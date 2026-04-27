@@ -62,9 +62,9 @@ for (const file of files) {
     }
 
     console.log(`ANCHOR ${file}`);
-    execSync("node anchor-agent.mjs", {
+    execSync(`node anchor-agent.mjs ${file}`, {
       stdio: "inherit",
-      env: { ...process.env, TSCP_PAYLOAD_FILE: file }
+      
     });
   } catch (err) {
     console.warn(`SKIP invalid/unreadable: ${file}`);

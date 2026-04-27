@@ -1,0 +1,71 @@
+{
+  "tscp_class": "TSCP-IMPL",
+  "tscp_id": "TSCP-IMPL-ANCHOR-0001",
+  "version": "1.0.0",
+  "status": "RATIFIED",
+  "title": "TSCP On-Chain Anchor System — Local + Sepolia Implementation",
+  "authored_by": "Sean Southwick / Triune-Oracle",
+  "session_date": "2026-04-27",
+  "created_at": "2026-04-27T08:35:00.000Z",
+  "modified_at": "2026-04-27T11:01:43.547Z",
+  "repository": "https://github.com/Triune-Oracle/tscp-anchor",
+  "contract": {
+    "name": "TSCPAnchor",
+    "local_address": "0x9259eabAEA85113D6a87823F8Ed3A6E55Ce523be",
+    "sepolia_address": "0x6FDB70F31E4815bE866Fd6aDD32802f90F9B5E06",
+    "chain_id_local": 1337,
+    "chain_id_sepolia": 11155111
+  },
+  "artifacts_anchored": [
+    {
+      "tscp_id": "TSCP-SPEC-0001",
+      "batch_hash": "0x5412d7d5fc48546d38ffdd49b912891cf8d3b92ba2d82f46aa267d6cf5924a5d",
+      "block": 10741509,
+      "tx_hash": "0x8ece8c44141158d732b27457f951f2a22350afc4b2987ec5d1beed21b042e705"
+    },
+    {
+      "tscp_id": "TSCP-GOV-0001",
+      "batch_hash": "0x126b44d63d4a28eae731398e1890954cddf3a6e2bf3ce7fc456c7a520ec1927a",
+      "block": 10741516,
+      "tx_hash": "0x5afb88220c22b1b6d56011313db35c2537268d1624374c8b622e6f6560716da8"
+    },
+    {
+      "tscp_id": "TSCP-IMPL-0001",
+      "batch_hash": "0x41a7960e6f0b4d241b79320d4a736d24bc31fca8296701a88b92e0dc6749eb78",
+      "block": 10741517,
+      "tx_hash": "0x8b832f56ddcc2ce4400d52578201ec73facaff8082938dd07412fafef6cce78a"
+    },
+    {
+      "tscp_id": "TSCP-TEST-0001",
+      "batch_hash": "0x45f0e7796d636a8a383fd9d737f837a6f426da8c6235d26c46202bd5d2f9a106",
+      "block": 10741518,
+      "tx_hash": "0x68a63a253610f854ac3c5c2af763bf29cd4d79a3607af93d10e7d8a1ec5be1e5"
+    }
+  ],
+  "components_delivered": [
+    "TSCPAnchor.sol",
+    "anchor-agent.mjs",
+    "anchor-batch.mjs",
+    "anchor-sepolia.mjs",
+    "deploy-local.mjs",
+    "deploy-sepolia.mjs",
+    "start-node.sh"
+  ],
+  "pipeline": {
+    "hash_function": "keccak256",
+    "local_node": "ganache v7.9.2",
+    "mnemonic_fixed": true,
+    "persistence": "ganache-data/",
+    "receipt_format": "anchor-receipts/{timestamp}-{network}-anchor.json"
+  },
+  "commits": 9,
+  "next_milestone": "TSCP-PL ratification hook via scripts/ratify-tscp.mjs",
+  "tags": [
+    "anchor",
+    "blockchain",
+    "sepolia",
+    "provenance",
+    "tscp-pl"
+  ],
+  "ratified_at": "2026-04-27T11:01:43.562Z"
+}
