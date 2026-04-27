@@ -20,7 +20,7 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm ci --omit=optional
+        run: npm install --omit=optional --no-audit
 
       - name: Compile contracts
         run: npx hardhat compile
