@@ -1,0 +1,18 @@
+{
+  "tscp_id": "TSCP-AUDIT-0001",
+  "version": "1.0.0",
+  "audit_type": "receipt_verification",
+  "mode": "offline",
+  "timestamp_utc": "2026-04-27T14:07:47Z",
+  "git_commit": "46b74dcea5a2d7da4fabc661a9b8acc647a85aea",
+  "git_dirty": false,
+  "node_version": "v24.14.1",
+  "npm_version": "11.12.1",
+  "command": "npm run verify:offline",
+  "status": "PASS",
+  "receipt_count": 9,
+  "stdout_sha256": "148d683cbda014a28263b5f675db5a4e7a202b7ec5a082eb1665e8222c60fa0f",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout": "\n> tscp-anchor@1.0.0 verify:offline\n> node scripts/verify-receipt.mjs anchor-receipts/*.json\n\nTSCP-SPEC-0001 → VALID (offline)\nTSCP-TEST-0001 → VALID (offline)\nTSCP-SPEC-0001 → VALID (offline)\nTSCP-SPEC-0001 → VALID (offline)\nTSCP-GOV-0001 → VALID (offline)\nTSCP-IMPL-0001 → VALID (offline)\nTSCP-TEST-0001 → VALID (offline)\nTSCP-IMPL-ANCHOR-0001 → VALID (offline)\nTSCP-IMPL-ANCHOR-0001 → VALID (offline)\n",
+  "stderr": ""
+}
