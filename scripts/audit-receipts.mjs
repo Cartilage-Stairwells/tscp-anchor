@@ -30,6 +30,11 @@ const git_status = run("git", ["status", "--short"]).stdout.trim();
 const node_version = run("node", ["-v"]).stdout.trim();
 const npm_version = run("npm", ["-v"]).stdout.trim();
 
+if (git_status.length > 0) {
+  console.error("audit requires clean working tree");
+  process.exit(2);
+}
+
 const verify =
   mode === "sepolia"
     ? run("npm", ["run", "verify:rpc:sepolia"])
@@ -49,7 +54,7 @@ const audit = {
   mode: mode,
   timestamp_utc: utc_now_seconds(),
   git_commit: git_commit,
-  git_dirty: git_status.length > 0,
+  git_dirty: false,
   node_version: node_version,
   npm_version: npm_version,
   command: verify.cmd,
