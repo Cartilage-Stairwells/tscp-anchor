@@ -1,7 +1,6 @@
+.env
+ganache.log
+ganache-data/
 node_modules/
-.env
-cache/
 artifacts/
-ganache.log
-ganache.log
-.env
+cache/
