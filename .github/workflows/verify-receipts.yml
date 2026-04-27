@@ -12,5 +12,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm ci --omit=optional
+      - run: npm install --omit=optional --ignore-scripts
       - run: npm run verify:offline
