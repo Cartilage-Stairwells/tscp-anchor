@@ -1,0 +1,10 @@
+{
+  "tscp_id": "TSCP-TEST-0001",
+  "batch_hash": "0x45f0e7796d636a8a383fd9d737f837a6f426da8c6235d26c46202bd5d2f9a106",
+  "contract_address": "0x6FDB70F31E4815bE866Fd6aDD32802f90F9B5E06",
+  "tx_hash": "0x68a63a253610f854ac3c5c2af763bf29cd4d79a3607af93d10e7d8a1ec5be1e5",
+  "block": 10741518,
+  "network": "sepolia",
+  "etherscan": "https://sepolia.etherscan.io/tx/0x68a63a253610f854ac3c5c2af763bf29cd4d79a3607af93d10e7d8a1ec5be1e5",
+  "anchored_at": "2026-04-27T08:35:37.860Z"
+}

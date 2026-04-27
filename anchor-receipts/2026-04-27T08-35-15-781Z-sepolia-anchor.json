@@ -1,0 +1,10 @@
+{
+  "tscp_id": "TSCP-GOV-0001",
+  "batch_hash": "0x126b44d63d4a28eae731398e1890954cddf3a6e2bf3ce7fc456c7a520ec1927a",
+  "contract_address": "0x6FDB70F31E4815bE866Fd6aDD32802f90F9B5E06",
+  "tx_hash": "0x5afb88220c22b1b6d56011313db35c2537268d1624374c8b622e6f6560716da8",
+  "block": 10741516,
+  "network": "sepolia",
+  "etherscan": "https://sepolia.etherscan.io/tx/0x5afb88220c22b1b6d56011313db35c2537268d1624374c8b622e6f6560716da8",
+  "anchored_at": "2026-04-27T08:35:15.796Z"
+}
