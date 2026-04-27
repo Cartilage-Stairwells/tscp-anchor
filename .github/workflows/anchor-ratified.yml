@@ -25,5 +25,18 @@ jobs:
       - name: Compile contracts
         run: npx hardhat compile
 
-      - name: Scan RATIFIED payloads
+      - name: Start local Hardhat node
+        run: |
+          npx hardhat node > node.log 2>&1 &
+          sleep 5
+
+      - name: Run anchor pipeline
+        env:
+          LOCAL_RPC_URL: http://127.0.0.1:8545
         run: node scripts/scan-ratified.mjs
+
+      - name: Upload receipts
+        uses: actions/upload-artifact@v4
+        with:
+          name: anchor-receipts
+          path: anchor-receipts/
