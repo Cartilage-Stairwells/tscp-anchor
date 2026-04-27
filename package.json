@@ -8,7 +8,9 @@
     "verify:offline": "node scripts/verify-receipt.mjs anchor-receipts/*.json",
     "verify:rpc:sepolia": "node scripts/verify-receipt.mjs anchor-receipts/*-sepolia-anchor.json --rpc=$SEPOLIA_RPC_URL",
     "audit:offline": "node scripts/audit-receipts.mjs offline",
-    "audit:sepolia": "node scripts/audit-receipts.mjs sepolia"
+    "audit:sepolia": "node scripts/audit-receipts.mjs sepolia",
+    "audit:manifest": "node scripts/create-audit-manifest.mjs anchor-receipts/*.json --out=audit-manifest.json --auditor=Triune-Oracle",
+    "verify:audit:manifest": "node scripts/verify-audit-manifest.mjs audit-manifest.json"
   },
   "keywords": [],
   "author": "",
