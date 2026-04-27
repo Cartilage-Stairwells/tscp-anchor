@@ -3,7 +3,7 @@
   "tscp_id": "TSCP-IMPL-ANCHOR-0001",
   "version": "1.0.0",
   "status": "RATIFIED",
-  "title": "TSCP On-Chain Anchor System — Local + Sepolia Implementation",
+  "title": "TSCP On-Chain Anchor System \u2014 Local + Sepolia Implementation",
   "authored_by": "Sean Southwick / Triune-Oracle",
   "session_date": "2026-04-27",
   "created_at": "2026-04-27T08:35:00.000Z",
@@ -67,5 +67,12 @@
     "provenance",
     "tscp-pl"
   ],
-  "ratified_at": "2026-04-27T11:01:43.562Z"
+  "ratified_at": "2026-04-27T11:01:43.562Z",
+  "anchor": {
+    "chain": "sepolia",
+    "tx_hash": "0x46f61d06ebae07b8e6f4e16f1503e6357812042864242f2d71a3b8cde8dc8356",
+    "block_number": null,
+    "timestamp": null,
+    "receipt_file": "anchor-receipts/2026-04-27T11-01-50-617Z-sepolia-anchor.json"
+  }
 }
