@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "verify:offline": "node scripts/verify-receipt.mjs anchor-receipts/*.json",
-    "verify:rpc:sepolia": "node scripts/verify-receipt.mjs anchor-receipts/*-sepolia-anchor.json --rpc=$SEPOLIA_RPC_URL"
+    "verify:rpc:sepolia": "node scripts/verify-receipt.mjs anchor-receipts/*-sepolia-anchor.json --rpc=$SEPOLIA_RPC_URL",
+    "audit:offline": "node scripts/audit-receipts.mjs offline",
+    "audit:sepolia": "node scripts/audit-receipts.mjs sepolia"
   },
   "keywords": [],
   "author": "",
