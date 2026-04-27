@@ -36,6 +36,19 @@ console.log("Etherscan: https://sepolia.etherscan.io/tx/" + tx.hash);
 const receipt = await tx.wait();
 console.log("Confirmed in block:", receipt.blockNumber);
 
+const obj = JSON.parse(fs.readFileSync(file, "utf8"));
+
+obj.anchor = {
+  chain: "sepolia",
+  tx_hash: tx.hash,
+  block_number: receipt.blockNumber,
+  timestamp: new Date().toISOString()
+};
+
+fs.writeFileSync(file, JSON.stringify(obj, null, 2));
+console.log("Anchor proof embedded:", file);
+
+
 fs.mkdirSync("./anchor-receipts", { recursive: true });
 const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 const receiptData = {

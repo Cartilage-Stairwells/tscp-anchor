@@ -52,6 +52,12 @@ for (const file of files) {
     const raw = fs.readFileSync(file, "utf8");
     const obj = JSON.parse(raw);
 
+if (obj.anchor?.tx_hash) {
+  console.log(`SKIP: already anchored ${file}`);
+  continue;
+}
+
+
     if (!isRatified(obj)) continue;
 
     const sourceHash = sha256(raw);
