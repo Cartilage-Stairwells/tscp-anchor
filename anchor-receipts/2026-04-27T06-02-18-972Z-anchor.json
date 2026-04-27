@@ -1,0 +1,9 @@
+{
+  "tscp_id": "TSCP-TEST-0001",
+  "batch_hash": "0x45f0e7796d636a8a383fd9d737f837a6f426da8c6235d26c46202bd5d2f9a106",
+  "contract_address": "0x523dD7eC8E61bAAf34c1c65Edd098957A76f9EfD",
+  "tx_hash": "0x33eb15eb079791c51a23ad84e18b60caaace9ffcaecadd5c372314bd1f9555fb",
+  "block": 7,
+  "network": "http://127.0.0.1:8545",
+  "anchored_at": "2026-04-27T06:02:18.985Z"
+}
