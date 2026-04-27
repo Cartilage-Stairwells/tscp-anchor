@@ -1,0 +1,10 @@
+{
+  "tscp_id": "TSCP-IMPL-0001",
+  "batch_hash": "0x41a7960e6f0b4d241b79320d4a736d24bc31fca8296701a88b92e0dc6749eb78",
+  "contract_address": "0x6FDB70F31E4815bE866Fd6aDD32802f90F9B5E06",
+  "tx_hash": "0x8b832f56ddcc2ce4400d52578201ec73facaff8082938dd07412fafef6cce78a",
+  "block": 10741517,
+  "network": "sepolia",
+  "etherscan": "https://sepolia.etherscan.io/tx/0x8b832f56ddcc2ce4400d52578201ec73facaff8082938dd07412fafef6cce78a",
+  "anchored_at": "2026-04-27T08:35:26.791Z"
+}
