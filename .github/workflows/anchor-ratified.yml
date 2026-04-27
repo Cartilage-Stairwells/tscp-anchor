@@ -1,0 +1,29 @@
+name: Anchor RATIFIED TSCP Payloads
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  anchor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile contracts
+        run: npx hardhat compile
+
+      - name: Scan RATIFIED payloads
+        run: node scripts/scan-ratified.mjs
