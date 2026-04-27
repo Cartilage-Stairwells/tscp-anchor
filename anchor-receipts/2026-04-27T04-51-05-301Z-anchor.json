@@ -1,9 +1,17 @@
 {
   "tscp_id": "TSCP-SPEC-0001",
-  "batch_hash": "0x5412d7d5fc48546d38ffdd49b912891cf8d3b92ba2d82f46aa267d6cf5924a5d",
+  "version": "1.0.0",
+  "network": "http://127.0.0.1:8545",
+  "chain_id": 31337,
   "contract_address": "0x523dD7eC8E61bAAf34c1c65Edd098957A76f9EfD",
   "tx_hash": "0x202b29fd10239db0aa59526fb0c5175eaa1b1854f267156793678b423cb4354c",
-  "block": 6,
-  "network": "http://127.0.0.1:8545",
-  "anchored_at": "2026-04-27T04:51:05.312Z"
+  "block_number": 6,
+  "batch_hash": "0x5412d7d5fc48546d38ffdd49b912891cf8d3b92ba2d82f46aa267d6cf5924a5d",
+  "artifact_hash": "fb7aa716b2c637ed717ae79b28474d49e2ed610ac764a103170974879ebb78f3",
+  "timestamp_utc": "2026-04-27T04:51:05Z",
+  "anchor_mode": "single",
+  "source": {
+    "file": "tscp/impl/TSCP-IMPL-ANCHOR-0001.json",
+    "sha256": "fb7aa716b2c637ed717ae79b28474d49e2ed610ac764a103170974879ebb78f3"
+  }
 }

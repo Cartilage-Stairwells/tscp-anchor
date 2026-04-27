@@ -1,10 +1,17 @@
 {
   "tscp_id": "TSCP-IMPL-ANCHOR-0001",
-  "batch_hash": "0x6c1094c9d0b796338bee8347edf484102f813629800c82652f10bd11f6e16d17",
+  "version": "1.0.0",
+  "network": "sepolia",
+  "chain_id": 11155111,
   "contract_address": "0x6FDB70F31E4815bE866Fd6aDD32802f90F9B5E06",
   "tx_hash": "0x46f61d06ebae07b8e6f4e16f1503e6357812042864242f2d71a3b8cde8dc8356",
-  "block": 10742189,
-  "network": "sepolia",
-  "etherscan": "https://sepolia.etherscan.io/tx/0x46f61d06ebae07b8e6f4e16f1503e6357812042864242f2d71a3b8cde8dc8356",
-  "anchored_at": "2026-04-27T11:01:50.619Z"
+  "block_number": 10742189,
+  "batch_hash": "0x6c1094c9d0b796338bee8347edf484102f813629800c82652f10bd11f6e16d17",
+  "artifact_hash": "fb7aa716b2c637ed717ae79b28474d49e2ed610ac764a103170974879ebb78f3",
+  "timestamp_utc": "2026-04-27T11:01:50Z",
+  "anchor_mode": "single",
+  "source": {
+    "file": "tscp/impl/TSCP-IMPL-ANCHOR-0001.json",
+    "sha256": "fb7aa716b2c637ed717ae79b28474d49e2ed610ac764a103170974879ebb78f3"
+  }
 }
