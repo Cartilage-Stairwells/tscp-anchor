@@ -4,3 +4,4 @@ cache/
 artifacts/
 ganache.log
 ganache.log
+.env
