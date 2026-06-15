@@ -1,6 +1,7 @@
 use oracle_layer::oracle::{ColumnOracle, MleOracle};
 use oracle_layer::folded::FoldedOracleBuilder;
 use p3_baby_bear::BabyBear;
+use p3_field::PrimeCharacteristicRing;
 
 type F = BabyBear;
 
@@ -28,16 +29,17 @@ fn main() {
     // Commutation law: fold-then-bind == bind-then-fold
     let prefix = vec![BabyBear::new(1)];
     let lhs = folded.bind_prefix(&prefix);
-    let bound: Vec<Vec<F>> = [col0, col1].iter().map(|o| {
-        oracle_layer::folded::FoldedOracleBuilder::new(vec![o.clone()], n.ilog2() as usize)
-            .absorb_challenge(F::ONE)
-            .build()
-            .bind_prefix(&prefix)
-    }).collect();
+
     let mut rhs = vec![F::ZERO; lhs.len()];
     let mut coeff = F::ONE;
-    for b in &bound {
-        for (i, v) in b.iter().enumerate() { rhs[i] += coeff * *v; }
+    for oracle_vals in [col0.clone(), col1.clone()] {
+        let bound = FoldedOracleBuilder::new(vec![oracle_vals], n.ilog2() as usize)
+            .absorb_challenge(F::ONE)
+            .build()
+            .bind_prefix(&prefix);
+        for (i, v) in bound.iter().enumerate() {
+            rhs[i] += coeff * *v;
+        }
         coeff *= alpha;
     }
     println!("Commutation law holds: {}", lhs == rhs);

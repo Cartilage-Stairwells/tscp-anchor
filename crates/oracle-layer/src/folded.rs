@@ -1,3 +1,4 @@
+use p3_field::PrimeCharacteristicRing;
 use p3_field::Field;
 use crate::oracle::{MleOracle, evaluate_mle};
 
