@@ -1,0 +1,27 @@
+[package]
+name = "oracle-layer"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "oracle_layer"
+path = "src/lib.rs"
+
+[[example]]
+name = "fibonacci"
+path = "examples/fibonacci.rs"
+
+[dependencies]
+p3-field = { version = "0.4.3-succinct" }
+p3-matrix = { version = "0.4.3-succinct" }
+p3-challenger = { version = "0.4.3-succinct" }
+p3-symmetric = { version = "0.4.3-succinct" }
+p3-baby-bear = { version = "0.4.3-succinct" }
+itertools = "0.12"
+
+[patch.crates-io]
+p3-field = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
+p3-matrix = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
+p3-challenger = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
+p3-symmetric = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
+p3-baby-bear = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
