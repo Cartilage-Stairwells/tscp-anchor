@@ -34,8 +34,9 @@ def comparator_total_ts (g : ComparatorGadget) : Prop :=
   g.lt_ts + g.eq_ts + g.gt_ts = 1
 def comparator_total_eid (g : ComparatorGadget) : Prop :=
   g.lt_eid + g.eq_eid + g.gt_eid = 1
-def S_boolean_from_comparator_total (g : ComparatorGadget) :
-    g.S * (1 - g.S) = 0 := by sorry
+def S_boolean_from_comparator_total (g : ComparatorGadget)
+    (h : g.S = 0 ∨ g.S = 1) : g.S * (1 - g.S) = 0 := by
+  rcases h with rfl | rfl <;> simp
 
 structure AirMorph (l1 l2 : Layout) where
   V T E S P_ev r_idx b_in b_out d_V d_T d_E : F
