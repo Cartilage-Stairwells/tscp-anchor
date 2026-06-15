@@ -1,0 +1,16 @@
+[Unit]
+Description=TSCP Prover HTTP Service
+After=network.target
+
+[Service]
+Type=simple
+User=tscp
+WorkingDirectory=/opt/tscp-prover
+ExecStart=/opt/tscp-prover/prover-server
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
