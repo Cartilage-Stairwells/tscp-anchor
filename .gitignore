@@ -1,6 +1,4 @@
+node_modules
 .env
-ganache.log
-ganache-data/
-node_modules/
-artifacts/
-cache/
+.ccl-release-root
+crates/oracle-layer/target/

@@ -1,51 +1,44 @@
-use oracle_layer::{oracle::{ColumnOracle, MleOracle}, folded::{FoldedOracleBuilder, NeedsChallenge}};
+use oracle_layer::oracle::{ColumnOracle, MleOracle};
+use oracle_layer::folded::FoldedOracleBuilder;
 use p3_baby_bear::BabyBear;
-use p3_matrix::dense::RowMajorMatrix;
 
 type F = BabyBear;
 
 fn main() {
-    // Build a Fibonacci trace: [a, b, a+b, b+(a+b), ...]
     let n = 8usize;
-    let mut row0 = vec![F::ZERO; n];
-    let mut row1 = vec![F::ZERO; n];
-    row0[0] = F::ONE;
-    row1[0] = F::ONE;
+    let mut col0 = vec![F::ZERO; n];
+    let mut col1 = vec![F::ZERO; n];
+    col0[0] = F::ONE;
+    col1[0] = F::ONE;
     for i in 1..n {
-        row0[i] = row0[i-1] + row1[i-1];
-        row1[i] = row1[i-1] + row0[i];
+        col0[i] = col0[i-1] + col1[i-1];
+        col1[i] = col1[i-1] + col0[i];
     }
+    println!("Fibonacci col0: {:?}", &col0);
 
-    println!("Fibonacci trace (col 0): {:?}", &row0);
-
-    // Lift to column oracle
-    let col0 = ColumnOracle { values: row0.clone(), n_vars: n.ilog2() as usize };
-    let col1 = ColumnOracle { values: row1.clone(), n_vars: n.ilog2() as usize };
-
-    // Fold with random alpha (in production: from Fiat-Shamir transcript)
-    let alpha = F::from_canonical_u32(42);
-    let builder = FoldedOracleBuilder::new(
-        vec![col0.values.clone(), col1.values.clone()],
+    let alpha = BabyBear::new(42);
+    let folded = FoldedOracleBuilder::new(
+        vec![col0.clone(), col1.clone()],
         n.ilog2() as usize,
-    );
-    // Typestate enforces: must absorb challenge before binding
-    let folded = builder.absorb_challenge(alpha).build();
+    ).absorb_challenge(alpha).build();
 
-    // Eval at a point
-    let point: Vec<F> = vec![
-        F::from_canonical_u32(2),
-        F::from_canonical_u32(3),
-        F::from_canonical_u32(1),
-    ];
-    println!("FoldedOracle eval at point: {:?}", folded.eval(&point));
+    let point = vec![BabyBear::new(2), BabyBear::new(3), BabyBear::new(1)];
+    println!("FoldedOracle eval: {:?}", folded.eval(&point));
 
-    // Commutation law test
-    let prefix = vec![F::from_canonical_u32(1)];
-    let ok = oracle_layer::folded::FoldedOracle::<F>::test_commutation_law(
-        &[col0.values, col1.values],
-        alpha,
-        &prefix,
-        n.ilog2() as usize,
-    );
-    println!("Commutation law holds: {}", ok);
+    // Commutation law: fold-then-bind == bind-then-fold
+    let prefix = vec![BabyBear::new(1)];
+    let lhs = folded.bind_prefix(&prefix);
+    let bound: Vec<Vec<F>> = [col0, col1].iter().map(|o| {
+        oracle_layer::folded::FoldedOracleBuilder::new(vec![o.clone()], n.ilog2() as usize)
+            .absorb_challenge(F::ONE)
+            .build()
+            .bind_prefix(&prefix)
+    }).collect();
+    let mut rhs = vec![F::ZERO; lhs.len()];
+    let mut coeff = F::ONE;
+    for b in &bound {
+        for (i, v) in b.iter().enumerate() { rhs[i] += coeff * *v; }
+        coeff *= alpha;
+    }
+    println!("Commutation law holds: {}", lhs == rhs);
 }
