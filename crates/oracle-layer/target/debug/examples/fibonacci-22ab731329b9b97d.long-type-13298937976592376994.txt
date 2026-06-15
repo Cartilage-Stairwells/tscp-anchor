@@ -1,2 +1,0 @@
-p3_monty_31::monty_31::MontyField31<MP>
-p3_monty_31::monty_31::MontyField31<BabyBearParameters>
