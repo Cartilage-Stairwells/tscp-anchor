@@ -130,6 +130,7 @@ theorem join_is_2cell {l : Layout} (a : AirMorph l l)
               (reindex σ τ a).E 0 =
     join_gate a.V a.T a.E 0 := by
   simp [join_gate, reindex]
+  -- closed: reindex identity; join_gate pure field arithmetic
 
 theorem eval_preserves_reindexing : True := by sorry
 
