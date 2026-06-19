@@ -14,7 +14,7 @@ p3-fri = { workspace = true }
 p3-dft = { workspace = true }
 p3-challenger = { workspace = true }
 p3-baby-bear = { workspace = true }
-rand = "0.10"
+rand = { version = "0.10", features = ["sys_rng"] }
 
 [dev-dependencies]
 p3-monty-31 = { workspace = true }
