@@ -1,116 +1,95 @@
-use axum::{routing::post, Json, Router};
+use axum::{extract::Json, routing::post, Router, response::IntoResponse, http::StatusCode};
+use std::net::SocketAddr;
+use p3_baby_bear::BabyBear;
+
+use p3_baby_bear::Poseidon2BabyBear;
+use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
+use p3_field::{Field, PrimeField, PrimeCharacteristicRing};
 use oracle_layer::folded::FoldedOracleBuilder;
 use oracle_layer::oracle::MleOracle;
-use p3_baby_bear::{default_babybear_poseidon2_16, BabyBear, Poseidon2BabyBear};
-use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
-use p3_field::PrimeCharacteristicRing;
 use serde::{Deserialize, Serialize};
 
 type F = BabyBear;
-const WIDTH: usize = 16;
-const RATE: usize = 8;
-type Challenger = DuplexChallenger<F, Poseidon2BabyBear<16>, WIDTH, RATE>;
+
+
+type Perm = Poseidon2BabyBear<16>;
+type Challenger = DuplexChallenger<F, Perm, 16, 8>;
 
 #[derive(Deserialize)]
-struct ProveRequest {
+struct ProofRequest {
+    job_id: String,
     col0: Vec<u32>,
     col1: Vec<u32>,
     alpha: u32,
 }
 
 #[derive(Serialize)]
-struct RoundInfo { g0: u32, g1: u32, r: u32, new_claim: u32 }
-
-#[derive(Serialize)]
-struct ProveResponse {
-    initial_claim: u32,
-    rounds: Vec<RoundInfo>,
-    terminal: u32,
-    verified: bool,
+struct ProofResponse {
+    job_id: String,
+    proof: Vec<u8>,
+    status: String,
 }
 
-fn to_u32(f: F) -> u32 { format!("{:?}", f).parse().unwrap_or(0) }
-
-fn hypercube_sum(oracle: &impl MleOracle<F>, n_vars: usize) -> F {
-    (0..(1usize << n_vars)).map(|i| {
-        let pt: Vec<F> = (0..n_vars)
-            .map(|b| if (i >> b) & 1 == 1 { F::new(1) } else { F::new(0) })
-            .collect();
-        oracle.eval(&pt)
-    }).fold(F::new(0), |a, b| a + b)
+#[tokio::main]
+async fn main() {
+    let app = Router::new().route("/prove/sumcheck", post(prove_handler));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
+    let listener = tokio::net::TcpListener::bind(addr).await.expect("Failed to bind");
+    println!("TSCP Prover Server listening on {}", addr);
+    axum::serve(listener, app).await.expect("Server failed");
 }
 
 fn prover_round(oracle: &impl MleOracle<F>, prefix: &[F]) -> [F; 2] {
     let n_vars = oracle.n_vars();
     let remaining = n_vars - prefix.len() - 1;
     let half = 1usize << remaining;
+    
     let sum_bit = |bit: F| -> F {
         (0..half).map(|i| {
             let mut pt = prefix.to_vec();
             pt.push(bit);
             for b in 0..remaining {
-                pt.push(if (i >> b) & 1 == 1 { F::new(1) } else { F::new(0) });
+                pt.push(if (i >> b) & 1 == 1 { F::ONE } else { F::ZERO });
             }
             oracle.eval(&pt)
-        }).fold(F::new(0), |a, b| a + b)
+        }).fold(F::ZERO, |a, b| a + b)
     };
-    [sum_bit(F::new(0)), sum_bit(F::new(1))]
+    [sum_bit(F::ZERO), sum_bit(F::ONE)]
 }
 
-async fn prove(Json(req): Json<ProveRequest>) -> Json<ProveResponse> {
-    let n = req.col0.len();
-    let n_vars = n.ilog2() as usize;
-    let col0: Vec<F> = req.col0.iter().map(|&v| BabyBear::new(v)).collect();
-    let col1: Vec<F> = req.col1.iter().map(|&v| BabyBear::new(v)).collect();
-    let alpha = BabyBear::new(req.alpha);
+async fn prove_handler(Json(req): Json<ProofRequest>) -> impl IntoResponse {
+    let n_vars = req.col0.len().ilog2() as usize;
+    let col0: Vec<F> = req.col0.iter().map(|&v| F::from_u32(v)).collect();
+    let col1: Vec<F> = req.col1.iter().map(|&v| F::from_u32(v)).collect();
+    let alpha = F::from_u32(req.alpha);
 
-    // Real Fiat-Shamir transcript: challenges are derived from a Poseidon2
-    // duplex sponge that has observed the trace columns and each round's
-    // polynomial, instead of being hardcoded by the prover.
-    let mut challenger = Challenger::new(default_babybear_poseidon2_16());
+    let mut challenger = {
+        use p3_baby_bear::default_babybear_poseidon2_16;
+        Challenger::new(default_babybear_poseidon2_16())
+    };
     for &v in &col0 { challenger.observe(v); }
     for &v in &col1 { challenger.observe(v); }
 
     let folded = FoldedOracleBuilder::new(vec![col0, col1], n_vars)
         .absorb_challenge(alpha).build();
 
-    let mut claim = hypercube_sum(&folded, n_vars);
-    let initial_claim = to_u32(claim);
     let mut prefix: Vec<F> = Vec::new();
-    let mut rounds = Vec::new();
+    let mut proof_data = Vec::new();
 
-    for _round in 0..n_vars {
+    for _ in 0..n_vars {
         let [g0, g1] = prover_round(&folded, &prefix);
-
-        // Observe the round polynomial BEFORE sampling the next challenge.
-        // This is what makes r unpredictable to the prover at the time g0/g1
-        // were computed, which is the actual soundness property we need.
+        
         challenger.observe(g0);
         challenger.observe(g1);
         let r: F = challenger.sample();
-
-        let new_claim = g0 + r * (g1 - g0);
-        rounds.push(RoundInfo {
-            g0: to_u32(g0), g1: to_u32(g1),
-            r: to_u32(r), new_claim: to_u32(new_claim),
-        });
-        claim = new_claim;
+        
+        proof_data.extend(bincode::serialize(&(g0, g1)).unwrap());
         prefix.push(r);
     }
 
-    let terminal = folded.eval(&prefix);
-    Json(ProveResponse {
-        initial_claim,
-        rounds,
-        terminal: to_u32(terminal),
-        verified: terminal == claim,
-    })
-}
-
-#[tokio::main]
-async fn main() {
-    let app = Router::new().route("/prove", post(prove));
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3030").await.unwrap();
-    println!("TSCP Prover listening on :3030");
-    axum::serve(listener, app).await.unwrap();
+    (StatusCode::OK, Json(ProofResponse {
+        job_id: req.job_id,
+        proof: proof_data,
+        status: "success".to_string(),
+    }))
 }

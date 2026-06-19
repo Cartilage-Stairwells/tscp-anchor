@@ -3,3 +3,4 @@ node_modules
 .ccl-release-root
 crates/oracle-layer/target/
 .env
+target/
