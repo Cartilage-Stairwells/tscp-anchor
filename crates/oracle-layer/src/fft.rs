@@ -1,7 +1,7 @@
+use p3_field::Field;
 #[allow(unused_imports)]
 #[allow(unused_imports)]
 use p3_field::PrimeCharacteristicRing;
-use p3_field::Field;
 
 /// Radix-2 DIT FFT/IFFT over a field with a known root of unity.
 /// `omega` must be a primitive n-th root of unity, where n = values.len()

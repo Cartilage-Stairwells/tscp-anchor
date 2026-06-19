@@ -1,3 +1,4 @@
+pub mod api;
 pub mod oracle;
 pub mod folded;
 pub mod constraint;
@@ -8,3 +9,5 @@ pub mod merkle;
 pub mod fri;
 pub mod fri_protocol;
 pub mod fri_query;
+pub mod constraint_oracle;
+pub mod poly;

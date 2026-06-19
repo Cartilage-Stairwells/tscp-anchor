@@ -1,7 +1,7 @@
+use p3_field::Field;
 #[allow(unused_imports)]
 #[allow(unused_imports)]
 use p3_field::PrimeCharacteristicRing;
-use p3_field::Field;
 
 /// Divides a coefficient-form polynomial C(x) by the vanishing
 /// polynomial Z_H(x) = x^n - 1 for a degree-n domain, returning the
