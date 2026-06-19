@@ -8,6 +8,8 @@ import Mathlib.Data.Vector
 import Mathlib.Algebra.Field.Basic
 import Mathlib.Data.List.Basic
 
+namespace TraceCoreProver
+
 abbrev F := ℕ
 
 structure Layout where
@@ -138,3 +140,5 @@ theorem eval_preserves_reindexing : True := by sorry
 def main : IO Unit := do
   IO.println "TSCP AIR Kernel v1.1.0 — TSCP-AIR-EXEC-0001"
   IO.println "Selectors: comparator-derived | DEEP-ALI: post-transcript | Fiat-Shamir: sound"
+
+end TraceCoreProver

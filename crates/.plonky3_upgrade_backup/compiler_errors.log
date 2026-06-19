@@ -1,0 +1,444 @@
+    Checking batch-merkle v0.1.0 (/data/data/com.termux/files/home/tscp-anchor/crates/batch-merkle)
+error[E0432]: unresolved import `p3_field::AbstractField`
+ --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:3:5
+  |
+3 | use p3_field::AbstractField;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^ no `AbstractField` in the root
+
+error[E0599]: no function or associated item named `zero` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:12:17
+   |
+12 | ...   vec![F::zero(), F::one(), F::ze...
+   |               ^^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: there is a method `is_zero` with a similar name
+   |
+12 |         vec![F::is_zero(), F::one(), F::zero(), F::one()],
+   |                 +++
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:12:28
+   |
+12 | ...::zero(), F::one(), F::zero(), F::...
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `zero` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:12:38
+   |
+12 | ...:one(), F::zero(), F::one()],
+   |               ^^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: there is a method `is_zero` with a similar name
+   |
+12 |         vec![F::zero(), F::one(), F::is_zero(), F::one()],
+   |                                      +++
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:12:49
+   |
+12 | ...::zero(), F::one()],
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `zero` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:16:17
+   |
+16 |         vec![F::zero(), F::one()],
+   |                 ^^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: there is a method `is_zero` with a similar name
+   |
+16 |         vec![F::is_zero(), F::one()],
+   |                 +++
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:16:28
+   |
+16 |         vec![F::zero(), F::one()],
+   |                            ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:21:16
+   |
+21 |             F::one(), F::two(), F::on...
+   |                ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `two` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:21:26
+   |
+21 | ...F::one(), F::two(), F::one(), F::t...
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:21:36
+   |
+21 | ...F::two(), F::one(), F::two(),
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `two` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:21:46
+   |
+21 | ...F::one(), F::two(),
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `zero` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:22:16
+   |
+22 | ...        F::zero(), F::one(), F::ze...
+   |               ^^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: there is a method `is_zero` with a similar name
+   |
+22 |             F::is_zero(), F::one(), F::zero(), F::one(),
+   |                +++
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:22:27
+   |
+22 | ...::zero(), F::one(), F::zero(), F::...
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `zero` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:22:37
+   |
+22 | ...:one(), F::zero(), F::one(),
+   |               ^^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: there is a method `is_zero` with a similar name
+   |
+22 |             F::zero(), F::one(), F::is_zero(), F::one(),
+   |                                     +++
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:22:48
+   |
+22 | ...::zero(), F::one(),
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0308]: mismatched types
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:30:9
+   |
+30 | ...et (opened_values, proof) = mmcs.open_batch(1, &prover_data);
+   |       ^^^^^^^^^^^^^^^^^^^^^^   -------------------------------- this expression has type `BatchOpening<..., ...>`
+   |       |
+   |       expected `BatchOpening<MontyField31<...>, ...>`, found `(_, _)`
+   |
+   = note: expected struct `BatchOpening<..., ...>`
+               found tuple `(_, _)`
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-10093715555533834498.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0061]: this method takes 4 arguments but 5 arguments were supplied
+   --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:31:10
+    |
+ 31 | ...cs.verify_batch(&commit, &dims, 1, &opened_values, &proof)
+    |       ^^^^^^^^^^^^                                    ------ unexpected argument #5
+    |
+note: method defined here
+   --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-commit-0.6.1/src/mmcs.rs:151:8
+    |
+151 |     fn verify_batch(
+    |        ^^^^^^^^^^^^
+help: remove the extra argument
+    |
+ 31 -     mmcs.verify_batch(&commit, &dims, 1, &opened_values, &proof)
+ 31 +     mmcs.verify_batch(&commit, &dims, 1, &opened_values)
+    |
+
+error[E0599]: no function or associated item named `zero` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:40:17
+   |
+40 | ...   vec![F::zero(), F::one(), F::tw...
+   |               ^^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: there is a method `is_zero` with a similar name
+   |
+40 |         vec![F::is_zero(), F::one(), F::two(), F::one()],
+   |                 +++
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:40:28
+   |
+40 | ...::zero(), F::one(), F::two(), F::o...
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `two` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:40:38
+   |
+40 | ...F::one(), F::two(), F::one()],
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:40:48
+   |
+40 | ...F::two(), F::one()],
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:44:17
+   |
+44 |         vec![F::one(), F::zero(), F::...
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `zero` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:44:27
+   |
+44 | ...:one(), F::zero(), F::one(), F::tw...
+   |               ^^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+help: there is a method `is_zero` with a similar name
+   |
+44 |         vec![F::one(), F::is_zero(), F::one(), F::two()],
+   |                           +++
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:44:38
+   |
+44 | ...::zero(), F::one(), F::two()],
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `two` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:44:48
+   |
+44 | ...F::one(), F::two()],
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0308]: mismatched types
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:51:9
+   |
+51 | ...et (opened_values, mut proof) = mmcs.open_batch(2, &prover_data);
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^   -------------------------------- this expression has type `BatchOpening<..., ...>`
+   |       |
+   |       expected `BatchOpening<MontyField31<...>, ...>`, found `(_, _)`
+   |
+   = note: expected struct `BatchOpening<..., ...>`
+               found tuple `(_, _)`
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-10093715555533834498.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0599]: no function or associated item named `one` found for struct `MontyField31<MP>` in the current scope
+  --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:52:23
+   |
+52 | ...[0][0] += F::one(); // corrupt the...
+   |                 ^^^ function or associated item not found in `MontyField31<...>`
+   |
+note: if you're trying to build a new `p3_monty_31::monty_31::MontyField31<p3_baby_bear::baby_bear::BabyBearParameters>`, consider using `p3_monty_31::monty_31::MontyField31::<MP>::new` which returns `p3_monty_31::monty_31::MontyField31<_>`
+  --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-monty-31-0.6.1/src/monty_31.rs:51:5
+   |
+51 |     pub const fn new(value: u32) -> Self {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+   = note: the full name for the type has been written to '/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/batch_merkle_roundtrip-e788c86b78535c3d.long-type-16821333964895540235.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0061]: this method takes 4 arguments but 5 arguments were supplied
+   --> crates/batch-merkle/tests/batch_merkle_roundtrip.rs:54:23
+    |
+ 54 | ...cs.verify_batch(&commit, &dims, 2, &opened_values, &proof);
+    |       ^^^^^^^^^^^^                                    ------ unexpected argument #5
+    |
+note: method defined here
+   --> /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/p3-commit-0.6.1/src/mmcs.rs:151:8
+    |
+151 |     fn verify_batch(
+    |        ^^^^^^^^^^^^
+help: remove the extra argument
+    |
+ 54 -     let result = mmcs.verify_batch(&commit, &dims, 2, &opened_values, &proof);
+ 54 +     let result = mmcs.verify_batch(&commit, &dims, 2, &opened_values);
+    |
+
+Some errors have detailed explanations: E0061, E0308, E0432, E0599.
+For more information about an error, try `rustc --explain E0061`.
+error: could not compile `batch-merkle` (test "batch_merkle_roundtrip") due to 28 previous errors

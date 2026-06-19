@@ -10,3 +10,7 @@ p3-challenger = "0.17"
 p3-symmetric = "0.17"
 p3-baby-bear = "0.17"
 itertools = "0.12"
+prometheus = "0.13"
+parking_lot = "0.12"
+serde = { version = "1.0", features = ["derive"] }
+uuid = { version = "1.0", features = ["v4"] }

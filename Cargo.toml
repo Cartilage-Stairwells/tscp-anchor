@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = ["crates/oracle-layer", "crates/batch-merkle", "crates/prover-server"]
+
+[workspace.dependencies]
+p3-field = "0.6.0"
+p3-matrix = "0.6.0"
+p3-baby-bear = "0.6.0"
+p3-monty-31 = "0.6.0"
+p3-symmetric = "0.6.0"
+p3-merkle-tree = "0.6.0"
+p3-poseidon2 = "0.6.0"
+p3-commit = "0.6.0"
+p3-fri = "0.6.0"
+p3-dft = "0.6.0"
+p3-challenger = "0.6.0"
+p3-util = "0.6.0"

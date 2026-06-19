@@ -1,0 +1,56 @@
+use batch_merkle::{new_batch_merkle, F};
+use p3_commit::Mmcs;
+use p3_field::AbstractField;
+use p3_matrix::dense::RowMajorMatrix;
+use p3_matrix::Matrix;
+
+#[test]
+fn commit_open_verify_mixed_matrices() {
+    let mmcs = new_batch_merkle();
+
+    let col0 = RowMajorMatrix::new(
+        vec![F::zero(), F::one(), F::zero(), F::one()],
+        1,
+    );
+    let col1 = RowMajorMatrix::new(
+        vec![F::zero(), F::one()],
+        1,
+    );
+    let wide = RowMajorMatrix::new(
+        vec![
+            F::one(), F::two(), F::one(), F::two(),
+            F::zero(), F::one(), F::zero(), F::one(),
+        ],
+        2,
+    );
+
+    let dims = vec![col0.dimensions(), col1.dimensions(), wide.dimensions()];
+    let (commit, prover_data) = mmcs.commit(vec![col0, col1, wide]);
+
+    let (opened_values, proof) = mmcs.open_batch(1, &prover_data);
+    mmcs.verify_batch(&commit, &dims, 1, &opened_values, &proof)
+        .expect("valid batch proof should verify");
+}
+
+#[test]
+fn tampered_proof_fails_verification() {
+    let mmcs = new_batch_merkle();
+
+    let col0 = RowMajorMatrix::new(
+        vec![F::zero(), F::one(), F::two(), F::one()],
+        1,
+    );
+    let col1 = RowMajorMatrix::new(
+        vec![F::one(), F::zero(), F::one(), F::two()],
+        1,
+    );
+
+    let dims = vec![col0.dimensions(), col1.dimensions()];
+    let (commit, prover_data) = mmcs.commit(vec![col0, col1]);
+
+    let (opened_values, mut proof) = mmcs.open_batch(2, &prover_data);
+    proof[0][0] += F::one(); // corrupt the proof
+
+    let result = mmcs.verify_batch(&commit, &dims, 2, &opened_values, &proof);
+    assert!(result.is_err(), "tampered proof should fail verification");
+}

@@ -12,16 +12,14 @@ name = "fibonacci"
 path = "examples/fibonacci.rs"
 
 [dependencies]
-p3-field = { version = "0.4.3-succinct" }
-p3-matrix = { version = "0.4.3-succinct" }
-p3-challenger = { version = "0.4.3-succinct" }
-p3-symmetric = { version = "0.4.3-succinct" }
-p3-baby-bear = { version = "0.4.3-succinct" }
+p3-field.workspace = true
+p3-matrix.workspace = true
+p3-challenger.workspace = true
+p3-symmetric.workspace = true
+p3-baby-bear.workspace = true
+p3-poseidon2.workspace = true
+p3-commit.workspace = true
+p3-fri.workspace = true
+p3-dft.workspace = true
+p3-util.workspace = true
 itertools = "0.12"
-
-[patch.crates-io]
-p3-field = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
-p3-matrix = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
-p3-challenger = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
-p3-symmetric = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }
-p3-baby-bear = { git = "https://github.com/Plonky3/Plonky3", branch = "main" }

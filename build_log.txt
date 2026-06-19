@@ -1,0 +1,157 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling autocfg v1.5.1
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling either v1.16.0
+   Compiling paste v1.0.15
+   Compiling strength_reduce v0.2.4
+   Compiling tracing-core v0.1.36
+   Compiling pin-project-lite v0.2.17
+   Compiling rand_core v0.10.1
+   Compiling p3-maybe-rayon v0.6.1
+   Compiling itertools v0.14.0
+   Compiling scopeguard v1.2.0
+   Compiling rand v0.10.1
+   Compiling lock_api v0.4.14
+   Compiling num-traits v0.2.19
+   Compiling thiserror v2.0.18
+   Compiling spin v0.12.0
+   Compiling itertools v0.12.1
+   Compiling syn v2.0.118
+   Compiling num-integer v0.1.46
+   Compiling transpose v0.2.3
+   Compiling num-bigint v0.4.6
+   Compiling serde_derive v1.0.228
+   Compiling tracing-attributes v0.1.31
+   Compiling thiserror-impl v2.0.18
+   Compiling tracing v0.1.44
+   Compiling p3-util v0.6.1
+   Compiling p3-field v0.6.1
+   Compiling p3-matrix v0.6.1
+   Compiling p3-symmetric v0.6.1
+   Compiling p3-dft v0.6.1
+   Compiling p3-multilinear-util v0.6.1
+   Compiling p3-mds v0.6.1
+   Compiling p3-poseidon2 v0.6.1
+   Compiling p3-poseidon1 v0.6.1
+   Compiling p3-monty-31 v0.6.1
+   Compiling p3-challenger v0.6.1
+   Compiling p3-commit v0.6.1
+   Compiling p3-baby-bear v0.6.1
+   Compiling p3-fri v0.6.1
+   Compiling oracle-layer v0.1.0 (/data/data/com.termux/files/home/tscp-anchor/crates/oracle-layer)
+error[E0599]: no function or associated item named `one` found for type parameter `F` in the current scope
+  --> crates/oracle-layer/src/fft.rs:63:32
+   |
+38 | ..._place<F: Field>(a: &mut [F], omeg...
+   |           - function or associated item `one` not found for this type parameter
+...
+63 | ...   let mut w = F::one();
+   |                      ^^^ function or associated item not found in `F`
+   |
+   = help: items from traits can only be used if the type parameter is bounded by the trait
+help: there is a method `ne` with a similar name, but with different arguments
+  --> /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library/core/src/cmp.rs:264:4
+help: the following trait defines an item `one`, perhaps you need to restrict type parameter `F` with it:
+   |
+38 |     fn fft_in_place<F: Field + num_traits::identities::One>(a: &mut [F], omega: F) {
+   |                              +++++++++++++++++++++++++++++
+
+error[E0599]: no function or associated item named `zero` found for type parameter `F` in the current scope
+   --> crates/oracle-layer/src/fft.rs:112:29
+    |
+111 | ...ate_coeffs<F: Field>(coeffs: &[F]...
+    |               - function or associated item `zero` not found for this type parameter
+112 | ...result = F::zero();
+    |                ^^^^ function or associated item not found in `F`
+    |
+    = help: items from traits can only be used if the type parameter is bounded by the trait
+help: the following trait defines an item `zero`, perhaps you need to restrict type parameter `F` with it:
+    |
+111 |     pub fn evaluate_coeffs<F: Field + num_traits::identities::Zero>(coeffs: &[F], point: F) -> F {
+    |                                     ++++++++++++++++++++++++++++++
+help: there is a method `is_zero` with a similar name
+    |
+112 |         let mut result = F::is_zero();
+    |                             +++
+
+error[E0599]: no function or associated item named `zero` found for type parameter `F` in the current scope
+  --> crates/oracle-layer/src/quotient.rs:33:51
+   |
+18 | ...ng<F: Field>(coeffs: &[F], domain_...
+   |       - function or associated item `zero` not found for this type parameter
+...
+33 | ...esult { quotient: vec![F::zero()],...
+   |                              ^^^^ function or associated item not found in `F`
+   |
+   = help: items from traits can only be used if the type parameter is bounded by the trait
+help: the following trait defines an item `zero`, perhaps you need to restrict type parameter `F` with it:
+   |
+18 | pub fn divide_by_vanishing<F: Field + num_traits::identities::Zero>(coeffs: &[F], domain_size: usize) -> QuotientResult<F> {
+   |                                     ++++++++++++++++++++++++++++++
+help: there is a method `is_zero` with a similar name
+   |
+33 |         return QuotientResult { quotient: vec![F::is_zero()], remainder: work };
+   |                                                   +++
+
+error[E0599]: no function or associated item named `zero` found for type parameter `F` in the current scope
+  --> crates/oracle-layer/src/quotient.rs:36:32
+   |
+18 | ..._vanishing<F: Field>(coeffs: &[F],...
+   |               - function or associated item `zero` not found for this type parameter
+...
+36 | ...ient = vec![F::zero(); deg - n];
+   |                   ^^^^ function or associated item not found in `F`
+   |
+   = help: items from traits can only be used if the type parameter is bounded by the trait
+help: the following trait defines an item `zero`, perhaps you need to restrict type parameter `F` with it:
+   |
+18 | pub fn divide_by_vanishing<F: Field + num_traits::identities::Zero>(coeffs: &[F], domain_size: usize) -> QuotientResult<F> {
+   |                                     ++++++++++++++++++++++++++++++
+help: there is a method `is_zero` with a similar name
+   |
+36 |     let mut quotient = vec![F::is_zero(); deg - n];
+   |                                +++
+
+error[E0599]: no function or associated item named `zero` found for type parameter `F` in the current scope
+  --> crates/oracle-layer/src/quotient.rs:42:22
+   |
+18 | ...ide_by_vanishing<F: Field>(coeffs:...
+   |                     - function or associated item `zero` not found for this type parameter
+...
+42 | ...rk[i] = F::zero();
+   |               ^^^^ function or associated item not found in `F`
+   |
+   = help: items from traits can only be used if the type parameter is bounded by the trait
+help: the following trait defines an item `zero`, perhaps you need to restrict type parameter `F` with it:
+   |
+18 | pub fn divide_by_vanishing<F: Field + num_traits::identities::Zero>(coeffs: &[F], domain_size: usize) -> QuotientResult<F> {
+   |                                     ++++++++++++++++++++++++++++++
+help: there is a method `is_zero` with a similar name
+   |
+42 |         work[i] = F::is_zero();
+   |                      +++
+
+error[E0599]: no function or associated item named `zero` found for type parameter `F` in the current scope
+  --> crates/oracle-layer/src/quotient.rs:54:46
+   |
+52 | ...main<F: Field>(coeffs: &[F], domai...
+   |         - function or associated item `zero` not found for this type parameter
+53 | ...de_by_vanishing(coeffs, domain_size);
+54 | ...iter().all(|&r| r == F::zero())
+   |                            ^^^^ function or associated item not found in `F`
+   |
+   = help: items from traits can only be used if the type parameter is bounded by the trait
+help: the following trait defines an item `zero`, perhaps you need to restrict type parameter `F` with it:
+   |
+52 | pub fn vanishes_on_domain<F: Field + num_traits::identities::Zero>(coeffs: &[F], domain_size: usize) -> bool {
+   |                                    ++++++++++++++++++++++++++++++
+help: there is a method `is_zero` with a similar name
+   |
+54 |     result.remainder.iter().all(|&r| r == F::is_zero())
+   |                                              +++
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `oracle-layer` (lib) due to 6 previous errors
