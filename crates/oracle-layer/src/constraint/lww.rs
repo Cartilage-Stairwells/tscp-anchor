@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use p3_field::{Field, PrimeCharacteristicRing};
+use p3_field::Field;
 use super::{Constraint, CompositeConstraint};
 
 // ---------- Booleanity: S*(1-S) = 0 ----------

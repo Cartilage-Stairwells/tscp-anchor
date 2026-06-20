@@ -1,46 +1,65 @@
-#[allow(unused_imports)]
-#[allow(unused_imports)]
+use std::sync::OnceLock;
+
+use p3_baby_bear::{default_babybear_poseidon2_16, BabyBear, Poseidon2BabyBear};
 use p3_field::PrimeCharacteristicRing;
-use p3_field::{Field, PrimeField64};
+use p3_symmetric::{PseudoCompressionFunction, TruncatedPermutation};
 
-/// A minimal Merkle tree over field elements, using a simple
-/// multiplicative+additive mixing function as a placeholder hash.
+/// A Merkle tree over BabyBear field elements, using a real
+/// Poseidon2-based 2-to-1 compression function for hashing.
 ///
-/// NOTE: this is NOT cryptographically secure — it is a structural
-/// scaffold to get tree construction, root computation, and opening
-/// verification correct and tested first. The real implementation
-/// should replace `hash_pair` with a proper sponge (e.g. Poseidon2
-/// via p3_symmetric) before this is used for anything load-bearing.
-pub struct MerkleTree<F> {
-    pub leaves: Vec<F>,
-    pub levels: Vec<Vec<F>>, // levels[0] = leaves, levels.last() = [root]
+/// The compressor is built once from fixed, deterministic Poseidon2
+/// round constants (`default_babybear_poseidon2_16`) — not randomized
+/// per-call — so the same inputs always produce the same root, which
+/// is required for a prover and verifier to ever agree.
+///
+/// NOTE: this is specialized to `BabyBear` rather than generic over
+/// any field, since the Poseidon2 permutation's round constants are
+/// themselves field-specific. The earlier placeholder hash was field-
+/// generic only because it used raw integer arithmetic, not a real
+/// cryptographic primitive.
+pub struct MerkleTree {
+    pub leaves: Vec<BabyBear>,
+    pub levels: Vec<Vec<BabyBear>>, // levels[0] = leaves, levels.last() = [root]
 }
 
-pub struct MerkleOpening<F> {
+pub struct MerkleOpening {
     pub leaf_index: usize,
-    pub leaf_value: F,
-    pub siblings: Vec<F>, // one sibling per level, bottom to top
+    pub leaf_value: BabyBear,
+    pub siblings: Vec<BabyBear>, // one sibling per level, bottom to top
 }
 
-fn hash_pair<F: Field + PrimeField64>(a: F, b: F) -> F {
-    // Placeholder mixing function: NOT a secure hash. Deterministic,
-    // order-sensitive (hash(a,b) != hash(b,a)), and collision-prone in
-    // ways a real hash isn't. Replace before any real soundness claim.
-    let av = a.as_canonical_u64();
-    let bv = b.as_canonical_u64();
-    let mixed = av.wrapping_mul(0x9E3779B97F4A7C15).wrapping_add(bv).rotate_left(17) ^ bv.wrapping_mul(0xC2B2AE3D27D4EB4F);
-    F::from_u64(mixed)
+type Perm = Poseidon2BabyBear<16>;
+type Compressor = TruncatedPermutation<Perm, 2, 8, 16>;
+
+fn compressor() -> &'static Compressor {
+    static COMPRESSOR: OnceLock<Compressor> = OnceLock::new();
+    COMPRESSOR.get_or_init(|| Compressor::new(default_babybear_poseidon2_16()))
 }
 
-impl<F: Field + PrimeField64 + Copy> MerkleTree<F> {
-    pub fn build(leaves: Vec<F>) -> Self {
+fn hash_pair(a: BabyBear, b: BabyBear) -> BabyBear {
+    // Pad each scalar into an 8-element chunk (the compressor's CHUNK
+    // width), compress the two chunks via the real Poseidon2
+    // permutation, and take the first output element as the result.
+    // Padding with zeros is fine here: a/b occupy a fixed position
+    // (index 0) in an otherwise-zero chunk, so distinct (a, b) pairs
+    // map to distinct compressor inputs.
+    let mut chunk_a = [BabyBear::ZERO; 8];
+    let mut chunk_b = [BabyBear::ZERO; 8];
+    chunk_a[0] = a;
+    chunk_b[0] = b;
+    let out = compressor().compress([chunk_a, chunk_b]);
+    out[0]
+}
+
+impl MerkleTree {
+    pub fn build(leaves: Vec<BabyBear>) -> Self {
         assert!(leaves.len().is_power_of_two(), "leaf count must be a power of two");
         assert!(!leaves.is_empty(), "cannot build a tree with zero leaves");
 
         let mut levels = vec![leaves.clone()];
         let mut current = leaves.clone();
         while current.len() > 1 {
-            let next: Vec<F> = current
+            let next: Vec<BabyBear> = current
                 .chunks(2)
                 .map(|pair| hash_pair(pair[0], pair[1]))
                 .collect();
@@ -51,13 +70,13 @@ impl<F: Field + PrimeField64 + Copy> MerkleTree<F> {
         Self { leaves, levels }
     }
 
-    pub fn root(&self) -> F {
+    pub fn root(&self) -> BabyBear {
         *self.levels.last().unwrap().last().unwrap()
     }
 
     /// Produce an opening proof for the leaf at `index`: the leaf value
     /// plus the sibling at each level needed to recompute the root.
-    pub fn open(&self, index: usize) -> MerkleOpening<F> {
+    pub fn open(&self, index: usize) -> MerkleOpening {
         assert!(index < self.leaves.len(), "leaf index out of range");
         let mut siblings = Vec::new();
         let mut idx = index;
@@ -76,10 +95,7 @@ impl<F: Field + PrimeField64 + Copy> MerkleTree<F> {
 
 /// Verify an opening against a known root, without needing the full
 /// tree — this is what a real verifier would call.
-pub fn verify_opening<F: Field + PrimeField64 + Copy>(
-    root: F,
-    opening: &MerkleOpening<F>,
-) -> bool {
+pub fn verify_opening(root: BabyBear, opening: &MerkleOpening) -> bool {
     let mut current = opening.leaf_value;
     let mut idx = opening.leaf_index;
     for &sibling in &opening.siblings {
@@ -96,7 +112,6 @@ pub fn verify_opening<F: Field + PrimeField64 + Copy>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_baby_bear::BabyBear;
 
     type F = BabyBear;
 

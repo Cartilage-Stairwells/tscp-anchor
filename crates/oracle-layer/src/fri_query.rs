@@ -1,27 +1,27 @@
 #[allow(unused_imports)]
 #[allow(unused_imports)]
-use p3_field::PrimeCharacteristicRing;
-use p3_field::{Field, PrimeField64};
+use p3_field::{Field, PrimeCharacteristicRing, PrimeField64};
+use p3_baby_bear::BabyBear;
 use crate::merkle::{MerkleTree, MerkleOpening, verify_opening};
 
 /// Everything needed to check one round's fold consistency at a single
 /// query index, without the verifier ever seeing the full evaluation
 /// vectors: the two openings from round i (at idx and idx+half) and
 /// the one opening from round i+1 (at idx mod half).
-pub struct FriQueryRound<F> {
-    pub opening_x: MerkleOpening<F>,
-    pub opening_neg_x: MerkleOpening<F>,
-    pub opening_folded: MerkleOpening<F>,
+pub struct FriQueryRound {
+    pub opening_x: MerkleOpening,
+    pub opening_neg_x: MerkleOpening,
+    pub opening_folded: MerkleOpening,
 }
 
 /// Generates the query openings for a single round, given that round's
 /// tree, the next round's tree, and a query index into the current
 /// (pre-fold) evaluation vector.
-pub fn fri_query_round<F: Field + PrimeField64 + Copy>(
-    current_tree: &MerkleTree<F>,
-    next_tree: &MerkleTree<F>,
+pub fn fri_query_round(
+    current_tree: &MerkleTree,
+    next_tree: &MerkleTree,
     query_index: usize,
-) -> FriQueryRound<F> {
+) -> FriQueryRound {
     let half = current_tree.leaves.len() / 2;
     let idx = query_index % half;
     FriQueryRound {
@@ -35,12 +35,12 @@ pub fn fri_query_round<F: Field + PrimeField64 + Copy>(
 /// is p_even(x^2) + beta * p_odd(x^2), computed from the two openings
 /// at x and -x, AND that all three openings are valid against their
 /// respective claimed roots.
-pub fn verify_fri_query_round<F: Field + PrimeField64 + Copy>(
-    root_current: F,
-    root_next: F,
-    x: F,
-    beta: F,
-    query: &FriQueryRound<F>,
+pub fn verify_fri_query_round(
+    root_current: BabyBear,
+    root_next: BabyBear,
+    x: BabyBear,
+    beta: BabyBear,
+    query: &FriQueryRound,
 ) -> bool {
     if !verify_opening(root_current, &query.opening_x) {
         return false;
@@ -52,7 +52,7 @@ pub fn verify_fri_query_round<F: Field + PrimeField64 + Copy>(
         return false;
     }
 
-    let two_inv = F::from_u64(2).inverse();
+    let two_inv = BabyBear::from_u64(2).inverse();
     let p_x = query.opening_x.leaf_value;
     let p_neg_x = query.opening_neg_x.leaf_value;
 
@@ -86,7 +86,7 @@ mod tests {
         d
     }
 
-    fn setup_one_round() -> (MerkleTree<F>, MerkleTree<F>, Vec<F>, F) {
+    fn setup_one_round() -> (MerkleTree, MerkleTree, Vec<BabyBear>, BabyBear) {
         let w = omega8();
         let domain = negation_closed_domain(w, 8);
         let coeffs = vec![F::from_u64(1), F::from_u64(2), F::from_u64(3), F::from_u64(4),

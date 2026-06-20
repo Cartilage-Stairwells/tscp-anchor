@@ -4,7 +4,7 @@ use p3_baby_bear::BabyBear;
 
 use p3_baby_bear::Poseidon2BabyBear;
 use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
-use p3_field::{Field, PrimeField, PrimeCharacteristicRing};
+use p3_field::PrimeCharacteristicRing;
 use oracle_layer::folded::FoldedOracleBuilder;
 use oracle_layer::oracle::MleOracle;
 use serde::{Deserialize, Serialize};
@@ -29,9 +29,22 @@ struct ProofResponse {
     proof: Vec<u8>,
     status: String,
 }
-
 #[tokio::main]
 async fn main() {
+    let dft = p3_dft::Radix2DitParallel::<F>::default();
+    let input_mmcs = batch_merkle::new_batch_merkle();
+    let fri_mmcs = batch_merkle::new_batch_merkle();
+    let fri_params = p3_fri::FriParameters {
+        log_blowup: 1,
+        log_final_poly_len: 0,
+        max_log_arity: 1,
+        num_queries: 32,
+        commit_proof_of_work_bits: 0,
+        query_proof_of_work_bits: 0,
+        mmcs: fri_mmcs,
+    };
+    let pcs = commitment::new_tscp_pcs(dft, input_mmcs, batch_merkle::new_batch_merkle(), fri_params);
+    let _ = &pcs; // PCS constructed for future opening/commitment phase; not yet used by prove_handler.
     let app = Router::new().route("/prove/sumcheck", post(prove_handler));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
     let listener = tokio::net::TcpListener::bind(addr).await.expect("Failed to bind");
@@ -93,3 +106,7 @@ async fn prove_handler(Json(req): Json<ProofRequest>) -> impl IntoResponse {
         status: "success".to_string(),
     }))
 }
+
+
+
+

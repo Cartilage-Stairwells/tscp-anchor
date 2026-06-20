@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
-use p3_field::PrimeCharacteristicRing;
-use p3_field::{Field, PrimeField64};
+use p3_field::{Field, PrimeCharacteristicRing, PrimeField64};
+use p3_baby_bear::BabyBear;
 use crate::fri::{fri_fold_step, fold_domain};
 use crate::merkle::MerkleTree;
 
@@ -8,9 +8,9 @@ use crate::merkle::MerkleTree;
 /// round (including the initial commitment to the unfolded
 /// evaluations), and the final constant value the polynomial folds
 /// down to.
-pub struct FriCommitment<F> {
-    pub roots: Vec<F>,       // roots[0] = initial commitment, roots.last() = final round's tree (single leaf)
-    pub final_value: F,
+pub struct FriCommitment {
+    pub roots: Vec<BabyBear>,       // roots[0] = initial commitment, roots.last() = final round's tree (single leaf)
+    pub final_value: BabyBear,
 }
 
 /// Runs the FRI commit phase: repeatedly fold the evaluations in half,
@@ -21,11 +21,11 @@ pub struct FriCommitment<F> {
 /// one per fold round — passed in explicitly here rather than derived
 /// from a transcript, so this function's correctness can be checked
 /// independently of any Fiat-Shamir wiring.
-pub fn fri_commit<F: Field + PrimeField64 + Copy>(
-    evals: Vec<F>,
-    domain: Vec<F>,
-    betas: &[F],
-) -> FriCommitment<F> {
+pub fn fri_commit(
+    evals: Vec<BabyBear>,
+    domain: Vec<BabyBear>,
+    betas: &[BabyBear],
+) -> FriCommitment {
     let n = evals.len();
     assert!(n.is_power_of_two(), "initial evaluation count must be a power of two");
     let expected_rounds = n.trailing_zeros() as usize;
@@ -58,11 +58,11 @@ pub fn fri_commit<F: Field + PrimeField64 + Copy>(
 /// match. This is the consistency check a verifier ultimately relies
 /// on: that re-deriving the same protocol from the same transcript of
 /// challenges reproduces the same commitment.
-pub fn fri_verify_commitment<F: Field + PrimeField64 + Copy>(
-    evals: Vec<F>,
-    domain: Vec<F>,
-    betas: &[F],
-    claimed: &FriCommitment<F>,
+pub fn fri_verify_commitment(
+    evals: Vec<BabyBear>,
+    domain: Vec<BabyBear>,
+    betas: &[BabyBear],
+    claimed: &FriCommitment,
 ) -> bool {
     let recomputed = fri_commit(evals, domain, betas);
     recomputed.roots == claimed.roots && recomputed.final_value == claimed.final_value
