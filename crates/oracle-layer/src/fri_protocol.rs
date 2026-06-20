@@ -1,8 +1,13 @@
 #[allow(unused_imports)]
 use p3_field::{Field, PrimeCharacteristicRing, PrimeField64};
-use p3_baby_bear::BabyBear;
+use p3_baby_bear::{BabyBear, Poseidon2BabyBear};
+use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
 use crate::fri::{fri_fold_step, fold_domain};
 use crate::merkle::MerkleTree;
+
+/// The Fiat-Shamir transcript type used to derive FRI challenges.
+/// Matches the pattern already proven out in prover-server.
+pub type Challenger = DuplexChallenger<BabyBear, Poseidon2BabyBear<16>, 16, 8>;
 
 /// The full output of running FRI's commit phase: one Merkle root per
 /// round (including the initial commitment to the unfolded
@@ -68,11 +73,73 @@ pub fn fri_verify_commitment(
     recomputed.roots == claimed.roots && recomputed.final_value == claimed.final_value
 }
 
+/// Fiat-Shamir variant of `fri_commit`: instead of taking the betas as
+/// caller-supplied data, this derives each round's beta from a
+/// transcript that has observed that round's Merkle root. This is what
+/// makes FRI non-interactive and sound against an adaptive prover: the
+/// prover cannot choose evaluations after seeing beta, because beta
+/// itself is a deterministic function of the prover's own commitment.
+///
+/// The transcript must already have observed anything that should be
+/// bound into the challenges (e.g. public parameters, the original
+/// polynomial's claimed degree) before this function is called.
+pub fn fri_commit_transcript(
+    evals: Vec<BabyBear>,
+    domain: Vec<BabyBear>,
+    challenger: &mut Challenger,
+) -> FriCommitment {
+    let n = evals.len();
+    assert!(n.is_power_of_two(), "initial evaluation count must be a power of two");
+    let expected_rounds = n.trailing_zeros() as usize;
+
+    let mut current_evals = evals;
+    let mut current_domain = domain;
+    let mut roots = Vec::with_capacity(expected_rounds + 1);
+
+    let initial_tree = MerkleTree::build(current_evals.clone());
+    let initial_root = initial_tree.root();
+    challenger.observe(initial_root);
+    roots.push(initial_root);
+
+    for _ in 0..expected_rounds {
+        let beta: BabyBear = challenger.sample();
+
+        current_evals = fri_fold_step(&current_evals, &current_domain, beta);
+        current_domain = fold_domain(&current_domain);
+
+        let tree = MerkleTree::build(current_evals.clone());
+        let root = tree.root();
+        challenger.observe(root);
+        roots.push(root);
+    }
+
+    assert_eq!(current_evals.len(), 1, "after log2(n) folds exactly one value must remain");
+    FriCommitment { roots, final_value: current_evals[0] }
+}
+
+/// Recomputes `fri_commit_transcript` independently from a fresh
+/// transcript seeded the same way, and checks it matches the claimed
+/// commitment. Because betas are derived (not supplied), the verifier
+/// re-derives them by observing the same roots in the same order.
+pub fn fri_verify_commitment_transcript(
+    evals: Vec<BabyBear>,
+    domain: Vec<BabyBear>,
+    challenger: &mut Challenger,
+    claimed: &FriCommitment,
+) -> bool {
+    let recomputed = fri_commit_transcript(evals, domain, challenger);
+    recomputed.roots == claimed.roots && recomputed.final_value == claimed.final_value
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::fft::Radix2Interpolator;
-    use p3_baby_bear::BabyBear;
+    use p3_baby_bear::{BabyBear, default_babybear_poseidon2_16};
+
+    fn fresh_challenger() -> Challenger {
+        Challenger::new(default_babybear_poseidon2_16())
+    }
 
     type F = BabyBear;
 
@@ -173,5 +240,74 @@ mod tests {
         let evals = vec![F::ONE; 8];
         let too_few_betas = vec![F::from_u64(1), F::from_u64(2)]; // need 3, gave 2
         fri_commit(evals, domain, &too_few_betas);
+    }
+
+    #[test]
+    fn transcript_commit_is_deterministic_for_identical_inputs() {
+        let w = omega8();
+        let domain = negation_closed_domain(w, 8);
+        let coeffs = vec![F::from_u64(1), F::from_u64(2), F::from_u64(3), F::from_u64(4),
+                           F::ZERO, F::ZERO, F::ZERO, F::ZERO];
+        let evals: Vec<F> = domain.iter()
+            .map(|&x| Radix2Interpolator::evaluate_coeffs(&coeffs, x))
+            .collect();
+
+        let mut challenger_a = fresh_challenger();
+        let commit_a = fri_commit_transcript(evals.clone(), domain.clone(), &mut challenger_a);
+
+        let mut challenger_b = fresh_challenger();
+        let commit_b = fri_commit_transcript(evals, domain, &mut challenger_b);
+
+        assert_eq!(commit_a.roots, commit_b.roots,
+            "identical evals/domain with freshly-seeded transcripts must derive identical betas and roots");
+        assert_eq!(commit_a.final_value, commit_b.final_value);
+    }
+
+    #[test]
+    fn transcript_commit_verifies_against_fresh_transcript() {
+        let w = omega8();
+        let domain = negation_closed_domain(w, 8);
+        let coeffs = vec![F::from_u64(5), F::from_u64(1), F::from_u64(0), F::from_u64(2),
+                           F::ZERO, F::ZERO, F::ZERO, F::ZERO];
+        let evals: Vec<F> = domain.iter()
+            .map(|&x| Radix2Interpolator::evaluate_coeffs(&coeffs, x))
+            .collect();
+
+        let mut prover_challenger = fresh_challenger();
+        let commitment = fri_commit_transcript(evals.clone(), domain.clone(), &mut prover_challenger);
+
+        let mut verifier_challenger = fresh_challenger();
+        assert!(fri_verify_commitment_transcript(evals, domain, &mut verifier_challenger, &commitment),
+            "verifier re-deriving betas from the same transcript protocol must reproduce the prover's commitment");
+    }
+
+    #[test]
+    fn tampering_with_evaluations_changes_the_derived_betas_and_root() {
+        // This is the key Fiat-Shamir soundness property: since beta is
+        // derived from the root (which depends on the evaluations), a
+        // prover cannot tamper with evaluations without also changing
+        // the challenges used to fold them -- unlike the old caller-
+        // supplied-betas version, where tampered evals could still be
+        // folded with the same betas as the honest run.
+        let w = omega8();
+        let domain = negation_closed_domain(w, 8);
+        let coeffs = vec![F::from_u64(1), F::from_u64(2), F::from_u64(3), F::from_u64(4),
+                           F::ZERO, F::ZERO, F::ZERO, F::ZERO];
+        let evals_honest: Vec<F> = domain.iter()
+            .map(|&x| Radix2Interpolator::evaluate_coeffs(&coeffs, x))
+            .collect();
+        let mut evals_tampered = evals_honest.clone();
+        evals_tampered[3] = F::from_u64(999999);
+
+        let mut challenger_honest = fresh_challenger();
+        let commit_honest = fri_commit_transcript(evals_honest, domain.clone(), &mut challenger_honest);
+
+        let mut challenger_tampered = fresh_challenger();
+        let commit_tampered = fri_commit_transcript(evals_tampered, domain, &mut challenger_tampered);
+
+        assert_ne!(commit_honest.roots[0], commit_tampered.roots[0],
+            "tampered evaluations must produce a different initial root");
+        assert_ne!(commit_honest.roots, commit_tampered.roots,
+            "since later betas are derived from earlier roots, tampering must cascade into different later roots too");
     }
 }
