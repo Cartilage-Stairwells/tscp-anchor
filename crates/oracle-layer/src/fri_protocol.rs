@@ -3,7 +3,7 @@ use p3_field::{Field, PrimeCharacteristicRing, PrimeField64};
 use p3_baby_bear::{BabyBear, Poseidon2BabyBear};
 use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
 use crate::fri::{fri_fold_step, fold_domain};
-use crate::merkle::MerkleTree;
+use crate::merkle::{MerkleTree, Commitment};
 
 /// The Fiat-Shamir transcript type used to derive FRI challenges.
 /// Matches the pattern already proven out in prover-server.
@@ -14,7 +14,7 @@ pub type Challenger = DuplexChallenger<BabyBear, Poseidon2BabyBear<16>, 16, 8>;
 /// evaluations), and the final constant value the polynomial folds
 /// down to.
 pub struct FriCommitment {
-    pub roots: Vec<BabyBear>,       // roots[0] = initial commitment, roots.last() = final round's tree (single leaf)
+    pub roots: Vec<Commitment>,       // roots[0] = initial commitment, roots.last() = final round's tree (single leaf)
     pub final_value: BabyBear,
 }
 
@@ -98,7 +98,7 @@ pub fn fri_commit_transcript(
 
     let initial_tree = MerkleTree::build(current_evals.clone());
     let initial_root = initial_tree.root();
-    challenger.observe(initial_root);
+    challenger.observe(initial_root.clone());
     roots.push(initial_root);
 
     for _ in 0..expected_rounds {
@@ -109,7 +109,7 @@ pub fn fri_commit_transcript(
 
         let tree = MerkleTree::build(current_evals.clone());
         let root = tree.root();
-        challenger.observe(root);
+        challenger.observe(root.clone());
         roots.push(root);
     }
 
