@@ -3,7 +3,7 @@
 use p3_field::{Field, PrimeCharacteristicRing, PrimeField32, PrimeField64};
 use p3_baby_bear::BabyBear;
 use p3_challenger::{CanObserve, CanSample};
-use crate::merkle::{MerkleTree, MerkleOpening, verify_opening};
+use crate::merkle::{MerkleTree, MerkleOpening, verify_opening, Commitment};
 use crate::fri::{fri_fold_step, fold_domain};
 use crate::fri_protocol::{Challenger, FriCommitment};
 
@@ -39,19 +39,21 @@ pub fn fri_query_round(
 /// at x and -x, AND that all three openings are valid against their
 /// respective claimed roots.
 pub fn verify_fri_query_round(
-    root_current: BabyBear,
-    root_next: BabyBear,
+    root_current: &Commitment,
+    root_next: &Commitment,
+    current_leaf_count: usize,
+    next_leaf_count: usize,
     x: BabyBear,
     beta: BabyBear,
     query: &FriQueryRound,
 ) -> bool {
-    if !verify_opening(root_current, &query.opening_x) {
+    if !verify_opening(root_current, current_leaf_count, &query.opening_x) {
         return false;
     }
-    if !verify_opening(root_current, &query.opening_neg_x) {
+    if !verify_opening(root_current, current_leaf_count, &query.opening_neg_x) {
         return false;
     }
-    if !verify_opening(root_next, &query.opening_folded) {
+    if !verify_opening(root_next, next_leaf_count, &query.opening_folded) {
         return false;
     }
 
@@ -103,7 +105,7 @@ pub fn fri_prove(
 
     let initial_tree = MerkleTree::build(current_evals.clone());
     let initial_root = initial_tree.root();
-    challenger.observe(initial_root);
+    challenger.observe(initial_root.clone());
     roots.push(initial_root);
     trees.push(initial_tree);
 
@@ -114,7 +116,7 @@ pub fn fri_prove(
 
         let tree = MerkleTree::build(current_evals.clone());
         let root = tree.root();
-        challenger.observe(root);
+        challenger.observe(root.clone());
         roots.push(root);
         trees.push(tree);
     }
@@ -164,12 +166,12 @@ pub fn fri_verify(
 
     // Re-derive betas the same way the prover did, observing the same
     // roots in the same order.
-    challenger.observe(proof.commitment.roots[0]);
+    challenger.observe(proof.commitment.roots[0].clone());
     let mut betas = Vec::with_capacity(expected_rounds);
     for r in 0..expected_rounds {
         let beta: BabyBear = challenger.sample();
         betas.push(beta);
-        challenger.observe(proof.commitment.roots[r + 1]);
+        challenger.observe(proof.commitment.roots[r + 1].clone());
     }
 
     // Re-derive query indices the same way.
@@ -199,14 +201,16 @@ pub fn fri_verify(
         }
 
         for r in 0..expected_rounds {
-            let root_current = proof.commitment.roots[r];
-            let root_next = proof.commitment.roots[r + 1];
+            let root_current = &proof.commitment.roots[r];
+            let root_next = &proof.commitment.roots[r + 1];
+            let current_leaf_count = domains[r].len();
+            let next_leaf_count = domains[r + 1].len();
             let half = domains[r].len() / 2;
             let x = domains[r][index % half];
             let beta = betas[r];
             let query = &proof.query_proofs[q][r];
 
-            if !verify_fri_query_round(root_current, root_next, x, beta, query) {
+            if !verify_fri_query_round(root_current, root_next, current_leaf_count, next_leaf_count, x, beta, query) {
                 return false;
             }
         }
@@ -255,7 +259,7 @@ mod tests {
 
         let current_tree = MerkleTree::build(evals);
         let next_tree = MerkleTree::build(folded);
-        (current_tree, next_tree, domain, beta)
+        (current_tree, next_tree, domain, beta) // current has 8 leaves, next has 4
     }
 
     #[test]
@@ -267,7 +271,7 @@ mod tests {
         for idx in 0..4 {
             let query = fri_query_round(&current_tree, &next_tree, idx);
             let x = domain[idx];
-            assert!(verify_fri_query_round(root_current, root_next, x, beta, &query),
+            assert!(verify_fri_query_round(&root_current, &root_next, 8, 4, x, beta, &query),
                 "honest query at index {idx} must verify");
         }
     }
@@ -281,7 +285,7 @@ mod tests {
         let mut query = fri_query_round(&current_tree, &next_tree, 0);
         query.opening_folded.leaf_value = F::from_u64(999999);
         let x = domain[0];
-        assert!(!verify_fri_query_round(root_current, root_next, x, beta, &query),
+        assert!(!verify_fri_query_round(&root_current, &root_next, 8, 4, x, beta, &query),
             "a tampered folded value must fail verification even if its Merkle path is internally consistent with a different root");
     }
 
@@ -294,7 +298,7 @@ mod tests {
         let query = fri_query_round(&current_tree, &next_tree, 0);
         let x = domain[0];
         let wrong_beta = beta + F::ONE;
-        assert!(!verify_fri_query_round(root_current, root_next, x, wrong_beta, &query),
+        assert!(!verify_fri_query_round(&root_current, &root_next, 8, 4, x, wrong_beta, &query),
             "verifying with the wrong beta must fail, since the fold relation no longer holds");
     }
 
@@ -307,7 +311,7 @@ mod tests {
         let mut query = fri_query_round(&current_tree, &next_tree, 0);
         query.opening_neg_x = current_tree.open(2); // wrong pairing
         let x = domain[0];
-        assert!(!verify_fri_query_round(root_current, root_next, x, beta, &query),
+        assert!(!verify_fri_query_round(&root_current, &root_next, 8, 4, x, beta, &query),
             "mismatched x/-x pairing must fail the fold relation check");
     }
 
@@ -315,11 +319,11 @@ mod tests {
     fn forged_opening_with_wrong_root_fails_even_with_correct_arithmetic() {
         let (current_tree, next_tree, _domain, beta) = setup_one_round();
         let root_next = next_tree.root();
-        let bogus_root_current = F::from_u64(123456789);
+        let bogus_root_current = MerkleTree::build(vec![F::from_u64(1); 8]).root();
 
         let query = fri_query_round(&current_tree, &next_tree, 0);
         let x = F::from_u64(1);
-        assert!(!verify_fri_query_round(bogus_root_current, root_next, x, beta, &query),
+        assert!(!verify_fri_query_round(&bogus_root_current, &root_next, 8, 4, x, beta, &query),
             "verification must fail immediately if the current root doesn't match");
     }
 

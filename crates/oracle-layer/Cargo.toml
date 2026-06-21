@@ -25,3 +25,4 @@ p3-fri.workspace = true
 p3-dft.workspace = true
 p3-util.workspace = true
 itertools = "0.12"
+batch-merkle = { path = "../batch-merkle" }
