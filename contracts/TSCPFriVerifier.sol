@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-
-contract TSCPFriVerifier {
-    uint256 public constant FRI_BLOWUP = 2;
+                                          contract TSCPFriVerifier {                    uint256 public constant FRI_BLOWUP = 2;
     uint256 public constant NUM_FRI_QUERIES = 80;
     uint256 public constant PROOF_OF_WORK_BITS = 16;
     uint256 public constant BABYBEAR_PRIME = 0x78000001;
