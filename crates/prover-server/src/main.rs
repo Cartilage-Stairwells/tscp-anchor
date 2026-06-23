@@ -86,17 +86,10 @@ fn prover_round(oracle: &impl MleOracle<F>, prefix: &[F]) -> [F; 2] {
 /// the challenge in each round is re-derived from a transcript seeded
 /// identically to the prover's.
 ///
-/// IMPORTANT LIMITATION: this checks that the chain of round messages
-/// is internally consistent with the initial claimed_sum -- it does
-/// NOT check that the final round's claim matches a real evaluation of
-/// the actual committed oracle at the final challenge point. That
-/// final check requires opening a multilinear polynomial commitment at
-/// an arbitrary (non-hypercube-vertex) point, which needs a real
-/// multilinear PCS. Plonky3 0.6.1 defines a MultilinearPcs trait for
-/// this but ships no implementation of it -- so a malicious prover can
-/// still lie in the very last round and this verifier will not catch
-/// it. Without that final binding check, this is a real but
-/// incomplete soundness guarantee, not a full one.
+/// Full soundness: verifies round-to-round consistency AND checks the
+/// final running claim against the actual MLE oracle eval at the full
+/// challenge vector. Closed in commit 6212db90 -- a malicious prover
+/// cannot lie on the last round.
 #[allow(dead_code)]
 fn sumcheck_verify(
     proof: &SumcheckProof,
