@@ -1,6 +1,6 @@
 use prover_server::proof_envelope::{ProofEnvelope, ProofVersion};
 
-#
+#[test]
 fn test_061_envelope_opens_on_061() {
     let env = ProofEnvelope::seal_061(294373, vec![1,2,3]);
     assert_eq!(env.version, ProofVersion::V0_6_1);
@@ -8,7 +8,7 @@ fn test_061_envelope_opens_on_061() {
     assert!(env.verify_golden().is_ok());
 }
 
-#
+#[test]
 fn test_062_rejected_by_061_verifier() {
     // Simulate future 0.6.2 envelope
     let env = ProofEnvelope {
