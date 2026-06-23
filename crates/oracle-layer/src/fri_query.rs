@@ -328,6 +328,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(unused_assignments)]
     fn full_protocol_honest_proof_verifies() {
         let w = omega8();
         let mut domain = negation_closed_domain(w, 8);
