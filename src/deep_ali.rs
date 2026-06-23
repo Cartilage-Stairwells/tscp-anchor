@@ -155,6 +155,7 @@ impl<F: Field> TraceEvaluator<F> {
 pub trait DeepAliVerifier<F: Field, S: PolynomialSpace, C: CanObserve<F> + CanSample<F>> {
     fn verify_deep_batch(
         &self,
+        trace: &p3_matrix::dense::RowMajorMatrix<F>,
         trace_commitment: &S::Commitment,
         queries: &[DeepResponse<F>],
         links: &[AlgebraicLink<F>],
@@ -290,6 +291,7 @@ where
 {
     fn verify_deep_batch(
         &self,
+        trace: &RowMajorMatrix<BabyBear>,
         _trace_commitment: &<MerkleTreeMmcs<MMCS> as p3_commit::PolynomialSpace>::Commitment,
         queries: &[DeepResponse<BabyBear>],
         links: &[AlgebraicLink<BabyBear>],
@@ -310,10 +312,9 @@ where
         }
 
         for link in links {
-            let constraint_eval = self.evaluate_air_constraint(
-                &RowMajorMatrix::new(vec![BabyBear::ZERO; self.num_columns], self.num_columns),
-                link,
-            )?;
+            // Use the real trace — not a zeroed dummy — so constraint
+            // evaluation is actually meaningful.
+            let constraint_eval = self.evaluate_air_constraint(trace, link)?;
 
             if constraint_eval != BabyBear::ZERO {
                 return Err(DeepAliError::ConstraintViolation {
