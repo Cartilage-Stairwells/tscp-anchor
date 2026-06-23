@@ -1,0 +1,8 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.24s
+     Running tests/fri_0_6_1_correctness.rs (target/debug/deps/fri_0_6_1_correctness-bcc318ceb6b52f90)
+
+running 1 test
+test fri_prove_does_not_panic_and_returns_proof ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
