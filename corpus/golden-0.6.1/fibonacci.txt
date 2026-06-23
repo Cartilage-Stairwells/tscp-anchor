@@ -1,0 +1,9 @@
+=== Fibonacci AIR Full Sumcheck Demo - Plonky3 0.6.1 ===
+col0: [1, 2, 5, 13, 34, 89, 233, 610]
+Initial claim (hypercube sum): 12159
+Round 0: g=[3360,8799] r=3 new_claim=19677
+Round 1: g=[2506,17171] r=4 new_claim=61166
+Round 2: g=[1273,59893] r=5 new_claim=294373
+Terminal oracle eval: 294373
+Final claim: 294373
+✅ Terminal check passed.
