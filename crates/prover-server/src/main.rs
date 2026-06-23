@@ -97,8 +97,13 @@ fn prover_round(oracle: &impl MleOracle<F>, prefix: &[F]) -> [F; 2] {
 /// still lie in the very last round and this verifier will not catch
 /// it. Without that final binding check, this is a real but
 /// incomplete soundness guarantee, not a full one.
-fn sumcheck_verify(proof: &SumcheckProof, challenger: &mut Challenger) -> bool {
+fn sumcheck_verify(
+    proof: &SumcheckProof,
+    challenger: &mut Challenger,
+    oracle: &impl oracle_layer::oracle::MleOracle<F>,
+) -> bool {
     let mut running_claim = proof.claimed_sum;
+    let mut challenges: Vec<F> = Vec::with_capacity(proof.rounds.len());
 
     for &(g0, g1) in &proof.rounds {
         if g0 + g1 != running_claim {
@@ -110,9 +115,14 @@ fn sumcheck_verify(proof: &SumcheckProof, challenger: &mut Challenger) -> bool {
         let r: F = challenger.sample();
 
         running_claim = g0 + r * (g1 - g0);
+        challenges.push(r);
     }
 
-    true
+    // Final binding check: the last running claim must equal the oracle
+    // evaluated at the full challenge vector. This closes the soundness
+    // gap — a malicious prover can no longer lie on the last round.
+    let oracle_eval = oracle.eval(&challenges);
+    running_claim == oracle_eval
 }
 
 async fn prove_handler(Json(req): Json<ProofRequest>) -> impl IntoResponse {
@@ -208,9 +218,19 @@ mod tests {
         SumcheckProof { claimed_sum, rounds }
     }
 
+    fn make_oracle(col0: Vec<u32>, col1: Vec<u32>, alpha: u32) -> oracle_layer::folded::FoldedOracle<F> {
+        let n_vars = col0.len().ilog2() as usize;
+        let col0: Vec<F> = col0.iter().map(|&v| F::from_u32(v)).collect();
+        let col1: Vec<F> = col1.iter().map(|&v| F::from_u32(v)).collect();
+        oracle_layer::folded::FoldedOracleBuilder::new(vec![col0, col1], n_vars)
+            .absorb_challenge(F::from_u32(alpha))
+            .build()
+    }
+
     #[test]
     fn honest_proof_verifies() {
         let proof = run_prover(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
+        let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
         let mut verifier_challenger = fresh_challenger();
         for &v in &[F::from_u32(1), F::from_u32(2), F::from_u32(3), F::from_u32(4)] {
             verifier_challenger.observe(v);
@@ -218,7 +238,7 @@ mod tests {
         for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
             verifier_challenger.observe(v);
         }
-        assert!(sumcheck_verify(&proof, &mut verifier_challenger),
+        assert!(sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
             "an honestly generated sumcheck proof must verify against a freshly-seeded transcript");
     }
 
@@ -234,7 +254,8 @@ mod tests {
         for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
             verifier_challenger.observe(v);
         }
-        assert!(!sumcheck_verify(&proof, &mut verifier_challenger),
+        let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
+        assert!(!sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
             "a tampered round message must break the g(0)+g(1) == running_claim invariant and fail");
     }
 
@@ -250,7 +271,8 @@ mod tests {
         for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
             verifier_challenger.observe(v);
         }
-        assert!(!sumcheck_verify(&proof, &mut verifier_challenger),
+        let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
+        assert!(!sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
             "a claimed_sum that doesn't match round 0's g(0)+g(1) must fail immediately");
     }
 
@@ -269,7 +291,8 @@ mod tests {
         for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
             wrong_challenger.observe(v);
         }
-        assert!(!sumcheck_verify(&proof, &mut wrong_challenger),
+        let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
+        assert!(!sumcheck_verify(&proof, &mut wrong_challenger, &oracle),
             "verifying with a transcript seeded from different public inputs must fail");
     }
 }
