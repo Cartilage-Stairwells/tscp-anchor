@@ -97,6 +97,7 @@ fn prover_round(oracle: &impl MleOracle<F>, prefix: &[F]) -> [F; 2] {
 /// still lie in the very last round and this verifier will not catch
 /// it. Without that final binding check, this is a real but
 /// incomplete soundness guarantee, not a full one.
+#[allow(dead_code)]
 fn sumcheck_verify(
     proof: &SumcheckProof,
     challenger: &mut Challenger,
