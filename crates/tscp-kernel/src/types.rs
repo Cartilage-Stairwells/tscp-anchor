@@ -1,38 +1,14 @@
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 pub type StateHash = [u8; 32];
-pub type EventId = [u8; 32];
-pub type PayloadHash = [u8; 32];
+pub type EventHash = [u8; 32];
+pub type TransitionHash = [u8; 32];
+pub type EventId = [u8; 16];
+pub type RulesetVersion = u16;
+pub type KernelVersion = RulesetVersion;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RulesetVersion(pub u16);
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ActorId(pub String);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum TransitionId {
-    ClaimCreated = 1,
-    ClaimVerified = 2,
-}
-
-#[derive(Debug, Error)]
-pub enum TransitionError {
-    #[error("Invalid parent state: expected {expected:?}, got {actual:?}")]
-    InvalidParentState { expected: StateHash, actual: StateHash },
-    #[error("Unsupported transition: {0:?}")]
-    UnsupportedTransition(TransitionId),
-    #[error("Serialization error: {0}")]
-    Serialization(String),
-    #[error("State mutation violated determinism")]
-    NonDeterministic,
-}
-
-pub const PROTOCOL_VERSION: u16 = 1;
 pub const GENESIS_STATE: StateHash = [0u8; 32];
 
-// === TransitionReceipt (frozen protocol boundary) ===
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TransitionReceipt {
     pub parent_state_hash: StateHash,
@@ -42,8 +18,6 @@ pub struct TransitionReceipt {
 }
 
 impl TransitionReceipt {
-    /// Domain-separated hash of the receipt.
-    /// H("TSCP_TRANSITION_RECEIPT_V1", kernel_version, parent, event, child)
     pub fn hash(&self) -> TransitionHash {
         use blake3::Hasher;
         let mut hasher = Hasher::new();
@@ -52,9 +26,18 @@ impl TransitionReceipt {
         hasher.update(&self.parent_state_hash);
         hasher.update(&self.event_hash);
         hasher.update(&self.child_state_hash);
-        let hash = hasher.finalize();
         let mut out = [0u8; 32];
-        out.copy_from_slice(hash.as_bytes());
+        out.copy_from_slice(hasher.finalize().as_bytes());
         out
     }
+}
+
+#[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
+pub enum TransitionError {
+    #[error("Invalid parent state")]
+    InvalidParent,
+    #[error("Precondition failed: {0}")]
+    PreconditionFailed(String),
+    #[error("Invariant violation: {0}")]
+    InvariantViolation(String),
 }
