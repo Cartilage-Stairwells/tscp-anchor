@@ -92,3 +92,51 @@ fn test_invalid_parent_rejected() {
     let result = engine.apply(&bad_event);
     assert!(result.is_err());
 }
+
+#[test]
+fn test_child_mutation_rejected() {
+    // Same parent + event + kernel must produce consistent child.
+    // If a broken transition produces a different child, the receipt hash must differ.
+    // (Implementation note: this test will be strengthened once a concrete
+    // transition function that can be deliberately broken is available.)
+    let parent = [1u8; 32];
+    let event = create_test_event(parent);
+    let kernel_version = 1u16;
+
+    let receipt1 = build_receipt(parent, event.clone(), kernel_version);
+    // Simulate a faulty child (different state hash)
+    let mut receipt2 = receipt1.clone();
+    receipt2.child_state_hash = [99u8; 32];
+
+    assert_ne!(receipt1.hash(), receipt2.hash(),
+        "Child mutation must change the receipt hash");
+}
+
+#[test]
+fn test_domain_separation() {
+    // Receipt hash must not collide with raw state or event hashes.
+    let parent = [42u8; 32];
+    let event = create_test_event(parent);
+    let kernel_version = 1u16;
+
+    let receipt = build_receipt(parent, event.clone(), kernel_version);
+    let receipt_hash = receipt.hash();
+
+    // These should never be equal under the current domain separator
+    assert_ne!(receipt_hash, parent,
+        "Receipt hash must differ from raw parent state hash");
+    assert_ne!(receipt_hash, event.payload_hash,
+        "Receipt hash must differ from event payload hash");
+}
+
+// Helper (temporary until a proper builder is added to the test module)
+fn build_receipt(parent: StateHash, event: EventEnvelope, kernel_version: KernelVersion) -> TransitionReceipt {
+    // In a real implementation this would call the transition function.
+    // For now we construct a deterministic placeholder receipt.
+    TransitionReceipt {
+        parent_state_hash: parent,
+        event_hash: event.payload_hash, // placeholder – replace with real event hash when available
+        child_state_hash: [0u8; 32],    // placeholder
+        kernel_version,
+    }
+}
