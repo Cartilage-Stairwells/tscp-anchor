@@ -1511,6 +1511,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tscp-cli"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "serde_cbor",
+ "tscp-kernel",
+]
+
+[[package]]
 name = "tscp-kernel"
 version = "0.1.0"
 dependencies = [

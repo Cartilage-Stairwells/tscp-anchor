@@ -12,27 +12,39 @@ pub fn dispatch_event(
     state: &State,
     state_hash: StateHash,
     event: &EventEnvelope,
-    _context: &ExecutionContext,
-) -> Result<(State, StateHash), TransitionError> {
-    // Verify parent linkage
+    context: &ExecutionContext,
+) -> Result<(State, TransitionReceipt), TransitionError> {
     if event.parent_state_hash!= state_hash {
         return Err(TransitionError::InvalidParent);
     }
 
-    // Simple deterministic transition: increment counter, hash new state
     let mut new_state = state.clone();
     new_state.counter += 1;
 
-    let new_hash = {
+    let child_hash = {
         use blake3::Hasher;
-        let mut hasher = Hasher::new();
-        hasher.update(&state_hash);
-        hasher.update(&event.hash());
-        hasher.update(&new_state.counter.to_le_bytes());
+        let mut h = Hasher::new();
+        h.update(&state_hash);
+        h.update(&event.hash());
+        h.update(&new_state.counter.to_le_bytes());
         let mut out = [0u8; 32];
-        out.copy_from_slice(hasher.finalize().as_bytes());
+        out.copy_from_slice(h.finalize().as_bytes());
         out
     };
 
-    Ok((new_state, new_hash))
+    let kind = if new_state.counter % 2 == 1 {
+        TransitionKind::ClaimCreated
+    } else {
+        TransitionKind::ClaimVerified
+    };
+
+    let receipt = TransitionReceipt {
+        parent_state_hash: state_hash,
+        event_hash: event.hash(),
+        child_state_hash: child_hash,
+        kernel_version: context.ruleset_version,
+        kind,
+    };
+
+    Ok((new_state, receipt))
 }
