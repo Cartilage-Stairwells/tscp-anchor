@@ -1,0 +1,17 @@
+tag v0.1-artifact
+Tagger:     TSCP Operator <operator@localhost>
+TaggerDate: Tue Jun 23 19:48:13 2026 -0700
+
+TSCP artifact lifecycle verified
+
+commit b02f7e3185a56b593ffac0415771c35dc68a5d3d
+Author:     TSCP Operator <operator@localhost>
+AuthorDate: Tue Jun 23 19:48:04 2026 -0700
+Commit:     TSCP Operator <operator@localhost>
+CommitDate: Tue Jun 23 19:48:04 2026 -0700
+
+    feat(cli): deterministic artifact produce replay roundtrip
+
+ crates/tscp-cli/src/main.rs |  99 ++++++++++++++++++++++++++++++++++++++++----
+ events.cbor                 | Bin 0 -> 2143 bytes
+ 2 files changed, 90 insertions(+), 9 deletions(-)

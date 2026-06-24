@@ -1,0 +1,90 @@
+947f6b02c3f6403e31b4211470519f799a2b3de2 2026-06-23 20:09:30 -0700 docs: record TSCP technical fingerprint
+899a16828aefeb36a674954761e5945ec0cd4f67 2026-06-23 20:08:37 -0700 chore: add convergence observation log
+90162d51e752528a62b8a7a9874881a53f5dbd96 2026-06-23 20:07:57 -0700 chore: hash deterministic event artifact
+33f63c1145c749c3ac6151049c5da2bb0c59e074 2026-06-23 20:07:34 -0700 chore: archive artifact provenance record
+b02f7e3185a56b593ffac0415771c35dc68a5d3d 2026-06-23 19:48:04 -0700 feat(cli): deterministic artifact produce replay roundtrip
+fb9c9622bd6d51113bcd1c77733ac2bfa46e6833 2026-06-23 19:28:10 -0700 feat(kernel): wire receipts with kind, replay returns receipts, add tscp-cli
+019b662889efea32c0926741ac311b7487366b77 2026-06-23 19:21:39 -0700 feat(kernel): v0.1 deterministic kernel green — 4/4 tests, frozen receipt
+e372392958d63dcbb8a8e1fc08cac59241049409 2026-06-23 19:16:04 -0700 feat(kernel): freeze TransitionReceipt interface with derived hash and domain separation
+fc85e64adafc3d91d2d1ee80e3b6e0dee7d4236b 2026-06-23 19:11:39 -0700 fix(kernel): silence unused execution context
+501fd89c6a8937c52819d2d438f55fc087c0efd6 2026-06-23 19:09:24 -0700 feat(kernel): add deterministic transition engine
+c5cac02309886dd9e0630ffbad838fbb607d23e3 2026-06-23 17:43:31 -0700 docs: polish pass — TSCP context, acronym expansions, Security & Audit Status section
+702533e835942ecf0d5fa90615780bb78af5ecee 2026-06-23 17:07:42 -0700 docs: final README freeze — release integrity block, precise claim boundaries, build env
+5f9732cc21fc5074e156c0ae94c020833d67f0af 2026-06-23 16:49:32 -0700 chore: suppress unused_assignments lint in full_protocol_honest_proof_verifies
+879a9893935c80f4b71867ac4de96c5a3b9cf181 2026-06-23 16:41:00 -0700 docs: update sumcheck_verify comment to reflect closed final-binding gap
+26847b932f30ae56ea2f6de708033f82779f69b2 2026-06-23 16:21:39 -0700 chore: archive 0.6.2 preflight rollback manifests
+041fe120ad76116d4880821d1a295203fd2cacc6 2026-06-23 16:02:38 -0700 chore: hash golden corpus artifacts
+c49407ec82bd3d35d741424b3ff3319f818575d3 2026-06-23 15:52:47 -0700 chore: revert to published 0.6.1 — 0.6.2 not yet on crates.io
+579e0f0c4e50dbfb2ce1e0433d800026b4dc9646 2026-06-23 15:51:16 -0700 fix(phase-B): correct test attributes for G2.5
+789a17ec5ad9974ba1ca4ea4670af793b49bd278 2026-06-23 15:48:40 -0700 feat(phase-B): versioned ProofEnvelope + G2.5 mixed-version rejection
+0327a3023240679368bfb795d83e52a08f75be93 2026-06-23 15:46:49 -0700 chore(phase-A): archive 0.6.1 golden corpus and validation artifacts
+6299c42cf937977186736e4f0e1b0c0daa91b3ba 2026-06-23 15:29:22 -0700 chore: upgrade Plonky3 to 0.6.1 - validated (4.59ms/16.2ms/61.2ms)
+a2d62459ae89b0d897a0cd42079ab993068873ea 2026-06-23 13:53:41 -0700 chore: upgrade oracle-layer to Plonky3 0.6.1 + cleanups
+bd744c964086aefc9592a3d556ace48b6e02c61c 2026-06-23 12:25:30 -0700 Wire OWSL daemon: real kernel entropy sampling, atomic writes, cold-start bootstrap
+da1614df3bb16f7328b0b7047436a24167e7990a 2026-06-23 12:08:09 -0700 Fix DEEP-ALI soundness: pass real trace to verify_deep_batch, close dummy trace bug
+6212db903e35309ac083313b422982a4b18383c0 2026-06-23 12:04:24 -0700 Close sumcheck final-binding gap: add oracle eval check to sumcheck_verify
+a17e3fca9efdddb05fb9f7e42bcc26eb039417d3 2026-06-21 18:33:46 -0700 feat(golf): Solidity verifier test suite & deployment pipeline v1.6.1-GOLF
+3d3d7d827577bca9d25761421d52784d0b068f12 2026-06-21 13:53:46 -0700 feat(foxtrot): end-to-end integration test harness v1.6.1-FOXTROT
+70676a9072c217f19f4f430a4a4f10a87e939415 2026-06-21 13:04:16 -0700 feat(echo): on-chain FRI verifier scaffold v1.6.1-ECHO
+647638df626895beace0530de42a84a17ccc1b97 2026-06-21 12:36:04 -0700 feat(delta): FRI commitment bridge scaffold v1.6.1-DELTA
+1aab1ca168572c92e61dc1446e7b071ba43913d6 2026-06-21 12:20:32 -0700 feat(deep-ali): Charlie-DA v1.6.1-DA-GATE5
+e1c262ff94df456cf668e8d9fb8ce117a5c88bc7 2026-06-20 18:53:29 -0700 feat: sumcheck round-consistency verifier for prover-server, with explicit final-binding gap documented
+b8ccf6af255a5fcc136dc894671827f55d2a411b 2026-06-20 18:34:49 -0700 feat: replace hand-rolled Merkle hash with real batch-merkle Mmcs; fix critical non-determinism bug
+642b0a00eccffe12e44dedb44d40cfb826a0d711 2026-06-20 17:42:13 -0700 feat: full FRI prove/verify protocol with Fiat-Shamir query sampling
+c7db69154d0d29ed0efdb977ddb9fc273331d72c 2026-06-20 16:41:19 -0700 feat: Fiat-Shamir transcript wiring for FRI commit phase
+ac04896aed00ed829fdc67306c7c7f1f4bedef4e 2026-06-20 12:35:35 -0700 feat: real Poseidon2 hash in merkle.rs, concrete BabyBear FRI types, add commitment crate
+1badf1e5c860fb4479fcdaf814dafb5b3884eee2 2026-06-19 15:13:39 -0700 chore: remove orphan stubs from workspace root (oracle-layer/, prover-server/)
+1d4e28502be88da05db973e2628dd18b72cfed5c 2026-06-19 15:10:12 -0700 feat: FRI pipeline, batch-merkle, prover-server — full workspace green
+9a2f683d28300efa5872a0ea5f59419af2e9b36d 2026-06-19 11:32:15 -0700 Fix Plonky3 0.6.1 migration: restore Field imports, exp_u64/two_adic_generator, correct Mmcs arity (2,8), OsRng->StdRng
+4ad02defa97bfa3ce7cac59b8911c2c9e8614b99 2026-06-19 07:14:24 -0700 chore: remove build artifacts from git index
+72d23bb9adc9ba320930bd424706b914ab09789f 2026-06-19 07:12:42 -0700 feat: restore prover-server with real Fiat-Shamir sumcheck, Plonky3 0.6.1 API fixes
+da67736e274444861601ad89a34f1508f4397142 2026-06-19 07:02:02 -0700 feat: prover-server scaffold — axum 0.8, tokio, /prove/sumcheck stub, Dockerfile 1.95
+381fdbe14c5e622e2f0ece2571af616d0d6a4724 2026-06-18 01:53:20 -0700 fix: migrate oracle-layer to Plonky3 0.6.x field API
+f33856aedc477c4d50e2b83e9f692f1e7299e083 2026-06-15 01:56:12 -0700 deploy: systemd service, Dockerfile, Hetzner setup script for prover-server
+66f979548101bf0a2a279a89ee75ed87b2245a72 2026-06-15 01:09:20 -0700 feat: end-to-end sumcheck proving round — terminal check passes on BabyBear
+5431851144596d9a7d885ab5d9c843a9b40dbb0a 2026-06-15 00:58:32 -0700 fix: add PrimeCharacteristicRing import; fix fibonacci commutation test
+625cce1750236125901063fd50cd902df55277f4 2026-06-15 00:57:00 -0700 fix: fibonacci example uses BabyBear::new(); exclude target/ from git
+196a814974fa54f416e1109e89d7a83916298ece 2026-06-15 00:54:51 -0700 feat: oracle-layer crate — MleOracle, FoldedOracle, sumcheck, Fibonacci example
+52d3e79844b0ce69e0c7f8cb591f7835909545e3 2026-06-14 23:23:55 -0700 feat: Goldilocks ZMod field; discharge S_boolean via booleanity hypothesis
+3a9578bf919ea98b88c680d033a6c161fcf20a53 2026-06-14 23:19:24 -0700 proof: annotate join_is_2cell as closed
+30baffdcda57d7e620364e26f714741ef5708ffa 2026-06-14 23:15:03 -0700 fix: replace placeholder with actual kernel content v1.1.0
+115178db807bbb1c19e752b622488fd858207ad3 2026-06-14 23:12:30 -0700 feat: TSCP-AIR-EXEC-0001 v1.1.0 — scope fix verifier_check(N), cryptographic fixes applied
+5d189fba9a4b41cff51788ba6840694118967e77 2026-04-27 07:26:01 -0700 feat: add audit manifest over anchor receipts
+5120d96cb7e8af86a0147c5db846d483a4ae9645 2026-04-27 07:10:37 -0700 audit: record sepolia rpc verification
+32b83378d71c6e2dae2c6d07baf3cdf010df2d8e 2026-04-27 07:07:48 -0700 audit: record clean offline verification
+46b74dcea5a2d7da4fabc661a9b8acc647a85aea 2026-04-27 07:06:54 -0700 fix: require clean tree for audit receipts
+1ac448d8090ff9b61956f00cc4da358e320ada47 2026-04-27 07:02:47 -0700 audit: record offline receipt verification
+a1c25745bfa61dcd4c105913f532800e0a361426 2026-04-27 07:01:45 -0700 feat: add TSCP audit receipt layer
+2b23e9fbc9cbfa420814789301a7eb24ec6aa306 2026-04-27 06:56:17 -0700 chore: add sepolia rpc receipt verification script
+e8eb100ff04eb86bb42ac81a00db3abda09619e0 2026-04-27 06:49:15 -0700 ci: use install without optional deps for receipt verification
+f7a32907f457eb702f9f4c8e0536831834480511 2026-04-27 06:46:45 -0700 ci: omit optional platform dependencies
+dc6a7502b831650868b203dcfbfad52038819f77 2026-04-27 06:44:44 -0700 ci: use node 22 for receipt verification
+0426fc9dcf3724fd3049784730fc501c03f4fd43 2026-04-27 06:42:10 -0700 ci: verify canonical anchor receipts
+e811f63a4ec732bdab469be7e51ffb5f69b935f7 2026-04-27 06:33:24 -0700 chore: add offline receipt verification script
+bd78f852f543c250eb33a63726d7bb3d279e8f29 2026-04-27 06:28:08 -0700 feat: add canonical TSCP anchor receipt normalization and verification
+87065204f5deeb6998d578afadd0400e8cb33eef 2026-04-27 04:31:25 -0700 fix: embed Sepolia proof into ratified artifact
+9117e3b40f5d1d1280d5a78e17d7d89457a4e33f 2026-04-27 04:29:46 -0700 fix: route scanner through Sepolia anchor and persist embedded proof
+04517ba2504d0485dafa57694b17a343cd505418 2026-04-27 04:25:34 -0700 feat: embed anchor proofs and skip already anchored artifacts
+82a27029139cee6b7629dfceca9047140435e4bf 2026-04-27 04:16:00 -0700 chore: ignore local chain and environment files
+d374f0eaa4d41d4adc0cfbd51b802f666474f1c1 2026-04-27 04:13:41 -0700 chore: remove obsolete Hardhat anchor workflow
+eb2fc1945647b768646a43903a533df09dfa4014 2026-04-27 04:08:44 -0700 fix: use Sepolia anchor workflow without Hardhat compile
+6c1d92e1d3d72186b22ff8a0309cba783685f69e 2026-04-27 04:04:42 -0700 feat: ratification pipeline — ratify-tscp.mjs + scan-ratified.mjs + CI workflow
+6ec9f973be9e76686cc1e3f6921b7ecc2cb858c4 2026-04-27 01:36:17 -0700 feat: anchor all TSCP artifacts to Sepolia blocks 10741509-10741518
+b003585ee453b041a6d32e191c14452423602c2f 2026-04-27 01:34:24 -0700 feat: Sepolia anchor agent — TSCP-SPEC-0001 anchored at block 10741509
+c7338f84bf3795d20973e5c30f969a9146ac01b2 2026-04-27 01:32:31 -0700 feat: Sepolia deploy script — TSCPAnchor at 0x6FDB70F31E4815bE866Fd6aDD32802f90F9B5E06
+c68dfab71185dc86e53dc8a245f7a304f58d321d 2026-04-27 01:13:38 -0700 chore: ensure .env is gitignored
+adb0f028020a606c2ba308fe794f4837b5b0c49d 2026-04-27 01:12:33 -0700 feat: persistent ganache node with deterministic mnemonic
+8d87248f3e2126be7a3fd9a4cd9f8b68c953a15f 2026-04-26 23:02:52 -0700 fix: restore CLI arg, contract call, and receipt writer in anchor-agent
+ecf9ab89ea149a261445e542a47fd69d34717b44 2026-04-26 22:38:53 -0700 ci: use npm install without optional deps
+63fddd0fdbbd2c53e3ff042c01676f30dc125591 2026-04-26 22:31:39 -0700 chore: ignore ganache logs
+9595e2f6bce7e2b07840b7ded526c9e71686abaf 2026-04-26 22:21:05 -0700 fix: regenerate hardhat lockfile
+6480f37dbdb74c015824e91ca63af018d73d73ca 2026-04-26 22:17:39 -0700 fix: remove darwin-only fsevents dependency
+e866a049dd5ba0738a7da5f36d75b5f6e2e82f14 2026-04-26 22:15:33 -0700 ci: omit optional platform dependencies
+5a07b4bdadf666e6378e749942bfa91760053b5a 2026-04-26 22:11:08 -0700 ci: add ephemeral hardhat chain for deterministic anchoring
+e82e000de25da7e890a25f3be9806a554d477e81 2026-04-26 22:09:57 -0700 feat: support dynamic payload input for anchor agent
+dbddfbfb2072ec9454a3c9f1349a23102ee406ec 2026-04-26 22:08:25 -0700 ci: anchor ratified tscp payloads
+3974e222f5165b9c074196416b7562b5f745fa57 2026-04-26 22:02:37 -0700 chore: remove workflow pending token scope
+7afb09d8e88662e328e0e8f118d40d93075066cb 2026-04-26 21:51:45 -0700 feat: write per-anchor receipts to anchor-receipts/
+5fcdfdab1f03a3468e62a8f739c2134771cc5f43 2026-04-26 21:45:52 -0700 docs: add README
+1561b73efecac91271ca140685f8b2968b128cd0 2026-04-26 21:43:14 -0700 chore: remove node_modules from tracking
+e535cde864abee369a6222044472ff3700655de2 2026-04-26 21:38:46 -0700 feat: TSCP on-chain anchor agent with batch manifest support
