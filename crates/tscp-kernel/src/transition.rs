@@ -1,7 +1,6 @@
 use crate::types::*;
-use crate::event::{EventEnvelope, ClaimCreatedPayload, ClaimVerifiedPayload};
 use crate::state::State;
-use crate::serialization;
+use crate::event::EventEnvelope;
 
 #[derive(Debug, Clone)]
 pub struct ExecutionContext {
@@ -10,31 +9,30 @@ pub struct ExecutionContext {
 }
 
 pub fn dispatch_event(
-    current_state: &State,
-    current_hash: StateHash,
+    state: &State,
+    state_hash: StateHash,
     event: &EventEnvelope,
     _context: &ExecutionContext,
 ) -> Result<(State, StateHash), TransitionError> {
-    if event.parent_state_hash!= current_hash {
-        return Err(TransitionError::InvalidParentState {
-            expected: current_hash,
-            actual: event.parent_state_hash,
-        });
+    // Verify parent linkage
+    if event.parent_state_hash!= state_hash {
+        return Err(TransitionError::InvalidParent);
     }
-    if event.protocol_version!= PROTOCOL_VERSION {
-        return Err(TransitionError::UnsupportedTransition(event.transition_id));
-    }
-    let mut new_state = current_state.clone();
-    match event.transition_id {
-        TransitionId::ClaimCreated => {
-            let payload: ClaimCreatedPayload = serialization::from_cbor(&event.payload)?;
-            new_state.apply_claim_created(payload.claim_id, payload.content_hash);
-        }
-        TransitionId::ClaimVerified => {
-            let payload: ClaimVerifiedPayload = serialization::from_cbor(&event.payload)?;
-            new_state.apply_claim_verified(payload.claim_id, event.actor.0.clone(), payload.score);
-        }
-    }
-    let new_hash = new_state.hash();
+
+    // Simple deterministic transition: increment counter, hash new state
+    let mut new_state = state.clone();
+    new_state.counter += 1;
+
+    let new_hash = {
+        use blake3::Hasher;
+        let mut hasher = Hasher::new();
+        hasher.update(&state_hash);
+        hasher.update(&event.hash());
+        hasher.update(&new_state.counter.to_le_bytes());
+        let mut out = [0u8; 32];
+        out.copy_from_slice(hasher.finalize().as_bytes());
+        out
+    };
+
     Ok((new_state, new_hash))
 }
