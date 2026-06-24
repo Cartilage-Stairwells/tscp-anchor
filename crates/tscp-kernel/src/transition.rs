@@ -13,7 +13,7 @@ pub fn dispatch_event(
     current_state: &State,
     current_hash: StateHash,
     event: &EventEnvelope,
-    context: &ExecutionContext,
+    _context: &ExecutionContext,
 ) -> Result<(State, StateHash), TransitionError> {
     if event.parent_state_hash!= current_hash {
         return Err(TransitionError::InvalidParentState {
