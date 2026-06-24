@@ -1,0 +1,94 @@
+use tscp_kernel::{
+    event::{EventEnvelope, ClaimCreatedPayload, ClaimVerifiedPayload},
+    replay::ReplayEngine,
+    types::{ActorId, RulesetVersion, TransitionId, GENESIS_STATE},
+    serialization,
+};
+
+#[test]
+fn test_deterministic_replay() {
+    let ruleset = RulesetVersion(1);
+
+    let claim_id = "claim_123".to_string();
+    let content_hash = [1u8; 32];
+
+    let created_payload = ClaimCreatedPayload {
+        claim_id: claim_id.clone(),
+        content_hash,
+    };
+    let created_bytes = serialization::to_canonical_cbor(&created_payload).unwrap();
+
+    let event1 = EventEnvelope::new(
+        GENESIS_STATE,
+        ActorId("alice".to_string()),
+        1,
+        TransitionId::ClaimCreated,
+        created_bytes,
+    );
+
+    let state_after_e1 = {
+        let mut engine = ReplayEngine::new(ruleset);
+        engine.apply(&event1).unwrap();
+        engine.current_hash()
+    };
+
+    let verified_payload = ClaimVerifiedPayload {
+        claim_id: claim_id.clone(),
+        evidence_hash: [2u8; 32],
+        score: 95,
+    };
+    let verified_bytes = serialization::to_canonical_cbor(&verified_payload).unwrap();
+
+    let event2 = EventEnvelope::new(
+        state_after_e1,
+        ActorId("admin_7".to_string()),
+        2,
+        TransitionId::ClaimVerified,
+        verified_bytes,
+    );
+
+    // Three independent verifiers
+    let mut v1 = ReplayEngine::new(ruleset);
+    v1.apply(&event1).unwrap();
+    v1.apply(&event2).unwrap();
+    let h1 = v1.current_hash();
+
+    let h2 = ReplayEngine::replay(&[event1.clone(), event2.clone()], ruleset).unwrap();
+
+    let mut v3 = ReplayEngine::new(ruleset);
+    v3.apply(&event1).unwrap();
+    v3.apply(&event2).unwrap();
+    let h3 = v3.current_hash();
+
+    assert_eq!(h1, h2);
+    assert_eq!(h2, h3);
+
+    let state = v1.current_state();
+    let claim = state.claims.get("claim_123").unwrap();
+    assert_eq!(claim.status, tscp_kernel::state::ClaimStatus::Verified);
+    assert_eq!(claim.score, Some(95));
+    assert_eq!(claim.verified_by, Some("admin_7".to_string()));
+}
+
+#[test]
+fn test_invalid_parent_rejected() {
+    let ruleset = RulesetVersion(1);
+    let mut engine = ReplayEngine::new(ruleset);
+
+    let payload = ClaimCreatedPayload {
+        claim_id: "test".to_string(),
+        content_hash: [0u8; 32],
+    };
+    let bytes = serialization::to_canonical_cbor(&payload).unwrap();
+
+    let bad_event = EventEnvelope::new(
+        [99u8; 32],
+        ActorId("alice".to_string()),
+        1,
+        TransitionId::ClaimCreated,
+        bytes,
+    );
+
+    let result = engine.apply(&bad_event);
+    assert!(result.is_err());
+}
