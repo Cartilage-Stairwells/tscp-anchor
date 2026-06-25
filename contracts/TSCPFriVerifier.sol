@@ -49,10 +49,10 @@ pragma solidity ^0.8.19;
         return true;
     }
 
-    function verifyProofOfWork(uint256 nonce, bytes32 traceCommitment) internal pure returns (bool) { return true; }
-    function verifyFriFoldings(uint256[][] calldata foldings) internal pure returns (bool) { return true; }
-    function verifyQueryResponses(bytes32 traceCommitment, bytes32 quotientCommitment, FriQueryResponse[] calldata responses) internal pure returns (bool) { return true; }
-    function verifyDegreeBound(uint256[] calldata finalPolynomial) internal pure returns (bool) { return true; }
+    function verifyProofOfWork(uint256 nonce, bytes32 traceCommitment) internal pure returns (bool) { revert("TSCP: PoW verifier not implemented"); }
+    function verifyFriFoldings(uint256[][] calldata foldings) internal pure returns (bool) { revert("TSCP: FRI folding verifier not implemented"); }
+    function verifyQueryResponses(bytes32 traceCommitment, bytes32 quotientCommitment, FriQueryResponse[] calldata responses) internal pure returns (bool) { revert("TSCP: query verifier not implemented"); }
+    function verifyDegreeBound(uint256[] calldata finalPolynomial) internal pure returns (bool) { revert("TSCP: degree verifier not implemented"); }
     function isTraceVerified(bytes32 traceCommitment) external view returns (bool) { return verifiedTraces[traceCommitment]; }
     function getOWSLSummary() external view returns (string memory status, string memory action, uint256 bitsRemaining, bool permits) {
         status = latestOWSLStatus.status; action = latestOWSLStatus.action; bitsRemaining = latestOWSLStatus.bitsRemaining;
