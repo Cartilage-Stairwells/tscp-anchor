@@ -1,28 +1,93 @@
-use tscp_kernel::{event::EventEnvelope, replay::ReplayEngine, types::GENESIS_STATE};
-use tscp_anchor::Anchor;
+use clap::{Parser, Subcommand};
+use std::path::PathBuf;
+use std::process::ExitCode;
+use sha2::{Digest, Sha256};
 
-fn main() {
-    println!("TSCP CLI v0.1 - Kernel→Anchor pipe");
+use tscp_kernel::event::EventEnvelope;
+use tscp_kernel::replay::ReplayEngine;
 
-    let mut engine = ReplayEngine::new(1);
-    let mut parent = GENESIS_STATE;
+#[derive(Parser)]
+#[command(name = "tscp", version, about = "TSCP deterministic verifier")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    for i in 1..=3 {
-        let event = EventEnvelope {
-            event_id: [i; 16],
-            parent_state_hash: parent,
-            payload_hash: [i+10; 32],
-            logical_time: i as u64,
+#[derive(Subcommand)]
+enum Commands {
+    Verify { bundle: PathBuf },
+}
+
+const EXIT_PASS: u8 = 0;
+const EXIT_MODIFIED_RECEIPT: u8 = 1;
+const EXIT_MALFORMED_BUNDLE: u8 = 5;
+const EXIT_CHECKSUM_MISMATCH: u8 = 6;
+
+fn main() -> ExitCode {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Verify { bundle } => {
+            ExitCode::from(run_verify(&bundle))
+        }
+    }
+}
+
+fn run_verify(bundle_path: &PathBuf) -> u8 {
+    let bytes = match std::fs::read(bundle_path) {
+        Ok(b) => b,
+        Err(_) => {
+            println!("FAIL: malformed_bundle");
+            return EXIT_MALFORMED_BUNDLE;
+        }
+    };
+
+    let sha_path = PathBuf::from(
+        format!("{}.sha256", bundle_path.display())
+    );
+
+    if sha_path.exists() {
+        let expected = match std::fs::read_to_string(&sha_path) {
+            Ok(v) => v,
+            Err(_) => {
+                println!("FAIL: malformed_bundle");
+                return EXIT_MALFORMED_BUNDLE;
+            }
         };
 
-        let receipt = engine.apply(&event).unwrap();
-        parent = receipt.child_state_hash; // chain it!
+        let expected_hash = expected
+            .split_whitespace()
+            .next()
+            .unwrap_or("");
 
-        let anchored = Anchor::anchor_receipt(receipt.clone());
+        let mut hasher = Sha256::new();
+        hasher.update(&bytes);
+        let actual = hex::encode(hasher.finalize());
 
-        println!("\nEvent {}:", i);
-        println!(" receipt.hash: {:x?}", &anchored.receipt_hash[..8]);
-        println!(" proof: {:x?}", &anchored.stark_proof[..8]);
-        println!(" verify: {}", anchored.verify());
+        if actual != expected_hash {
+            println!("FAIL: checksum_mismatch");
+            return EXIT_CHECKSUM_MISMATCH;
+        }
     }
+
+    let events: Vec<EventEnvelope> =
+        match serde_cbor::from_slice(&bytes) {
+            Ok(v) => v,
+            Err(_) => {
+                println!("FAIL: malformed_bundle");
+                return EXIT_MALFORMED_BUNDLE;
+            }
+        };
+
+    let mut engine = ReplayEngine::new(1);
+
+    for event in &events {
+        if engine.apply(event).is_err() {
+            println!("FAIL: modified_receipt");
+            return EXIT_MODIFIED_RECEIPT;
+        }
+    }
+
+    println!("PASS");
+    EXIT_PASS
 }
