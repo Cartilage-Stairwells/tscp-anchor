@@ -2,7 +2,8 @@ use sha2::{Sha256, Digest};
 use tscp_kernel::types::TransitionHash;
 
 pub fn prove_receipt(hash: &TransitionHash) -> Vec<u8> {
-    // STARK placeholder - for now we hash the receipt hash
+    // Experimental proof interface placeholder.
+    // This hashes the receipt hash only; it is not a production STARK proof.
     // This will become real plonky3 circuit later
     let mut hasher = Sha256::new();
     hasher.update(hash);
