@@ -8,7 +8,7 @@ This release provides:
 
 It does not claim:
 
-- production ZK security
-- production STARK verification
+- a production ZK security guarantee
+- a production STARK verification guarantee
 
 Proof systems are an extension layer and are not part of the v0.1 security guarantee.
