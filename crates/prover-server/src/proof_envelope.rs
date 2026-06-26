@@ -43,7 +43,7 @@ impl ProofEnvelope {
 
     pub fn verify_golden(&self) -> Result<(), ProofError> {
         // G2.5 + immortality gate
-        if self.claim!= 294373 {
+        if self.claim != 294373 {
             return Err(ProofError::GoldenMismatch {
                 expected: 294373,
                 got: self.claim,

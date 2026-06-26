@@ -1,16 +1,17 @@
-use axum::{extract::Json, routing::post, Router, response::IntoResponse, http::StatusCode};
-use std::net::SocketAddr;
+pub mod deep_ali;
+pub mod owsl_bridge;
+use axum::{extract::Json, http::StatusCode, response::IntoResponse, routing::post, Router};
 use p3_baby_bear::BabyBear;
+use std::net::SocketAddr;
 
+use oracle_layer::folded::FoldedOracleBuilder;
+use oracle_layer::oracle::MleOracle;
 use p3_baby_bear::Poseidon2BabyBear;
 use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
 use p3_field::PrimeCharacteristicRing;
-use oracle_layer::folded::FoldedOracleBuilder;
-use oracle_layer::oracle::MleOracle;
 use serde::{Deserialize, Serialize};
 
 type F = BabyBear;
-
 
 type Perm = Poseidon2BabyBear<16>;
 type Challenger = DuplexChallenger<F, Perm, 16, 8>;
@@ -53,11 +54,18 @@ async fn main() {
         query_proof_of_work_bits: 0,
         mmcs: fri_mmcs,
     };
-    let pcs = commitment::new_tscp_pcs(dft, input_mmcs, batch_merkle::new_batch_merkle(), fri_params);
+    let pcs = commitment::new_tscp_pcs(
+        dft,
+        input_mmcs,
+        batch_merkle::new_batch_merkle(),
+        fri_params,
+    );
     let _ = &pcs; // PCS constructed for future opening/commitment phase; not yet used by prove_handler.
     let app = Router::new().route("/prove/sumcheck", post(prove_handler));
     let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
-    let listener = tokio::net::TcpListener::bind(addr).await.expect("Failed to bind");
+    let listener = tokio::net::TcpListener::bind(addr)
+        .await
+        .expect("Failed to bind");
     println!("TSCP Prover Server listening on {}", addr);
     axum::serve(listener, app).await.expect("Server failed");
 }
@@ -66,16 +74,18 @@ fn prover_round(oracle: &impl MleOracle<F>, prefix: &[F]) -> [F; 2] {
     let n_vars = oracle.n_vars();
     let remaining = n_vars - prefix.len() - 1;
     let half = 1usize << remaining;
-    
+
     let sum_bit = |bit: F| -> F {
-        (0..half).map(|i| {
-            let mut pt = prefix.to_vec();
-            pt.push(bit);
-            for b in 0..remaining {
-                pt.push(if (i >> b) & 1 == 1 { F::ONE } else { F::ZERO });
-            }
-            oracle.eval(&pt)
-        }).fold(F::ZERO, |a, b| a + b)
+        (0..half)
+            .map(|i| {
+                let mut pt = prefix.to_vec();
+                pt.push(bit);
+                for b in 0..remaining {
+                    pt.push(if (i >> b) & 1 == 1 { F::ONE } else { F::ZERO });
+                }
+                oracle.eval(&pt)
+            })
+            .fold(F::ZERO, |a, b| a + b)
     };
     [sum_bit(F::ZERO), sum_bit(F::ONE)]
 }
@@ -129,11 +139,16 @@ async fn prove_handler(Json(req): Json<ProofRequest>) -> impl IntoResponse {
         use p3_baby_bear::default_babybear_poseidon2_16;
         Challenger::new(default_babybear_poseidon2_16())
     };
-    for &v in &col0 { challenger.observe(v); }
-    for &v in &col1 { challenger.observe(v); }
+    for &v in &col0 {
+        challenger.observe(v);
+    }
+    for &v in &col1 {
+        challenger.observe(v);
+    }
 
     let folded = FoldedOracleBuilder::new(vec![col0, col1], n_vars)
-        .absorb_challenge(alpha).build();
+        .absorb_challenge(alpha)
+        .build();
 
     let claimed_sum: F = (0..(1usize << n_vars))
         .map(|idx| {
@@ -158,11 +173,17 @@ async fn prove_handler(Json(req): Json<ProofRequest>) -> impl IntoResponse {
         prefix.push(r);
     }
 
-    (StatusCode::OK, Json(ProofResponse {
-        job_id: req.job_id,
-        proof: SumcheckProof { claimed_sum, rounds },
-        status: "success".to_string(),
-    }))
+    (
+        StatusCode::OK,
+        Json(ProofResponse {
+            job_id: req.job_id,
+            proof: SumcheckProof {
+                claimed_sum,
+                rounds,
+            },
+            status: "success".to_string(),
+        }),
+    )
 }
 
 #[cfg(test)]
@@ -183,11 +204,16 @@ mod tests {
         let alpha = F::from_u32(alpha);
 
         let mut challenger = fresh_challenger();
-        for &v in &col0 { challenger.observe(v); }
-        for &v in &col1 { challenger.observe(v); }
+        for &v in &col0 {
+            challenger.observe(v);
+        }
+        for &v in &col1 {
+            challenger.observe(v);
+        }
 
         let folded = FoldedOracleBuilder::new(vec![col0, col1], n_vars)
-            .absorb_challenge(alpha).build();
+            .absorb_challenge(alpha)
+            .build();
 
         let claimed_sum: F = (0..(1usize << n_vars))
             .map(|idx| {
@@ -209,10 +235,17 @@ mod tests {
             prefix.push(r);
         }
 
-        SumcheckProof { claimed_sum, rounds }
+        SumcheckProof {
+            claimed_sum,
+            rounds,
+        }
     }
 
-    fn make_oracle(col0: Vec<u32>, col1: Vec<u32>, alpha: u32) -> oracle_layer::folded::FoldedOracle<F> {
+    fn make_oracle(
+        col0: Vec<u32>,
+        col1: Vec<u32>,
+        alpha: u32,
+    ) -> oracle_layer::folded::FoldedOracle<F> {
         let n_vars = col0.len().ilog2() as usize;
         let col0: Vec<F> = col0.iter().map(|&v| F::from_u32(v)).collect();
         let col1: Vec<F> = col1.iter().map(|&v| F::from_u32(v)).collect();
@@ -226,14 +259,26 @@ mod tests {
         let proof = run_prover(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
         let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
         let mut verifier_challenger = fresh_challenger();
-        for &v in &[F::from_u32(1), F::from_u32(2), F::from_u32(3), F::from_u32(4)] {
+        for &v in &[
+            F::from_u32(1),
+            F::from_u32(2),
+            F::from_u32(3),
+            F::from_u32(4),
+        ] {
             verifier_challenger.observe(v);
         }
-        for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
+        for &v in &[
+            F::from_u32(5),
+            F::from_u32(6),
+            F::from_u32(7),
+            F::from_u32(8),
+        ] {
             verifier_challenger.observe(v);
         }
-        assert!(sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
-            "an honestly generated sumcheck proof must verify against a freshly-seeded transcript");
+        assert!(
+            sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
+            "an honestly generated sumcheck proof must verify against a freshly-seeded transcript"
+        );
     }
 
     #[test]
@@ -242,15 +287,27 @@ mod tests {
         proof.rounds[0].0 = proof.rounds[0].0 + F::ONE;
 
         let mut verifier_challenger = fresh_challenger();
-        for &v in &[F::from_u32(1), F::from_u32(2), F::from_u32(3), F::from_u32(4)] {
+        for &v in &[
+            F::from_u32(1),
+            F::from_u32(2),
+            F::from_u32(3),
+            F::from_u32(4),
+        ] {
             verifier_challenger.observe(v);
         }
-        for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
+        for &v in &[
+            F::from_u32(5),
+            F::from_u32(6),
+            F::from_u32(7),
+            F::from_u32(8),
+        ] {
             verifier_challenger.observe(v);
         }
         let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
-        assert!(!sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
-            "a tampered round message must break the g(0)+g(1) == running_claim invariant and fail");
+        assert!(
+            !sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
+            "a tampered round message must break the g(0)+g(1) == running_claim invariant and fail"
+        );
     }
 
     #[test]
@@ -259,15 +316,27 @@ mod tests {
         proof.claimed_sum = proof.claimed_sum + F::ONE;
 
         let mut verifier_challenger = fresh_challenger();
-        for &v in &[F::from_u32(1), F::from_u32(2), F::from_u32(3), F::from_u32(4)] {
+        for &v in &[
+            F::from_u32(1),
+            F::from_u32(2),
+            F::from_u32(3),
+            F::from_u32(4),
+        ] {
             verifier_challenger.observe(v);
         }
-        for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
+        for &v in &[
+            F::from_u32(5),
+            F::from_u32(6),
+            F::from_u32(7),
+            F::from_u32(8),
+        ] {
             verifier_challenger.observe(v);
         }
         let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
-        assert!(!sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
-            "a claimed_sum that doesn't match round 0's g(0)+g(1) must fail immediately");
+        assert!(
+            !sumcheck_verify(&proof, &mut verifier_challenger, &oracle),
+            "a claimed_sum that doesn't match round 0's g(0)+g(1) must fail immediately"
+        );
     }
 
     #[test]
@@ -279,14 +348,26 @@ mod tests {
         let proof = run_prover(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
 
         let mut wrong_challenger = fresh_challenger();
-        for &v in &[F::from_u32(99), F::from_u32(98), F::from_u32(97), F::from_u32(96)] {
+        for &v in &[
+            F::from_u32(99),
+            F::from_u32(98),
+            F::from_u32(97),
+            F::from_u32(96),
+        ] {
             wrong_challenger.observe(v);
         }
-        for &v in &[F::from_u32(5), F::from_u32(6), F::from_u32(7), F::from_u32(8)] {
+        for &v in &[
+            F::from_u32(5),
+            F::from_u32(6),
+            F::from_u32(7),
+            F::from_u32(8),
+        ] {
             wrong_challenger.observe(v);
         }
         let oracle = make_oracle(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
-        assert!(!sumcheck_verify(&proof, &mut wrong_challenger, &oracle),
-            "verifying with a transcript seeded from different public inputs must fail");
+        assert!(
+            !sumcheck_verify(&proof, &mut wrong_challenger, &oracle),
+            "verifying with a transcript seeded from different public inputs must fail"
+        );
     }
 }
