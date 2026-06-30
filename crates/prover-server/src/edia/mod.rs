@@ -57,6 +57,37 @@ mod control_tests {
     }
 }
 
+    #[tokio::test]
+    async fn edia_guard_decrements_pending_on_drop() {
+        let agent = Arc::new(Mutex::new(EdiaAgent::new(16)));
+
+        {
+            let mut locked = agent.lock().await;
+            locked.pending_requests += 1;
+            assert_eq!(locked.pending_requests, 1);
+        }
+
+        let guard = EdiaGuard::new(agent.clone());
+        drop(guard);
+
+        let locked = agent.lock().await;
+        assert_eq!(
+            locked.pending_requests, 0,
+            "EdiaGuard::drop must decrement pending_requests back to 0"
+        );
+    }
+
+    #[tokio::test]
+    async fn edia_guard_does_not_underflow_on_double_relevant_drop() {
+        // pending_requests already at 0; guard's drop must not panic or wrap.
+        let agent = Arc::new(Mutex::new(EdiaAgent::new(16)));
+        let guard = EdiaGuard::new(agent.clone());
+        drop(guard);
+
+        let locked = agent.lock().await;
+        assert_eq!(locked.pending_requests, 0);
+    }
+
 pub struct EdiaGuard {
     agent: Arc<Mutex<EdiaAgent>>,
 }
