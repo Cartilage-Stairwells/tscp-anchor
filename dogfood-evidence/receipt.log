@@ -1,0 +1,169 @@
+TSCP v0.6.1 DOGFOOD RECEIPT
+commit: c9f50013275d99efd0e4cf7bb12a284bec889d22
+tag: tscp-anchor-v0.6.1-deep-ali-owsl-audit
+timestamp: Tue Jun 30 06:58:48 UTC 2026
+
+    Finished `release` profile [optimized] target(s) in 2.23s
+     Running unittests src/lib.rs (target/release/deps/batch_merkle-a4dc447189267cc1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/batch_merkle_roundtrip.rs (target/release/deps/batch_merkle_roundtrip-c55aa66db85a96a4)
+
+running 2 tests
+test tampered_proof_fails_verification ... ok
+test commit_open_verify_mixed_matrices ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/commitment-4754e59b17cae9b7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/oracle_layer-c9b98a8fef3827cf)
+
+running 34 tests
+test constraint::lww::tests::lww_constraint_fails_on_invalid_value ... ok
+test constraint::lww::tests::lww_constraint_passes_on_valid_trace ... ok
+test fft::tests::fft_then_ifft_is_identity ... ok
+test fft::tests::fft_matches_direct_evaluation ... ok
+test fft::tests::interpolate_column_recovers_known_polynomial ... ok
+test fft::tests::omega4_has_order_4 ... ok
+test fft::tests::interpolate_matrix_handles_multiple_columns_independently ... ok
+test fri_protocol::tests::commit_on_constant_polynomial_ends_at_that_constant ... ok
+test fri_protocol::tests::tampering_with_evaluations_changes_the_derived_betas_and_root ... ok
+test fri_protocol::tests::tampering_with_evaluations_changes_the_initial_root_and_propagates ... ok
+test fri_protocol::tests::commit_matches_independent_recomputation ... ok
+test fri_protocol::tests::different_betas_produce_different_roots_and_final_value ... ok
+test fri_protocol::tests::transcript_commit_is_deterministic_for_identical_inputs ... ok
+test fri_protocol::tests::wrong_number_of_betas_panics - should panic ... ok
+test fri_query::tests::forged_opening_with_wrong_root_fails_even_with_correct_arithmetic ... ok
+test fri_protocol::tests::transcript_commit_verifies_against_fresh_transcript ... ok
+test fri_query::tests::full_protocol_honest_proof_verifies ... ok
+test fri_query::tests::full_protocol_wrong_query_indices_fail_verification ... ok
+test fri_query::tests::full_protocol_tampered_query_opening_fails_verification ... ok
+test fri_query::tests::mismatched_x_and_neg_x_openings_fails_verification ... ok
+test merkle::tests::tampered_leaf_value_fails_verification ... ok
+test fri_query::tests::tampered_folded_value_fails_verification ... ok
+test merkle::tests::root_is_deterministic_shape ... ok
+test fri_query::tests::honest_query_verifies_for_every_index ... ok
+test fri_query::tests::wrong_beta_fails_verification ... ok
+test merkle::tests::valid_opening_verifies_for_every_leaf ... ok
+test merkle::tests::wrong_commitment_fails_verification ... ok
+test poly::tests::test_interpolation_roundtrip ... ok
+test poly::tests::test_poly_div ... ok
+test poly::tests::test_poly_div_zero_quotient ... ok
+test poly::tests::test_vanishing_poly ... ok
+test quotient::tests::exact_multiple_of_vanishing_has_zero_remainder ... ok
+test quotient::tests::non_multiple_has_nonzero_remainder ... ok
+test quotient::tests::quotient_reconstructs_original_via_evaluation ... ok
+
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/fri_0_6_1_correctness.rs (target/release/deps/fri_0_6_1_correctness-fecf5d27f9dcc358)
+
+running 1 test
+test fri_prove_does_not_panic_and_returns_proof ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/oracle_lift_end_to_end.rs (target/release/deps/oracle_lift_end_to_end-e2c45bd9511a8529)
+
+running 1 test
+test oracle_lift_end_to_end ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/prover_server-aa38acf4d5a715de)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release/deps/prover_server-df31adaca9d0fc1c)
+
+running 9 tests
+test owsl_bridge::tests::test_owsl_status_critical_blocks ... ok
+test owsl_bridge::tests::test_bridge_reader_missing_file_blocks ... ok
+test tests::tampered_round_message_fails_verification ... ok
+test tests::honest_proof_verifies ... ok
+test owsl_bridge::tests::test_owsl_status_parse ... ok
+test tests::verifier_with_wrong_transcript_seed_fails ... ok
+test tests::wrong_claimed_sum_fails_verification ... ok
+test owsl_bridge::tests::test_bridge_reader_blocks_critical ... ok
+test owsl_bridge::tests::test_bridge_reader_permits_safe ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/g2_5_mixed_version.rs (target/release/deps/g2_5_mixed_version-5128d19e9077c55d)
+
+running 2 tests
+test test_061_envelope_opens_on_061 ... ok
+test test_062_rejected_by_061_verifier ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/m7_poly_seam.rs (target/release/deps/m7_poly_seam-222819e77be09c61)
+
+running 2 tests
+test test_m7_semantic_correctness ... ok
+test test_trace_rejects_invalid_transition ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/release/deps/tscp_cli-629e2d6edeefe0eb)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/release/deps/tscp_kernel-0f87deea4170bc61)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/determinism.rs (target/release/deps/determinism-6f75cc88928250f2)
+
+running 4 tests
+test test_invalid_parent_rejected ... ok
+test test_deterministic_replay ... ok
+test test_child_mutation_rejected ... ok
+test test_domain_separation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests batch_merkle
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests commitment
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests oracle_layer
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests prover_server
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests tscp_kernel
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
