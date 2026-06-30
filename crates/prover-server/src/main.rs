@@ -60,6 +60,7 @@ struct SealedProofResponse {
 }
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt::init();
     let dft = p3_dft::Radix2DitParallel::<F>::default();
     let input_mmcs = batch_merkle::new_batch_merkle();
     let fri_mmcs = batch_merkle::new_batch_merkle();
@@ -171,7 +172,7 @@ async fn prove_handler(
     // Phase 1 admission accounting: semaphore is the authority.
     let _edia_guard = edia::EdiaGuard::acquire(&state.edia_agent).await;
     let pending = state.edia_agent.lock().await.pending_requests.load(std::sync::atomic::Ordering::Acquire);
-    println!("admission inflight pending={}", pending);
+    tracing::debug!(pending, "admission inflight");
 
     if !owsl_permits_verification() {
         return (
