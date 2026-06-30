@@ -1,6 +1,8 @@
 pub mod deep_ali;
 pub mod owsl_bridge;
-use axum::{extract::Json, http::StatusCode, response::IntoResponse, routing::post, Router};
+use axum::{extract::{Json, State}, http::StatusCode, response::IntoResponse, routing::post, Router};
+use std::sync::Arc;
+use tokio::sync::Semaphore;
 use p3_baby_bear::BabyBear;
 use std::net::SocketAddr;
 
@@ -17,6 +19,11 @@ type F = BabyBear;
 
 type Perm = Poseidon2BabyBear<16>;
 type Challenger = DuplexChallenger<F, Perm, 16, 8>;
+
+#[derive(Clone)]
+struct AppState {
+    proving_permits: Arc<Semaphore>,
+}
 
 #[derive(Deserialize)]
 struct ProofRequest {
@@ -63,7 +70,12 @@ async fn main() {
         fri_params,
     );
     let _ = &pcs; // PCS constructed for future opening/commitment phase; not yet used by prove_handler.
-    let app = Router::new().route("/prove/sumcheck", post(prove_handler));
+    let state = AppState {
+        proving_permits: Arc::new(Semaphore::new(4)), // max 4 concurrent proofs; tune as needed
+    };
+    let app = Router::new()
+        .route("/prove/sumcheck", post(prove_handler))
+        .with_state(state);
     let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
     let listener = tokio::net::TcpListener::bind(addr)
         .await
@@ -131,7 +143,21 @@ fn sumcheck_verify(
     running_claim == oracle_eval
 }
 
-async fn prove_handler(Json(req): Json<ProofRequest>) -> impl IntoResponse {
+async fn prove_handler(
+    State(state): State<AppState>,
+    Json(req): Json<ProofRequest>,
+) -> impl IntoResponse {
+    let _permit = match state.proving_permits.try_acquire() {
+        Ok(p) => p,
+        Err(_) => {
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(serde_json::json!({ "error": "prover at capacity, retry later" })),
+            )
+                .into_response();
+        }
+    };
+
     let n_vars = req.col0.len().ilog2() as usize;
     let col0: Vec<F> = req.col0.iter().map(|&v| F::from_u32(v)).collect();
     let col1: Vec<F> = req.col1.iter().map(|&v| F::from_u32(v)).collect();
