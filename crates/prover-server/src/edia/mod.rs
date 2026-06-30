@@ -1,13 +1,13 @@
+use std::collections::VecDeque;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-
-use std::collections::VecDeque;
 
 pub struct EdiaAgent {
     pub ring_buffer: VecDeque<u64>,
     pub drain_rate_tps: u32,
     // REAL NEW FIELD: Tracks active, in-flight proving operations
-    pub pending_requests: u64,
+    pub pending_requests: Arc<AtomicU64>,
 }
 
 impl EdiaAgent {
@@ -15,7 +15,7 @@ impl EdiaAgent {
         Self {
             ring_buffer: VecDeque::with_capacity(capacity),
             drain_rate_tps: 1,
-            pending_requests: 0,
+            pending_requests: Arc::new(AtomicU64::new(0)),
         }
     }
 
@@ -53,26 +53,24 @@ mod control_tests {
         }
         assert!(agent.ring_buffer.len() < 7);
         // Verify the new field initializes cleanly
-        assert_eq!(agent.pending_requests, 0);
+        assert_eq!(agent.pending_requests.load(Ordering::Relaxed), 0);
     }
-}
 
     #[tokio::test]
     async fn edia_guard_decrements_pending_on_drop() {
         let agent = Arc::new(Mutex::new(EdiaAgent::new(16)));
+        let guard = EdiaGuard::acquire(&agent).await;
 
         {
-            let mut locked = agent.lock().await;
-            locked.pending_requests += 1;
-            assert_eq!(locked.pending_requests, 1);
+            let locked = agent.lock().await;
+            assert_eq!(locked.pending_requests.load(Ordering::Relaxed), 1);
         }
 
-        let guard = EdiaGuard::new(agent.clone());
         drop(guard);
 
         let locked = agent.lock().await;
         assert_eq!(
-            locked.pending_requests, 0,
+            locked.pending_requests.load(Ordering::Relaxed), 0,
             "EdiaGuard::drop must decrement pending_requests back to 0"
         );
     }
@@ -81,32 +79,39 @@ mod control_tests {
     async fn edia_guard_does_not_underflow_on_double_relevant_drop() {
         // pending_requests already at 0; guard's drop must not panic or wrap.
         let agent = Arc::new(Mutex::new(EdiaAgent::new(16)));
-        let guard = EdiaGuard::new(agent.clone());
+        let guard = EdiaGuard::acquire(&agent).await;
         drop(guard);
 
         let locked = agent.lock().await;
-        assert_eq!(locked.pending_requests, 0);
+        assert_eq!(locked.pending_requests.load(Ordering::Relaxed), 0);
     }
+}
 
 pub struct EdiaGuard {
-    agent: Arc<Mutex<EdiaAgent>>,
+    pending_requests: Arc<AtomicU64>,
 }
 
 impl EdiaGuard {
-    pub fn new(agent: Arc<Mutex<EdiaAgent>>) -> Self {
-        Self { agent }
+    /// Increments pending_requests and returns a guard that decrements
+    /// it on drop. This is the only way to bump the counter, so callers
+    /// can no longer forget the increment.
+    pub async fn acquire(agent: &Arc<Mutex<EdiaAgent>>) -> Self {
+        let pending_requests = {
+            let locked = agent.lock().await;
+            locked.pending_requests.clone()
+        };
+        pending_requests.fetch_add(1, Ordering::Relaxed);
+        Self { pending_requests }
     }
 }
 
 impl Drop for EdiaGuard {
     fn drop(&mut self) {
-        let mut agent = self
-            .agent
-            .try_lock()
-            .expect("EdiaGuard drop could not acquire admission lock");
-
-        if agent.pending_requests > 0 {
-            agent.pending_requests -= 1;
-        }
+        // No lock acquired here -- cannot panic, safe across await points.
+        self.pending_requests.fetch_update(
+            Ordering::Relaxed,
+            Ordering::Relaxed,
+            |v| Some(v.saturating_sub(1)),
+        ).ok();
     }
 }

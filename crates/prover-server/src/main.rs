@@ -169,11 +169,7 @@ async fn prove_handler(
     };
 
     // Phase 1 admission accounting: semaphore is the authority.
-    let _edia_guard = {
-        let mut agent = state.edia_agent.lock().await;
-        agent.pending_requests += 1;
-        edia::EdiaGuard::new(state.edia_agent.clone())
-    };
+    let _edia_guard = edia::EdiaGuard::acquire(&state.edia_agent).await;
 
     if !owsl_permits_verification() {
         return (
