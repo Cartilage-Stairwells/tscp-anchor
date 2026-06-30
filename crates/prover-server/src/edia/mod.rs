@@ -79,3 +79,27 @@ impl Drop for EdiaGuard {
         }
     }
 }
+
+use std::sync::atomic::{AtomicU64, Ordering};
+
+pub struct AdmissionMetrics {
+    pub admitted: AtomicU64,
+    pub completed: AtomicU64,
+    pub rejected: AtomicU64,
+    pub inflight: AtomicU64,
+    pub peak: AtomicU64,
+    pub total_proof_time_ns: AtomicU64,
+}
+
+impl Default for AdmissionMetrics {
+    fn default() -> Self {
+        Self {
+            admitted: AtomicU64::new(0),
+            completed: AtomicU64::new(0),
+            rejected: AtomicU64::new(0),
+            inflight: AtomicU64::new(0),
+            peak: AtomicU64::new(0),
+            total_proof_time_ns: AtomicU64::new(0),
+        }
+    }
+}

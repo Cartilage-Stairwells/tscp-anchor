@@ -32,6 +32,7 @@ type Challenger = DuplexChallenger<F, Perm, 16, 8>;
 struct AppState {
     proving_permits: Arc<Semaphore>,
     pub edia_agent: std::sync::Arc<tokio::sync::Mutex<edia::EdiaAgent>>,
+    pub metrics: std::sync::Arc<edia::AdmissionMetrics>,
 }
 
 #[derive(Deserialize)]
@@ -82,6 +83,7 @@ async fn main() {
     let state = AppState {
         proving_permits: Arc::new(Semaphore::new(4)), // max 4 concurrent proofs; tune as needed
         edia_agent: std::sync::Arc::new(tokio::sync::Mutex::new(edia::EdiaAgent::new(16))),
+        metrics: std::sync::Arc::new(edia::AdmissionMetrics::default()),
     };
     let app = Router::new()
         .route("/prove/sumcheck", post(prove_handler))
