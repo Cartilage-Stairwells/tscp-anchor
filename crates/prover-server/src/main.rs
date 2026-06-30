@@ -9,6 +9,8 @@ use oracle_layer::oracle::MleOracle;
 use p3_baby_bear::Poseidon2BabyBear;
 use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
 use p3_field::PrimeCharacteristicRing;
+use p3_field::PrimeField64;
+use prover_server::proof_envelope::ProofEnvelope;
 use serde::{Deserialize, Serialize};
 
 type F = BabyBear;
@@ -35,9 +37,9 @@ struct SumcheckProof {
 }
 
 #[derive(Serialize)]
-struct ProofResponse {
+struct SealedProofResponse {
     job_id: String,
-    proof: SumcheckProof,
+    envelope: ProofEnvelope,
     status: String,
 }
 #[tokio::main]
@@ -173,17 +175,31 @@ async fn prove_handler(Json(req): Json<ProofRequest>) -> impl IntoResponse {
         prefix.push(r);
     }
 
+    let proof = SumcheckProof { claimed_sum, rounds };
+
+    let payload = match serde_json::to_vec(&proof) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({ "error": e.to_string() })),
+            )
+                .into_response();
+        }
+    };
+
+    let claim_u64: u64 = claimed_sum.as_canonical_u64();
+    let envelope = ProofEnvelope::seal_061(claim_u64, payload);
+
     (
         StatusCode::OK,
-        Json(ProofResponse {
+        Json(SealedProofResponse {
             job_id: req.job_id,
-            proof: SumcheckProof {
-                claimed_sum,
-                rounds,
-            },
+            envelope,
             status: "success".to_string(),
         }),
     )
+        .into_response()
 }
 
 #[cfg(test)]
