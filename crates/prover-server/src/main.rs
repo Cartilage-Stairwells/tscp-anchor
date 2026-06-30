@@ -1,5 +1,6 @@
 pub mod deep_ali;
 pub mod owsl_bridge;
+use owsl_bridge::owsl_permits_verification;
 use axum::{extract::{Json, State}, http::StatusCode, response::IntoResponse, routing::post, Router};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
@@ -157,6 +158,14 @@ async fn prove_handler(
                 .into_response();
         }
     };
+
+    if !owsl_permits_verification() {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(serde_json::json!({ "error": "OWSL entropy gate denied verification" })),
+        )
+            .into_response();
+    }
 
     let n_vars = req.col0.len().ilog2() as usize;
     let col0: Vec<F> = req.col0.iter().map(|&v| F::from_u32(v)).collect();
