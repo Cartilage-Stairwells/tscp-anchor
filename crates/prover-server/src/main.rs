@@ -1,11 +1,18 @@
 pub mod deep_ali;
+pub mod edia;
 pub mod owsl_bridge;
+use axum::{
+    extract::{Json, State},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::post,
+    Router,
+};
 use owsl_bridge::owsl_permits_verification;
-use axum::{extract::{Json, State}, http::StatusCode, response::IntoResponse, routing::post, Router};
-use std::sync::Arc;
-use tokio::sync::Semaphore;
 use p3_baby_bear::BabyBear;
 use std::net::SocketAddr;
+use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 use oracle_layer::folded::FoldedOracleBuilder;
 use oracle_layer::oracle::MleOracle;
@@ -24,6 +31,7 @@ type Challenger = DuplexChallenger<F, Perm, 16, 8>;
 #[derive(Clone)]
 struct AppState {
     proving_permits: Arc<Semaphore>,
+    pub edia_agent: std::sync::Arc<tokio::sync::Mutex<edia::EdiaAgent>>,
 }
 
 #[derive(Deserialize)]
@@ -73,6 +81,7 @@ async fn main() {
     let _ = &pcs; // PCS constructed for future opening/commitment phase; not yet used by prove_handler.
     let state = AppState {
         proving_permits: Arc::new(Semaphore::new(4)), // max 4 concurrent proofs; tune as needed
+        edia_agent: std::sync::Arc::new(tokio::sync::Mutex::new(edia::EdiaAgent::new(16))),
     };
     let app = Router::new()
         .route("/prove/sumcheck", post(prove_handler))
@@ -159,6 +168,13 @@ async fn prove_handler(
         }
     };
 
+    // Phase 1 admission accounting: semaphore is the authority.
+    let _edia_guard = {
+        let mut agent = state.edia_agent.lock().await;
+        agent.pending_requests += 1;
+        edia::EdiaGuard::new(state.edia_agent.clone())
+    };
+
     if !owsl_permits_verification() {
         return (
             StatusCode::FORBIDDEN,
@@ -210,7 +226,10 @@ async fn prove_handler(
         prefix.push(r);
     }
 
-    let proof = SumcheckProof { claimed_sum, rounds };
+    let proof = SumcheckProof {
+        claimed_sum,
+        rounds,
+    };
 
     let payload = match serde_json::to_vec(&proof) {
         Ok(bytes) => bytes,
