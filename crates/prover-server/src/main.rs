@@ -170,6 +170,8 @@ async fn prove_handler(
 
     // Phase 1 admission accounting: semaphore is the authority.
     let _edia_guard = edia::EdiaGuard::acquire(&state.edia_agent).await;
+    let pending = state.edia_agent.lock().await.pending_requests.load(std::sync::atomic::Ordering::Acquire);
+    println!("admission inflight pending={}", pending);
 
     if !owsl_permits_verification() {
         return (
