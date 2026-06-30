@@ -4,3 +4,6 @@ node_modules
 crates/oracle-layer/target/
 .env
 target/
+*.bak*
+*.log
+*.log
