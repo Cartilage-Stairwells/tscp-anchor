@@ -53,7 +53,7 @@ mod control_tests {
         }
         assert!(agent.ring_buffer.len() < 7);
         // Verify the new field initializes cleanly
-        assert_eq!(agent.pending_requests.load(Ordering::Relaxed), 0);
+        assert_eq!(agent.pending_requests.load(Ordering::Acquire), 0);
     }
 
     #[tokio::test]
@@ -63,14 +63,14 @@ mod control_tests {
 
         {
             let locked = agent.lock().await;
-            assert_eq!(locked.pending_requests.load(Ordering::Relaxed), 1);
+            assert_eq!(locked.pending_requests.load(Ordering::Acquire), 1);
         }
 
         drop(guard);
 
         let locked = agent.lock().await;
         assert_eq!(
-            locked.pending_requests.load(Ordering::Relaxed), 0,
+            locked.pending_requests.load(Ordering::Acquire), 0,
             "EdiaGuard::drop must decrement pending_requests back to 0"
         );
     }
@@ -83,7 +83,37 @@ mod control_tests {
         drop(guard);
 
         let locked = agent.lock().await;
-        assert_eq!(locked.pending_requests.load(Ordering::Relaxed), 0);
+        assert_eq!(locked.pending_requests.load(Ordering::Acquire), 0);
+    }
+
+    #[tokio::test]
+    async fn edia_guard_survives_concurrent_acquire_and_drop() {
+        let agent = Arc::new(Mutex::new(EdiaAgent::new(16)));
+
+        // Spawn many concurrent acquire+drop cycles to force lock
+        // contention on the agent mutex inside `acquire`, and to
+        // exercise `Drop` firing while other guards are mid-flight.
+        let mut handles = Vec::new();
+        for _ in 0..50 {
+            let agent = agent.clone();
+            handles.push(tokio::spawn(async move {
+                let guard = EdiaGuard::acquire(&agent).await;
+                // tiny yield to widen the window for overlap with
+                // other tasks' acquire/drop
+                tokio::task::yield_now().await;
+                drop(guard);
+            }));
+        }
+
+        for h in handles {
+            h.await.expect("task panicked");
+        }
+
+        let locked = agent.lock().await;
+        assert_eq!(
+            locked.pending_requests.load(Ordering::Acquire), 0,
+            "all 50 concurrent guards should net out to zero pending_requests"
+        );
     }
 }
 
@@ -109,7 +139,7 @@ impl Drop for EdiaGuard {
     fn drop(&mut self) {
         // No lock acquired here -- cannot panic, safe across await points.
         self.pending_requests.fetch_update(
-            Ordering::Relaxed,
+            Ordering::Release,
             Ordering::Relaxed,
             |v| Some(v.saturating_sub(1)),
         ).ok();
