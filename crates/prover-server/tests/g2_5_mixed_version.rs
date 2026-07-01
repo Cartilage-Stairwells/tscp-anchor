@@ -1,4 +1,4 @@
-use prover_server::proof_envelope::{ProofEnvelope, ProofVersion};
+use tscp_protocol::proof_envelope::{ProofEnvelope, ProofVersion};
 
 #[test]
 fn test_061_envelope_opens_on_061() {
