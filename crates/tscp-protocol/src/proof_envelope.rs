@@ -9,7 +9,7 @@ pub enum ProofVersion {
 }
 
 impl ProofVersion {
-    pub const CURRENT: Self = Self::V0_6_1; // will flip to V0_6_2 after migration
+    pub const CURRENT: Self = Self::V0_6_1; // flips to V0_6_2 after migration completes
 }
 
 #[derive(Serialize, Deserialize)]
@@ -30,13 +30,26 @@ impl ProofEnvelope {
         }
     }
 
-    pub fn open(&self) -> Result<&[u8], ProofError> {
-        match self.version {
-            ProofVersion::V0_6_1 => Ok(&self.payload),
-            ProofVersion::V0_6_2 => Err(ProofError::UnsupportedVersion {
-                got: self.version,
-                expected: ProofVersion::V0_6_1,
-                reason: "0.6.2 verifier cannot accept 0.6.1 proofs without migration",
+    pub fn seal_062(claim: u64, payload: Vec<u8>) -> Self {
+        Self {
+            version: ProofVersion::V0_6_2,
+            plonky3_semver: [0, 6, 2],
+            claim,
+            payload,
+        }
+    }
+
+    /// Verifier declares which protocol version it implements.
+    /// Envelope and verifier versions must match exactly — no implicit
+    /// cross-version acceptance.
+    pub fn open(&self, verifier_version: ProofVersion) -> Result<&[u8], ProofError> {
+        match (self.version, verifier_version) {
+            (ProofVersion::V0_6_1, ProofVersion::V0_6_1) => Ok(&self.payload),
+            (ProofVersion::V0_6_2, ProofVersion::V0_6_2) => Ok(&self.payload),
+            (got, expected) => Err(ProofError::UnsupportedVersion {
+                got,
+                expected,
+                reason: "proof envelope version does not match verifier version",
             }),
         }
     }
