@@ -20,7 +20,7 @@ use p3_baby_bear::Poseidon2BabyBear;
 use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
 use p3_field::PrimeCharacteristicRing;
 use p3_field::PrimeField64;
-use prover_server::proof_envelope::ProofEnvelope;
+use tscp_protocol::proof_envelope::ProofEnvelope;
 use serde::{Deserialize, Serialize};
 
 type F = BabyBear;
