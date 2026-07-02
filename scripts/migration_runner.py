@@ -33,36 +33,25 @@ def run_verifier(verifier, fixture):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        "--fixture",
-        action="append",
-        required=True,
-    )
-
-    parser.add_argument(
-        "--verifier",
-        required=True,
-    )
-
-    parser.add_argument(
-        "--emit-witness",
-        required=True,
-    )
+    parser.add_argument("--fixture", action="append", required=True)
+    parser.add_argument("--verifier", required=True)
+    parser.add_argument("--emit-witness", required=True)
 
     args = parser.parse_args()
 
     checks = []
     fixture_hashes = {}
-
     overall = "PASS"
 
     for fixture in args.fixture:
+        if not os.path.exists(fixture):
+            raise FileNotFoundError(f"Fixture not found: {fixture}")
+
         fixture_hashes[os.path.basename(fixture)] = sha256_file(fixture)
 
         result = run_verifier(args.verifier, fixture)
 
         status = "PASS" if result["exit_code"] == 0 else "FAIL"
-
         if status == "FAIL":
             overall = "FAIL"
 
@@ -89,17 +78,10 @@ def main():
         },
     }
 
-    os.makedirs(
-        os.path.dirname(args.emit_witness),
-        exist_ok=True,
-    )
+    os.makedirs(os.path.dirname(args.emit_witness), exist_ok=True)
 
     with open(args.emit_witness, "w") as f:
-        json.dump(
-            witness,
-            f,
-            indent=2,
-        )
+        json.dump(witness, f, indent=2)
 
 
 if __name__ == "__main__":
