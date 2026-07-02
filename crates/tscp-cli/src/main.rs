@@ -1,3 +1,6 @@
+use tscp_polyir_verification::{verify,};
+use tscp_polyir_verification::equivalence::BitAccurateEquivalence;
+mod verify_adapter;
 use std::env;
 use std::fs;
 
@@ -54,7 +57,11 @@ fn produce(args: &[String]) {
             logical_time: i as u64,
         };
 
-        engine.apply(&event).expect("transition failed");
+        let mut apply_fn = |e: &tscp_kernel::event::EventEnvelope| {
+            engine.apply(e).map(|_| ()).map_err(|e| anyhow::anyhow!("{:?}", e))
+        };
+        let adapter = crate::verify_adapter::EngineAdapter { engine: std::cell::RefCell::new(&mut apply_fn) };
+        let event = verify::<_, BitAccurateEquivalence>(&adapter, event).expect("M8 verification failed");
 
         events.push(event);
     }
