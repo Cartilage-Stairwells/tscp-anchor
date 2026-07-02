@@ -1,3 +1,4 @@
+use p3_field::PrimeCharacteristicRing;
 use p3_field::Field;
 
 /// The TOPO-LOCK compliant storage abstraction.
