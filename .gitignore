@@ -7,3 +7,4 @@ target/
 *.bak*
 *.log
 *.log
+artifacts/*.json
