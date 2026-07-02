@@ -7,18 +7,18 @@ use p3_matrix::Matrix;
 fn commit_open_verify_mixed_matrices() {
     let mmcs = new_batch_merkle();
 
-    let col0 = RowMajorMatrix::new(
-        vec![F::new(0), F::new(1), F::new(0), F::new(1)],
-        1,
-    );
-    let col1 = RowMajorMatrix::new(
-        vec![F::new(0), F::new(1)],
-        1,
-    );
+    let col0 = RowMajorMatrix::new(vec![F::new(0), F::new(1), F::new(0), F::new(1)], 1);
+    let col1 = RowMajorMatrix::new(vec![F::new(0), F::new(1)], 1);
     let wide = RowMajorMatrix::new(
         vec![
-            F::new(1), F::new(2), F::new(1), F::new(2),
-            F::new(0), F::new(1), F::new(0), F::new(1),
+            F::new(1),
+            F::new(2),
+            F::new(1),
+            F::new(2),
+            F::new(0),
+            F::new(1),
+            F::new(0),
+            F::new(1),
         ],
         2,
     );
@@ -35,14 +35,8 @@ fn commit_open_verify_mixed_matrices() {
 fn tampered_proof_fails_verification() {
     let mmcs = new_batch_merkle();
 
-    let col0 = RowMajorMatrix::new(
-        vec![F::new(0), F::new(1), F::new(2), F::new(1)],
-        1,
-    );
-    let col1 = RowMajorMatrix::new(
-        vec![F::new(1), F::new(0), F::new(1), F::new(2)],
-        1,
-    );
+    let col0 = RowMajorMatrix::new(vec![F::new(0), F::new(1), F::new(2), F::new(1)], 1);
+    let col1 = RowMajorMatrix::new(vec![F::new(1), F::new(0), F::new(1), F::new(2)], 1);
 
     let dims = vec![col0.dimensions(), col1.dimensions()];
     let (commit, prover_data) = mmcs.commit(vec![col0, col1]);

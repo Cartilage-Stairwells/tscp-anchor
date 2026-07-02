@@ -10,7 +10,10 @@ pub type KernelVersion = RulesetVersion;
 pub const GENESIS_STATE: StateHash = [0u8; 32];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum TransitionKind { ClaimCreated = 1, ClaimVerified = 2 }
+pub enum TransitionKind {
+    ClaimCreated = 1,
+    ClaimVerified = 2,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TransitionReceipt {
@@ -31,12 +34,16 @@ impl TransitionReceipt {
         h.update(&self.parent_state_hash);
         h.update(&self.event_hash);
         h.update(&self.child_state_hash);
-        let mut out = [0u8;32]; out.copy_from_slice(h.finalize().as_bytes()); out
+        let mut out = [0u8; 32];
+        out.copy_from_slice(h.finalize().as_bytes());
+        out
     }
 }
 
 #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
 pub enum TransitionError {
-    #[error("Invalid parent")] InvalidParent,
-    #[error("Precondition: {0}")] PreconditionFailed(String),
+    #[error("Invalid parent")]
+    InvalidParent,
+    #[error("Precondition: {0}")]
+    PreconditionFailed(String),
 }

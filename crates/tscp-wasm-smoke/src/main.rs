@@ -12,8 +12,7 @@ fn main() -> Result<()> {
 
     let instance = Instance::new(&mut store, &module, &[])?;
 
-    let version = instance
-        .get_typed_func::<(), i32>(&mut store, "tscp_version")?;
+    let version = instance.get_typed_func::<(), i32>(&mut store, "tscp_version")?;
 
     let value = version.call(&mut store, ())?;
 

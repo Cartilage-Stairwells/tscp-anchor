@@ -6,9 +6,9 @@
 
 // Re-exports
 pub use p3_commit::Pcs;
+pub use p3_field::PrimeField;
 pub use p3_fri::TwoAdicFriPcs;
 pub use p3_fri::{FriParameters, FriProof};
-pub use p3_field::PrimeField;
 
 /// Convenient alias used throughout TSCP
 pub use Pcs as PolynomialCommitment;
