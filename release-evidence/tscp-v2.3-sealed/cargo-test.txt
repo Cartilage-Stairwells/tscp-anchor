@@ -1,0 +1,326 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.46
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling cfg-if v1.0.4
+   Compiling serde v1.0.228
+   Compiling libc v0.2.186
+   Compiling once_cell v1.21.4
+   Compiling log v0.4.33
+   Compiling either v1.16.0
+   Compiling pin-project-lite v0.2.17
+   Compiling autocfg v1.5.1
+   Compiling tracing-core v0.1.36
+   Compiling paste v1.0.15
+   Compiling rand_core v0.10.1
+   Compiling scopeguard v1.2.0
+   Compiling getrandom v0.4.3
+   Compiling lock_api v0.4.14
+   Compiling strength_reduce v0.2.4
+   Compiling chacha20 v0.10.1
+   Compiling thiserror v2.0.18
+   Compiling num-traits v0.2.19
+   Compiling itertools v0.14.0
+   Compiling p3-maybe-rayon v0.6.1
+   Compiling itoa v1.0.18
+   Compiling spin v0.12.1
+   Compiling syn v2.0.118
+   Compiling version_check v0.9.5
+   Compiling zmij v1.0.21
+   Compiling memchr v2.8.2
+   Compiling rand v0.10.2
+   Compiling shlex v2.0.1
+   Compiling zerocopy v0.8.52
+   Compiling num-integer v0.1.46
+   Compiling find-msvc-tools v0.1.9
+   Compiling jobserver v0.1.34
+   Compiling errno v0.3.14
+   Compiling transpose v0.2.3
+   Compiling num-bigint v0.4.6
+   Compiling cc v1.2.65
+   Compiling serde_json v1.0.150
+   Compiling itertools v0.12.1
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling generic-array v0.14.7
+   Compiling bitflags v2.13.0
+   Compiling bytes v1.12.0
+   Compiling typenum v1.20.1
+   Compiling crossbeam-utils v0.8.21
+   Compiling parking_lot_core v0.9.12
+   Compiling futures-core v0.3.32
+   Compiling indexmap v2.14.0
+   Compiling anyhow v1.0.103
+   Compiling http v1.4.2
+   Compiling crossbeam-epoch v0.9.18
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling signal-hook-registry v1.4.8
+   Compiling mio v1.2.1
+   Compiling digest v0.10.7
+   Compiling cpufeatures v0.2.17
+   Compiling socket2 v0.6.4
+   Compiling rayon-core v1.13.0
+   Compiling httparse v1.10.1
+   Compiling sha2 v0.10.9
+   Compiling crossbeam-deque v0.8.6
+   Compiling tower-service v0.3.3
+   Compiling futures-task v0.3.32
+   Compiling slab v0.4.12
+   Compiling rustversion v1.0.22
+   Compiling foldhash v0.1.5
+   Compiling futures-util v0.3.32
+   Compiling http-body v1.0.1
+   Compiling hashbrown v0.15.5
+   Compiling futures-channel v0.3.32
+   Compiling httpdate v1.0.3
+   Compiling option-ext v0.2.0
+   Compiling cranelift-isle v0.116.1
+   Compiling atomic-waker v1.1.2
+   Compiling thiserror v1.0.69
+   Compiling tower-layer v0.3.3
+   Compiling sync_wrapper v1.0.2
+   Compiling percent-encoding v2.3.2
+   Compiling allocator-api2 v0.2.21
+   Compiling form_urlencoded v1.2.2
+   Compiling dirs-sys v0.5.0
+   Compiling http-body-util v0.1.3
+   Compiling rayon v1.12.0
+   Compiling bumpalo v3.20.3
+   Compiling ahash v0.8.12
+   Compiling cranelift-codegen-shared v0.116.1
+   Compiling ryu v1.0.23
+   Compiling target-lexicon v0.13.5
+   Compiling half v1.8.3
+   Compiling lazy_static v1.5.0
+   Compiling mime v0.3.17
+   Compiling pkg-config v0.3.33
+   Compiling sharded-slab v0.1.7
+   Compiling cranelift-codegen-meta v0.116.1
+   Compiling dirs v6.0.0
+   Compiling gimli v0.31.1
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+   Compiling serde_path_to_error v0.1.20
+   Compiling tracing-log v0.2.0
+   Compiling thread_local v1.1.9
+   Compiling anstyle v1.0.14
+   Compiling regex-syntax v0.8.11
+   Compiling clap_lex v1.1.0
+   Compiling plotters-backend v0.3.7
+   Compiling nu-ansi-term v0.50.3
+   Compiling matchit v0.7.3
+   Compiling serde_derive v1.0.228
+   Compiling tracing-attributes v0.1.31
+   Compiling thiserror-impl v2.0.18
+   Compiling zerocopy-derive v0.8.52
+   Compiling tokio-macros v2.7.0
+   Compiling async-trait v0.1.89
+   Compiling tracing v0.1.44
+   Compiling thiserror-impl v1.0.69
+   Compiling wasmtime-versioned-export-macros v29.0.1
+   Compiling crc32fast v1.5.0
+   Compiling ciborium-io v0.2.2
+   Compiling rustix v1.1.4
+   Compiling cranelift-codegen v0.116.1
+   Compiling regex-automata v0.4.14
+   Compiling plotters-svg v0.3.7
+   Compiling clap_builder v4.6.0
+   Compiling axum-core v0.4.5
+   Compiling shellexpand v3.1.2
+   Compiling blake3 v1.8.5
+   Compiling itertools v0.10.5
+   Compiling rustc-hash v2.1.2
+   Compiling linux-raw-sys v0.12.1
+   Compiling p3-util v0.6.1
+   Compiling smallvec v1.15.2
+   Compiling p3-field v0.6.1
+   Compiling bincode v1.3.3
+   Compiling parking_lot v0.12.5
+   Compiling tscp-protocol v0.1.0 (/data/data/com.termux/files/home/tscp-anchor/crates/tscp-protocol)
+   Compiling tokio v1.52.3
+   Compiling cranelift-bitset v0.116.1
+   Compiling serde_urlencoded v0.7.1
+   Compiling serde_cbor v0.11.2
+   Compiling p3-matrix v0.6.1
+   Compiling p3-symmetric v0.6.1
+   Compiling cranelift-entity v0.116.1
+   Compiling tracing-subscriber v0.3.23
+   Compiling p3-dft v0.6.1
+   Compiling p3-multilinear-util v0.6.1
+   Compiling arbitrary v1.4.2
+   Compiling wasmparser v0.221.3
+   Compiling same-file v1.0.6
+   Compiling p3-mds v0.6.1
+   Compiling hex v0.4.3
+   Compiling object v0.36.7
+   Compiling p3-poseidon1 v0.6.1
+   Compiling p3-poseidon2 v0.6.1
+   Compiling p3-monty-31 v0.6.1
+   Compiling cast v0.3.0
+   Compiling walkdir v2.5.0
+   Compiling criterion-plot v0.5.0
+   Compiling cranelift-control v0.116.1
+   Compiling cranelift-bforest v0.116.1
+   Compiling clap v4.6.1
+   Compiling regalloc2 v0.11.2
+   Compiling tinytemplate v1.2.1
+   Compiling p3-challenger v0.6.1
+   Compiling regex v1.12.4
+   Compiling p3-commit v0.6.1
+   Compiling p3-baby-bear v0.6.1
+   Compiling p3-fri v0.6.1
+   Compiling p3-merkle-tree v0.6.1
+   Compiling half v2.7.1
+   Compiling batch-merkle v0.1.0 (/data/data/com.termux/files/home/tscp-anchor/crates/batch-merkle)
+   Compiling oracle-layer v0.1.0 (/data/data/com.termux/files/home/tscp-anchor/crates/oracle-layer)
+   Compiling ciborium-ll v0.2.2
+   Compiling hashbrown v0.14.5
+   Compiling ciborium v0.2.2
+   Compiling commitment v0.1.0 (/data/data/com.termux/files/home/tscp-anchor/crates/commitment)
+   Compiling plotters v0.3.7
+   Compiling cobs v0.3.0
+   Compiling semver v1.0.28
+   Compiling is-terminal v0.4.17
+   Compiling cpp_demangle v0.4.5
+   Compiling rustix v0.38.44
+   Compiling constant_time_eq v0.4.2
+   Compiling arrayref v0.3.9
+   Compiling hyper v1.10.1
+   Compiling tower v0.5.3
+   Compiling oorandom v11.1.5
+   Compiling arrayvec v0.7.8
+   Compiling fastrand v2.4.1
+   Compiling zstd-safe v7.2.4
+   Compiling anes v0.1.6
+   Compiling tempfile v3.27.0
+   Compiling criterion v0.5.1
+error: rustc interrupted by SIGSEGV, printing backtrace
+
+/apex/com.android.runtime/lib64/bionic/libc.so(backtrace+0x38) [0x7cb134df88]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbceff6e8]
+[vdso](+0x0) [0x7cc8996848]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeff820]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfefd230]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbff0058c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbff03634]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfefc928]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec44cc]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x804) [0x7cbfec81d0]
+
+### cycle encountered after 10 frames with period 11
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+### recursed 14 times
+
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfea7194]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe89940]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfea7194]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe89940]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4exprNtB4_6Parser21parse_expr_assoc_with+0x94) [0x7cbfeb7c18]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe78b08]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser27parse_stmt_without_recovery+0x17b0) [0x7cbfec917c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser15parse_full_stmt+0x194) [0x7cbfec51a8]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser16parse_block_tail+0x12c) [0x7cbfec5d3c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfec6a10]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(_RNvMNtNtCs6YGBuIxTLS9_11rustc_parse6parser4stmtNtB4_6Parser11parse_block+0x30) [0x7cbfec4190]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeb1b34]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe8989c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfe6c10c]
+/data/data/com.termux/files/usr/lib/rustlib/aarch64-linux-android/lib/librustc_driver-27f4206de6a54971.so(+0x0) [0x7cbfeabad0]
+
+note: rustc unexpectedly overflowed its stack! this is a bug
+note: maximum backtrace depth reached, frames may have been lost
+note: we would appreciate a report at https://github.com/rust-lang/rust
+help: you can increase rustc's stack size by setting RUST_MIN_STACK=16777216
+note: backtrace dumped due to SIGSEGV! resuming signal
+error: could not compile `cranelift-codegen` (lib)
+
+Caused by:
+  process didn't exit successfully: `rustc --crate-name cranelift_codegen --edition=2021 /data/data/com.termux/files/home/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cranelift-codegen-0.116.1/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 '--allow=clippy::all' --warn=unused_import_braces --warn=unused_extern_crates --warn=unused-macro-rules --warn=unused-lifetimes --warn=unstable_features '--warn=clippy::unnecessary_to_owned' '--warn=clippy::unnecessary_mut_passed' '--warn=clippy::unnecessary_fallible_conversions' '--warn=clippy::unnecessary_cast' '--warn=clippy::uninlined_format_args' --warn=unexpected_cfgs --warn=trivial_numeric_casts '--warn=clippy::map_clone' '--warn=clippy::manual_strip' '--warn=clippy::clone_on_copy' '--warn=clippy::allow_attributes_without_reason' --check-cfg 'cfg(pulley_tail_calls)' --check-cfg 'cfg(pulley_assume_llvm_makes_tail_calls)' --cfg 'feature="gimli"' --cfg 'feature="host-arch"' --cfg 'feature="std"' --cfg 'feature="timing"' --cfg 'feature="unwind"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("all-arch", "all-native-arch", "anyhow", "arm64", "capstone", "core", "default", "disas", "enable-serde", "gimli", "host-arch", "incremental-cache", "isle-errors", "postcard", "pulley", "riscv64", "s390x", "serde", "serde_derive", "sha2", "souper-harvest", "souper-ir", "std", "timing", "trace-log", "unwind", "x86"))' -C metadata=9a5c764324f044a1 -C extra-filename=-90e78923205fde20 --out-dir /data/data/com.termux/files/home/tscp-anchor/target/debug/deps -L dependency=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps --extern bumpalo=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libbumpalo-6836ab666222c5f5.rmeta --extern cranelift_bforest=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libcranelift_bforest-39eed8cf47d09445.rmeta --extern cranelift_bitset=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libcranelift_bitset-5fb8268723fa76ea.rmeta --extern cranelift_codegen_shared=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libcranelift_codegen_shared-60a99d10d79c4a12.rmeta --extern cranelift_control=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libcranelift_control-6a3000d3f0da127c.rmeta --extern cranelift_entity=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libcranelift_entity-e028ec950b0e1977.rmeta --extern gimli=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libgimli-1d2391cc70f5fb8b.rmeta --extern hashbrown=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libhashbrown-869adedee02bd4b8.rmeta --extern log=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/liblog-519ff4a4dc37e710.rmeta --extern regalloc2=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libregalloc2-48ca5836dadad674.rmeta --extern rustc_hash=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/librustc_hash-bf60d08caee3bb96.rmeta --extern smallvec=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libsmallvec-769736b28c9233e5.rmeta --extern target_lexicon=/data/data/com.termux/files/home/tscp-anchor/target/debug/deps/libtarget_lexicon-82b084314213d0b5.rmeta --cap-lints allow --cfg 'feature="arm64"'` (signal: 11, SIGSEGV: invalid memory reference)
+warning: build failed, waiting for other jobs to finish...
