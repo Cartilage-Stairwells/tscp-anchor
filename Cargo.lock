@@ -2379,9 +2379,11 @@ dependencies = [
 name = "tscp-cli"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "hex",
  "serde_cbor",
  "tscp-kernel",
+ "tscp-polyir-verification",
 ]
 
 [[package]]
@@ -2402,6 +2404,14 @@ version = "0.1.0"
 dependencies = [
  "rand 0.8.6",
  "rayon",
+]
+
+[[package]]
+name = "tscp-polyir-verification"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "sha2",
 ]
 
 [[package]]
