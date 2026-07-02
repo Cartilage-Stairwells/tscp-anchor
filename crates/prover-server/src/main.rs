@@ -125,7 +125,6 @@ fn prover_round(oracle: &impl MleOracle<F>, prefix: &[F]) -> [F; 2] {
 /// final running claim against the actual MLE oracle eval at the full
 /// challenge vector. Closed in commit 6212db90 -- a malicious prover
 /// cannot lie on the last round.
-#[allow(dead_code)]
 fn sumcheck_verify(
     proof: &SumcheckProof,
     challenger: &mut Challenger,
@@ -191,11 +190,19 @@ async fn prove_handler(
         use p3_baby_bear::default_babybear_poseidon2_16;
         Challenger::new(default_babybear_poseidon2_16())
     };
+    // Independent transcript, seeded identically, used to self-check the
+    // proof this handler is about to build before it ever leaves the server.
+    let mut verifier_challenger = {
+        use p3_baby_bear::default_babybear_poseidon2_16;
+        Challenger::new(default_babybear_poseidon2_16())
+    };
     for &v in &col0 {
         challenger.observe(v);
+        verifier_challenger.observe(v);
     }
     for &v in &col1 {
         challenger.observe(v);
+        verifier_challenger.observe(v);
     }
 
     let folded = FoldedOracleBuilder::new(vec![col0, col1], n_vars)
@@ -229,6 +236,19 @@ async fn prove_handler(
         claimed_sum,
         rounds,
     };
+
+    // Soundness self-check: verify the proof we just built before shipping
+    // it. Catches prover-side bugs (bad oracle folding, transcript
+    // mismatches, etc.) before a client ever sees a broken proof.
+    if !sumcheck_verify(&proof, &mut verifier_challenger, &folded) {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({
+                "error": "prover self-check failed: generated proof did not verify"
+            })),
+        )
+            .into_response();
+    }
 
     let payload = match serde_json::to_vec(&proof) {
         Ok(bytes) => bytes,
@@ -321,6 +341,64 @@ mod tests {
         oracle_layer::folded::FoldedOracleBuilder::new(vec![col0, col1], n_vars)
             .absorb_challenge(F::from_u32(alpha))
             .build()
+    }
+
+    #[tokio::test]
+    async fn prove_handler_self_check_passes_on_honest_input() {
+        // Exercises the full handler, including the sumcheck_verify
+        // self-check wired in before the response is built. A healthy
+        // prover must produce a proof that passes its own self-check.
+        //
+        // owsl_permits_verification() reads from the real default path
+        // (~/.tscp/owsl_status.json) via a process-global lazy_static --
+        // there is no injection point, so we write a valid SAFE status
+        // file there for the duration of this test.
+        let owsl_dir = shellexpand::tilde("~/.tscp").into_owned();
+        let owsl_path = format!("{}/owsl_status.json", owsl_dir);
+        std::fs::create_dir_all(&owsl_dir).unwrap();
+        let pre_existing = std::fs::read(&owsl_path).ok();
+        let safe_json = format!(
+            r#"{{"timestamp": {},"status": "SAFE","action": "COMMIT","round": 0,"bits_consumed": 0,"bits_remaining": 128,"anomalies": [],"frame_count": 0,"window_start": 0.0,"window_end": 0.0,"checksum_valid": true}}"#,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64()
+        );
+        std::fs::write(&owsl_path, safe_json).unwrap();
+
+        let state = AppState {
+            proving_permits: Arc::new(Semaphore::new(4)),
+            edia_agent: std::sync::Arc::new(tokio::sync::Mutex::new(
+                edia::EdiaAgent::new(16),
+            )),
+        };
+
+        let req = ProofRequest {
+            job_id: "test-job-1".to_string(),
+            col0: vec![1, 2, 3, 4],
+            col1: vec![5, 6, 7, 8],
+            alpha: 3,
+        };
+
+        let response = prove_handler(State(state), Json(req))
+            .await
+            .into_response();
+
+        // Restore whatever was there before (or remove if nothing was),
+        // regardless of assertion outcome below.
+        let restore = || match &pre_existing {
+            Some(bytes) => { let _ = std::fs::write(&owsl_path, bytes); }
+            None => { let _ = std::fs::remove_file(&owsl_path); }
+        };
+
+        let status = response.status();
+        restore();
+
+        assert_eq!(
+            status,
+            StatusCode::OK,
+            "a healthy prover's proof must pass its own self-check and return 200"
+        );
     }
 
     #[test]
@@ -438,5 +516,33 @@ mod tests {
             !sumcheck_verify(&proof, &mut wrong_challenger, &oracle),
             "verifying with a transcript seeded from different public inputs must fail"
         );
+    }
+}
+
+#[cfg(test)]
+mod golden_check {
+    use super::*;
+
+    #[test]
+    fn smoke_test_input_claim_is_88() {
+        let col0: Vec<F> = vec![1, 2, 3, 4].iter().map(|&v| F::from_u32(v)).collect();
+        let col1: Vec<F> = vec![5, 6, 7, 8].iter().map(|&v| F::from_u32(v)).collect();
+        let alpha = F::from_u32(3);
+        let n_vars = 2;
+
+        let folded = FoldedOracleBuilder::new(vec![col0, col1], n_vars)
+            .absorb_challenge(alpha)
+            .build();
+
+        let claimed_sum: F = (0..(1usize << n_vars))
+            .map(|idx| {
+                let point: Vec<F> = (0..n_vars)
+                    .map(|b| if (idx >> b) & 1 == 1 { F::ONE } else { F::ZERO })
+                    .collect();
+                folded.eval(&point)
+            })
+            .fold(F::ZERO, |a, b| a + b);
+
+        assert_eq!(claimed_sum.as_canonical_u64(), 88, "smoke test golden claim changed -- update run_smoke_test.sh if this is intentional");
     }
 }
