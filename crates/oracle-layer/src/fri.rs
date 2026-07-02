@@ -6,8 +6,15 @@ pub fn fri_fold_step<F: Field + PrimeCharacteristicRing>(
     beta: F,
 ) -> Vec<F> {
     let n = evals.len();
-    assert_eq!(domain.len(), n, "domain and evaluations must have the same length");
-    assert!(n.is_power_of_two() && n >= 2, "fold input size must be a power of two >= 2");
+    assert_eq!(
+        domain.len(),
+        n,
+        "domain and evaluations must have the same length"
+    );
+    assert!(
+        n.is_power_of_two() && n >= 2,
+        "fold input size must be a power of two >= 2"
+    );
     let half = n / 2;
 
     let two_inv = F::from_u64(2).inverse();

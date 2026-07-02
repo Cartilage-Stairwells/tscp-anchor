@@ -70,7 +70,8 @@ mod control_tests {
 
         let locked = agent.lock().await;
         assert_eq!(
-            locked.pending_requests.load(Ordering::Acquire), 0,
+            locked.pending_requests.load(Ordering::Acquire),
+            0,
             "EdiaGuard::drop must decrement pending_requests back to 0"
         );
     }
@@ -111,7 +112,8 @@ mod control_tests {
 
         let locked = agent.lock().await;
         assert_eq!(
-            locked.pending_requests.load(Ordering::Acquire), 0,
+            locked.pending_requests.load(Ordering::Acquire),
+            0,
             "all 50 concurrent guards should net out to zero pending_requests"
         );
     }
@@ -145,10 +147,10 @@ impl EdiaGuard {
 impl Drop for EdiaGuard {
     fn drop(&mut self) {
         // No lock acquired here -- cannot panic, safe across await points.
-        self.pending_requests.fetch_update(
-            Ordering::Release,
-            Ordering::Relaxed,
-            |v| Some(v.saturating_sub(1)),
-        ).ok();
+        self.pending_requests
+            .fetch_update(Ordering::Release, Ordering::Relaxed, |v| {
+                Some(v.saturating_sub(1))
+            })
+            .ok();
     }
 }

@@ -1,7 +1,7 @@
-use p3_field::PrimeCharacteristicRing;
-use p3_baby_bear::BabyBear;
 use oracle_layer::folded::FoldedOracleBuilder;
 use oracle_layer::oracle::MleOracle;
+use p3_baby_bear::BabyBear;
+use p3_field::PrimeCharacteristicRing;
 
 type F = BabyBear;
 
@@ -16,10 +16,14 @@ fn oracle_lift_end_to_end() {
         .absorb_challenge(alpha)
         .build();
 
-    let claim = (0..4).map(|i| {
-        let pt: Vec<F> = (0..2).map(|b| if (i >> b) & 1 == 1 { F::ONE } else { F::ZERO }).collect();
-        folded.eval(&pt)
-    }).fold(F::ZERO, |a, b| a + b);
+    let claim = (0..4)
+        .map(|i| {
+            let pt: Vec<F> = (0..2)
+                .map(|b| if (i >> b) & 1 == 1 { F::ONE } else { F::ZERO })
+                .collect();
+            folded.eval(&pt)
+        })
+        .fold(F::ZERO, |a, b| a + b);
 
     assert!(claim != F::ZERO);
 }
