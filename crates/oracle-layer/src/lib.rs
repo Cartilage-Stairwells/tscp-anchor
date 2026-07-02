@@ -11,3 +11,4 @@ pub mod fri_protocol;
 pub mod fri_query;
 pub mod constraint_oracle;
 pub mod poly;
+pub mod trace_provider;
