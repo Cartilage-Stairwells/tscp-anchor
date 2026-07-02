@@ -4,4 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wasmtime = "29"
+wasmtime = { version = "29", default-features = false, features = ["runtime"] }
+
+[features]
+default = []
+jit = ["wasmtime/cranelift"]
+
+[[bin]]
+name = "tscp-wasm-smoke"
+path = "src/main.rs"
+required-features = ["jit"]
