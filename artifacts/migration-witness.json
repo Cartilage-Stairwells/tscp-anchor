@@ -1,0 +1,28 @@
+{
+  "spec": "TSCP-MIGRATION-001",
+  "result": "PASS",
+  "execution": {
+    "timestamp": "2026-06-25T18:46:23.395404+00:00",
+    "verifier": "./target/release/tscp-cli"
+  },
+  "checks": [
+    {
+      "fixture": "migration-backups/plonky3-0.6.2-preflight/batch-merkle.toml.bak",
+      "status": "PASS",
+      "exit_code": 0
+    },
+    {
+      "fixture": "migration-backups/plonky3-0.6.2-preflight/commitment.toml.bak",
+      "status": "PASS",
+      "exit_code": 0
+    }
+  ],
+  "hashes": {
+    "fixtures": {
+      "batch-merkle.toml.bak": "sha256:b97cb6e01902374625f3835058d8acf18019e36acd98ca9e0bdc6ab863ac8c79",
+      "commitment.toml.bak": "sha256:fec0fa7a23e5c52546afeed54cfe407f3d03245077acdd14c0ff911d44c4870f"
+    },
+    "verifier_binary": "sha256:6ee930267ecdef69351c73f22e0a7154f0bb5d3344cfeefa2de83a5881cb3add",
+    "runner": "sha256:57c8a82d3fa043d540ec720066c92bacacb300edb0a44ac8333d090729301540"
+  }
+}
