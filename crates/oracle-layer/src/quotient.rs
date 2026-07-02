@@ -33,10 +33,7 @@ pub fn divide_by_vanishing<F: Field>(coeffs: &[F], domain_size: usize) -> Quotie
         // C already has degree < n: it cannot be divisible by Z_H
         // unless C is the zero polynomial. Quotient is zero, remainder
         // is C itself.
-        return QuotientResult {
-            quotient: vec![F::ZERO],
-            remainder: work,
-        };
+        return QuotientResult { quotient: vec![F::ZERO], remainder: work };
     }
 
     let mut quotient = vec![F::ZERO; deg - n];
@@ -50,10 +47,7 @@ pub fn divide_by_vanishing<F: Field>(coeffs: &[F], domain_size: usize) -> Quotie
     }
 
     let remainder = work[..n].to_vec();
-    QuotientResult {
-        quotient,
-        remainder,
-    }
+    QuotientResult { quotient, remainder }
 }
 
 /// Convenience check: does this polynomial vanish on the domain (i.e.,
@@ -68,7 +62,7 @@ mod tests {
     use super::*;
     use crate::fft::Radix2Interpolator;
     use p3_baby_bear::BabyBear;
-    use p3_field::PrimeField64;
+    use p3_field::{PrimeField64};
 
     type F = BabyBear;
 
@@ -88,10 +82,8 @@ mod tests {
         let coeffs = vec![F::ZERO - two, F::ZERO - three, F::ZERO, F::ZERO, two, three];
 
         let result = divide_by_vanishing(&coeffs, 4);
-        assert!(
-            result.remainder.iter().all(|&r| r == F::ZERO),
-            "remainder must be exactly zero for a true multiple of Z_H"
-        );
+        assert!(result.remainder.iter().all(|&r| r == F::ZERO),
+            "remainder must be exactly zero for a true multiple of Z_H");
         assert_eq!(result.quotient[0], two, "quotient constant term must be 2");
         assert_eq!(result.quotient[1], three, "quotient linear term must be 3");
     }
@@ -102,10 +94,8 @@ mod tests {
         // divisible by Z_H unless it's the zero polynomial.
         let coeffs = vec![F::ONE, F::ONE];
         let result = divide_by_vanishing(&coeffs, 4);
-        assert!(
-            !result.remainder.iter().all(|&r| r == F::ZERO),
-            "a nonzero low-degree polynomial must NOT vanish on the domain"
-        );
+        assert!(!result.remainder.iter().all(|&r| r == F::ZERO),
+            "a nonzero low-degree polynomial must NOT vanish on the domain");
     }
 
     #[test]
@@ -122,20 +112,16 @@ mod tests {
         // (the x^4 * Q part) and subtract Q (the -1 * Q part).
         let mut c_coeffs = vec![F::ZERO; 6];
         for (i, &qc) in q_coeffs.iter().enumerate() {
-            c_coeffs[i + 4] += qc; // x^4 * Q(x)
-            c_coeffs[i] -= qc; // -1 * Q(x)
+            c_coeffs[i + 4] += qc;       // x^4 * Q(x)
+            c_coeffs[i] -= qc;           // -1 * Q(x)
         }
 
-        assert!(
-            vanishes_on_domain(&c_coeffs, 4),
-            "Z_H(x) * Q(x) must vanish on the domain by construction"
-        );
+        assert!(vanishes_on_domain(&c_coeffs, 4),
+            "Z_H(x) * Q(x) must vanish on the domain by construction");
 
         let result = divide_by_vanishing(&c_coeffs, 4);
-        assert_eq!(
-            result.quotient, q_coeffs,
-            "recovered quotient must match the original Q(x) exactly"
-        );
+        assert_eq!(result.quotient, q_coeffs,
+            "recovered quotient must match the original Q(x) exactly");
 
         // Independent cross-check via FFT: evaluate C(x) at all domain
         // points using the FFT module; all should be zero.
@@ -144,11 +130,8 @@ mod tests {
         for i in 0..4u64 {
             let point = w.exp_u64(i);
             let direct = Radix2Interpolator::evaluate_coeffs(&c_coeffs, point);
-            assert_eq!(
-                direct,
-                F::ZERO,
-                "C(x) must evaluate to zero at every domain point, index {i}"
-            );
+            assert_eq!(direct, F::ZERO,
+                "C(x) must evaluate to zero at every domain point, index {i}");
         }
     }
 }

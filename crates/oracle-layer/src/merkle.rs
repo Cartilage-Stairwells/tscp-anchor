@@ -33,21 +33,13 @@ pub struct MerkleOpening {
 
 impl MerkleTree {
     pub fn build(leaves: Vec<F>) -> Self {
-        assert!(
-            leaves.len().is_power_of_two(),
-            "leaf count must be a power of two"
-        );
+        assert!(leaves.len().is_power_of_two(), "leaf count must be a power of two");
         assert!(!leaves.is_empty(), "cannot build a tree with zero leaves");
 
         let mmcs = new_batch_merkle();
         let (commitment, prover_data) = mmcs.commit_vec(leaves.clone());
 
-        Self {
-            leaves,
-            mmcs,
-            commitment,
-            prover_data,
-        }
+        Self { leaves, mmcs, commitment, prover_data }
     }
 
     pub fn root(&self) -> Commitment {
@@ -74,14 +66,10 @@ impl MerkleTree {
 /// count (needed to reconstruct the matrix's `Dimensions`).
 pub fn verify_opening(commitment: &Commitment, leaf_count: usize, opening: &MerkleOpening) -> bool {
     let mmcs = new_batch_merkle();
-    let dims = Dimensions {
-        width: 1,
-        height: leaf_count,
-    };
+    let dims = Dimensions { width: 1, height: leaf_count };
     let opened_values = vec![vec![opening.leaf_value]];
     let batch_opening_ref = p3_commit::BatchOpeningRef::new(&opened_values, &opening.proof);
-    mmcs.verify_batch(commitment, &[dims], opening.leaf_index, batch_opening_ref)
-        .is_ok()
+    mmcs.verify_batch(commitment, &[dims], opening.leaf_index, batch_opening_ref).is_ok()
 }
 
 #[cfg(test)]
@@ -104,10 +92,7 @@ mod tests {
         let root = tree.root();
         for i in 0..4 {
             let opening = tree.open(i);
-            assert!(
-                verify_opening(&root, 4, &opening),
-                "leaf {i} must verify against its own tree's root"
-            );
+            assert!(verify_opening(&root, 4, &opening), "leaf {i} must verify against its own tree's root");
         }
     }
 
@@ -119,10 +104,8 @@ mod tests {
 
         let mut opening = tree.open(1);
         opening.leaf_value = Fl::from_u64(999);
-        assert!(
-            !verify_opening(&root, 4, &opening),
-            "a tampered leaf value must NOT verify against the real root"
-        );
+        assert!(!verify_opening(&root, 4, &opening),
+            "a tampered leaf value must NOT verify against the real root");
     }
 
     #[test]
@@ -133,10 +116,8 @@ mod tests {
         let tree_b = MerkleTree::build(leaves_b);
 
         let opening = tree_a.open(0);
-        assert!(
-            !verify_opening(&tree_b.root(), 4, &opening),
-            "an opening from one tree must not verify against a different tree's commitment"
-        );
+        assert!(!verify_opening(&tree_b.root(), 4, &opening),
+            "an opening from one tree must not verify against a different tree's commitment");
     }
 
     #[test]
@@ -146,10 +127,7 @@ mod tests {
         let root = tree.root();
         for i in 0..8 {
             let opening = tree.open(i);
-            assert!(
-                verify_opening(&root, 8, &opening),
-                "leaf {i}'s opening must verify"
-            );
+            assert!(verify_opening(&root, 8, &opening), "leaf {i}'s opening must verify");
         }
     }
 }
