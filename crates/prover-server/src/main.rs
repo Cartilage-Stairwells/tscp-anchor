@@ -518,3 +518,31 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod golden_check {
+    use super::*;
+
+    #[test]
+    fn smoke_test_input_claim_is_88() {
+        let col0: Vec<F> = vec![1, 2, 3, 4].iter().map(|&v| F::from_u32(v)).collect();
+        let col1: Vec<F> = vec![5, 6, 7, 8].iter().map(|&v| F::from_u32(v)).collect();
+        let alpha = F::from_u32(3);
+        let n_vars = 2;
+
+        let folded = FoldedOracleBuilder::new(vec![col0, col1], n_vars)
+            .absorb_challenge(alpha)
+            .build();
+
+        let claimed_sum: F = (0..(1usize << n_vars))
+            .map(|idx| {
+                let point: Vec<F> = (0..n_vars)
+                    .map(|b| if (idx >> b) & 1 == 1 { F::ONE } else { F::ZERO })
+                    .collect();
+                folded.eval(&point)
+            })
+            .fold(F::ZERO, |a, b| a + b);
+
+        assert_eq!(claimed_sum.as_canonical_u64(), 88, "smoke test golden claim changed -- update run_smoke_test.sh if this is intentional");
+    }
+}
