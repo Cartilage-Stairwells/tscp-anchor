@@ -1,10 +1,7 @@
 use std::env;
 use std::fs;
 
-use tscp_kernel::{
-    event::EventEnvelope,
-    replay::ReplayEngine,
-};
+use tscp_kernel::{event::EventEnvelope, replay::ReplayEngine};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -13,28 +10,21 @@ fn main() {
         Some("produce") => produce(&args),
 
         Some("replay") => {
-            let path = args.get(2)
-                .expect("usage: tscp-cli replay <events.cbor>");
+            let path = args.get(2).expect("usage: tscp-cli replay <events.cbor>");
 
             println!("replaying {}", path);
 
-            let bytes = fs::read(path)
-                .expect("failed reading event file");
+            let bytes = fs::read(path).expect("failed reading event file");
 
-            let events: Vec<EventEnvelope> =
-                serde_cbor::from_slice(&bytes)
-                    .expect("invalid cbor");
+            let events: Vec<EventEnvelope> = serde_cbor::from_slice(&bytes).expect("invalid cbor");
 
-            let receipts =
-                ReplayEngine::replay(&events, 1)
-                    .expect("replay failed");
+            let receipts = ReplayEngine::replay(&events, 1).expect("replay failed");
 
             println!("replay successful");
             println!("receipts: {}", receipts.len());
             println!(
                 "final_state: {:?}",
-                receipts.last()
-                    .map(|r| r.child_state_hash)
+                receipts.last().map(|r| r.child_state_hash)
             );
         }
 
@@ -48,17 +38,10 @@ fn main() {
     }
 }
 
-
 fn produce(args: &[String]) {
-    let count: usize = arg_value(args, "--count")
-        .unwrap_or("10")
-        .parse()
-        .unwrap();
+    let count: usize = arg_value(args, "--count").unwrap_or("10").parse().unwrap();
 
-    let seed: u8 = arg_value(args, "--seed")
-        .unwrap_or("1")
-        .parse()
-        .unwrap();
+    let seed: u8 = arg_value(args, "--seed").unwrap_or("1").parse().unwrap();
 
     let mut engine = ReplayEngine::new(1);
     let mut events = Vec::new();
@@ -71,25 +54,19 @@ fn produce(args: &[String]) {
             logical_time: i as u64,
         };
 
-        engine.apply(&event)
-            .expect("transition failed");
+        engine.apply(&event).expect("transition failed");
 
         events.push(event);
     }
 
-    let bytes = serde_cbor::to_vec(&events)
-        .expect("encode failed");
+    let bytes = serde_cbor::to_vec(&events).expect("encode failed");
 
-    fs::write("events.cbor", bytes)
-        .expect("write failed");
+    fs::write("events.cbor", bytes).expect("write failed");
 
     println!("wrote events.cbor");
     println!("events: {}", count);
 }
 
-
 fn arg_value<'a>(args: &'a [String], key: &str) -> Option<&'a str> {
-    args.windows(2)
-        .find(|w| w[0] == key)
-        .map(|w| w[1].as_str())
+    args.windows(2).find(|w| w[0] == key).map(|w| w[1].as_str())
 }

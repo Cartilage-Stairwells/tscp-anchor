@@ -1,6 +1,6 @@
-use crate::types::*;
-use crate::state::State;
 use crate::event::EventEnvelope;
+use crate::state::State;
+use crate::types::*;
 
 #[derive(Debug, Clone)]
 pub struct ExecutionContext {
@@ -14,7 +14,7 @@ pub fn dispatch_event(
     event: &EventEnvelope,
     context: &ExecutionContext,
 ) -> Result<(State, TransitionReceipt), TransitionError> {
-    if event.parent_state_hash!= state_hash {
+    if event.parent_state_hash != state_hash {
         return Err(TransitionError::InvalidParent);
     }
 

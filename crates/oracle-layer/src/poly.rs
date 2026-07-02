@@ -1,5 +1,5 @@
-use p3_field::{Field, TwoAdicField};
 use p3_dft::{Radix2Dit, TwoAdicSubgroupDft};
+use p3_field::{Field, TwoAdicField};
 
 /// Compute vanishing polynomial Z_H(x) = x^n - 1 for domain of size n.
 pub fn vanishing_poly<F: Field>(n: usize) -> Vec<F> {
@@ -81,18 +81,18 @@ mod tests {
     #[test]
     fn test_poly_div() {
         let num = vec![F::ZERO, F::ZERO, F::ONE]; // x^2
-        let den = vec![-F::ONE, F::ONE];          // x - 1
+        let den = vec![-F::ONE, F::ONE]; // x - 1
         let q = poly_div(&num, &den);
-        assert_eq!(q, vec![F::ONE, F::ONE]);      // x + 1
+        assert_eq!(q, vec![F::ONE, F::ONE]); // x + 1
     }
 
     #[test]
     fn test_poly_div_zero_quotient() {
         // numerator degree < denominator degree -> quotient should be empty
-        let num = vec![F::ONE];                    // degree 0
-        let den = vec![F::ZERO, F::ONE];           // x (degree 1)
+        let num = vec![F::ONE]; // degree 0
+        let den = vec![F::ZERO, F::ONE]; // x (degree 1)
         let q = poly_div(&num, &den);
-        assert_eq!(q, vec![F::ZERO; 0]);           // empty quotient
+        assert_eq!(q, vec![F::ZERO; 0]); // empty quotient
     }
 
     #[test]
