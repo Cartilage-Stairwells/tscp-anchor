@@ -117,6 +117,13 @@ mod control_tests {
     }
 }
 
+/// Tracks the number of in-flight requests.
+///
+/// Release on decrement and Acquire on observation are intentionally
+/// conservative. Today this is only a monitoring counter (Relaxed would
+/// suffice), but the stronger ordering avoids revisiting memory-ordering
+/// decisions if the counter later becomes associated with additional
+/// shared state.
 pub struct EdiaGuard {
     pending_requests: Arc<AtomicU64>,
 }
