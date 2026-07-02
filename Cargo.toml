@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
- "crates/tscp-cli","crates/oracle-layer", "crates/batch-merkle", "crates/prover-server", "crates/commitment", "crates/tscp-kernel", "crates/tscp-protocol"]
+ "crates/tscp-cli","crates/oracle-layer", "crates/batch-merkle", "crates/prover-server", "crates/commitment", "crates/tscp-kernel", "crates/tscp-protocol", "crates/tscp-wasm-smoke"]
 
 [workspace.dependencies]
 p3-field = "0.6.1"
