@@ -20,8 +20,8 @@ use p3_baby_bear::Poseidon2BabyBear;
 use p3_challenger::{CanObserve, CanSample, DuplexChallenger};
 use p3_field::PrimeCharacteristicRing;
 use p3_field::PrimeField64;
-use serde::{Deserialize, Serialize};
 use tscp_protocol::proof_envelope::ProofEnvelope;
+use serde::{Deserialize, Serialize};
 
 type F = BabyBear;
 
@@ -170,12 +170,7 @@ async fn prove_handler(
 
     // Phase 1 admission accounting: semaphore is the authority.
     let _edia_guard = edia::EdiaGuard::acquire(&state.edia_agent).await;
-    let pending = state
-        .edia_agent
-        .lock()
-        .await
-        .pending_requests
-        .load(std::sync::atomic::Ordering::Acquire);
+    let pending = state.edia_agent.lock().await.pending_requests.load(std::sync::atomic::Ordering::Acquire);
     tracing::debug!(pending, "admission inflight");
 
     if !owsl_permits_verification() {
@@ -373,7 +368,9 @@ mod tests {
 
         let state = AppState {
             proving_permits: Arc::new(Semaphore::new(4)),
-            edia_agent: std::sync::Arc::new(tokio::sync::Mutex::new(edia::EdiaAgent::new(16))),
+            edia_agent: std::sync::Arc::new(tokio::sync::Mutex::new(
+                edia::EdiaAgent::new(16),
+            )),
         };
 
         let req = ProofRequest {
@@ -383,17 +380,15 @@ mod tests {
             alpha: 3,
         };
 
-        let response = prove_handler(State(state), Json(req)).await.into_response();
+        let response = prove_handler(State(state), Json(req))
+            .await
+            .into_response();
 
         // Restore whatever was there before (or remove if nothing was),
         // regardless of assertion outcome below.
         let restore = || match &pre_existing {
-            Some(bytes) => {
-                let _ = std::fs::write(&owsl_path, bytes);
-            }
-            None => {
-                let _ = std::fs::remove_file(&owsl_path);
-            }
+            Some(bytes) => { let _ = std::fs::write(&owsl_path, bytes); }
+            None => { let _ = std::fs::remove_file(&owsl_path); }
         };
 
         let status = response.status();
@@ -548,10 +543,6 @@ mod golden_check {
             })
             .fold(F::ZERO, |a, b| a + b);
 
-        assert_eq!(
-            claimed_sum.as_canonical_u64(),
-            88,
-            "smoke test golden claim changed -- update run_smoke_test.sh if this is intentional"
-        );
+        assert_eq!(claimed_sum.as_canonical_u64(), 88, "smoke test golden claim changed -- update run_smoke_test.sh if this is intentional");
     }
 }
