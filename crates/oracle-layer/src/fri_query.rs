@@ -1,11 +1,11 @@
-use crate::fri::{fold_domain, fri_fold_step};
-use crate::fri_protocol::{Challenger, FriCommitment};
-use crate::merkle::{verify_opening, Commitment, MerkleOpening, MerkleTree};
-use p3_baby_bear::BabyBear;
-use p3_challenger::{CanObserve, CanSample};
 #[allow(unused_imports)]
 #[allow(unused_imports)]
 use p3_field::{Field, PrimeCharacteristicRing, PrimeField32, PrimeField64};
+use p3_baby_bear::BabyBear;
+use p3_challenger::{CanObserve, CanSample};
+use crate::merkle::{MerkleTree, MerkleOpening, verify_opening, Commitment};
+use crate::fri::{fri_fold_step, fold_domain};
+use crate::fri_protocol::{Challenger, FriCommitment};
 
 /// Everything needed to check one round's fold consistency at a single
 /// query index, without the verifier ever seeing the full evaluation
@@ -95,10 +95,7 @@ pub fn fri_prove(
     num_queries: usize,
 ) -> FriProof {
     let n = evals.len();
-    assert!(
-        n.is_power_of_two(),
-        "initial evaluation count must be a power of two"
-    );
+    assert!(n.is_power_of_two(), "initial evaluation count must be a power of two");
     let expected_rounds = n.trailing_zeros() as usize;
 
     let mut current_evals = evals;
@@ -124,15 +121,8 @@ pub fn fri_prove(
         trees.push(tree);
     }
 
-    assert_eq!(
-        current_evals.len(),
-        1,
-        "after log2(n) folds exactly one value must remain"
-    );
-    let commitment = FriCommitment {
-        roots,
-        final_value: current_evals[0],
-    };
+    assert_eq!(current_evals.len(), 1, "after log2(n) folds exactly one value must remain");
+    let commitment = FriCommitment { roots, final_value: current_evals[0] };
 
     // Query phase: sample indices only now, after every round's root
     // is already in the transcript.
@@ -152,11 +142,7 @@ pub fn fri_prove(
         query_proofs.push(rounds_for_this_query);
     }
 
-    FriProof {
-        commitment,
-        query_proofs,
-        query_indices,
-    }
+    FriProof { commitment, query_proofs, query_indices }
 }
 
 /// Runs the full FRI verifier: re-derives the same betas and query
@@ -224,15 +210,7 @@ pub fn fri_verify(
             let beta = betas[r];
             let query = &proof.query_proofs[q][r];
 
-            if !verify_fri_query_round(
-                root_current,
-                root_next,
-                current_leaf_count,
-                next_leaf_count,
-                x,
-                beta,
-                query,
-            ) {
+            if !verify_fri_query_round(root_current, root_next, current_leaf_count, next_leaf_count, x, beta, query) {
                 return false;
             }
         }
@@ -245,8 +223,8 @@ pub fn fri_verify(
 mod tests {
     use super::*;
     use crate::fft::Radix2Interpolator;
-    use crate::fri::fri_fold_step;
-    use p3_baby_bear::{default_babybear_poseidon2_16, BabyBear};
+    use crate::fri::{fri_fold_step};
+    use p3_baby_bear::{BabyBear, default_babybear_poseidon2_16};
 
     type F = BabyBear;
 
@@ -271,18 +249,9 @@ mod tests {
     fn setup_one_round() -> (MerkleTree, MerkleTree, Vec<BabyBear>, BabyBear) {
         let w = omega8();
         let domain = negation_closed_domain(w, 8);
-        let coeffs = vec![
-            F::from_u64(1),
-            F::from_u64(2),
-            F::from_u64(3),
-            F::from_u64(4),
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-        ];
-        let evals: Vec<F> = domain
-            .iter()
+        let coeffs = vec![F::from_u64(1), F::from_u64(2), F::from_u64(3), F::from_u64(4),
+                           F::ZERO, F::ZERO, F::ZERO, F::ZERO];
+        let evals: Vec<F> = domain.iter()
             .map(|&x| Radix2Interpolator::evaluate_coeffs(&coeffs, x))
             .collect();
         let beta = F::from_u64(10);
@@ -302,10 +271,8 @@ mod tests {
         for idx in 0..4 {
             let query = fri_query_round(&current_tree, &next_tree, idx);
             let x = domain[idx];
-            assert!(
-                verify_fri_query_round(&root_current, &root_next, 8, 4, x, beta, &query),
-                "honest query at index {idx} must verify"
-            );
+            assert!(verify_fri_query_round(&root_current, &root_next, 8, 4, x, beta, &query),
+                "honest query at index {idx} must verify");
         }
     }
 
@@ -331,10 +298,8 @@ mod tests {
         let query = fri_query_round(&current_tree, &next_tree, 0);
         let x = domain[0];
         let wrong_beta = beta + F::ONE;
-        assert!(
-            !verify_fri_query_round(&root_current, &root_next, 8, 4, x, wrong_beta, &query),
-            "verifying with the wrong beta must fail, since the fold relation no longer holds"
-        );
+        assert!(!verify_fri_query_round(&root_current, &root_next, 8, 4, x, wrong_beta, &query),
+            "verifying with the wrong beta must fail, since the fold relation no longer holds");
     }
 
     #[test]
@@ -346,10 +311,8 @@ mod tests {
         let mut query = fri_query_round(&current_tree, &next_tree, 0);
         query.opening_neg_x = current_tree.open(2); // wrong pairing
         let x = domain[0];
-        assert!(
-            !verify_fri_query_round(&root_current, &root_next, 8, 4, x, beta, &query),
-            "mismatched x/-x pairing must fail the fold relation check"
-        );
+        assert!(!verify_fri_query_round(&root_current, &root_next, 8, 4, x, beta, &query),
+            "mismatched x/-x pairing must fail the fold relation check");
     }
 
     #[test]
@@ -360,10 +323,8 @@ mod tests {
 
         let query = fri_query_round(&current_tree, &next_tree, 0);
         let x = F::from_u64(1);
-        assert!(
-            !verify_fri_query_round(&bogus_root_current, &root_next, 8, 4, x, beta, &query),
-            "verification must fail immediately if the current root doesn't match"
-        );
+        assert!(!verify_fri_query_round(&bogus_root_current, &root_next, 8, 4, x, beta, &query),
+            "verification must fail immediately if the current root doesn't match");
     }
 
     #[test]
@@ -386,25 +347,11 @@ mod tests {
         domain = d;
 
         let coeffs = vec![
-            F::from_u64(1),
-            F::from_u64(2),
-            F::from_u64(3),
-            F::from_u64(4),
-            F::from_u64(5),
-            F::from_u64(6),
-            F::from_u64(7),
-            F::from_u64(8),
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
+            F::from_u64(1), F::from_u64(2), F::from_u64(3), F::from_u64(4),
+            F::from_u64(5), F::from_u64(6), F::from_u64(7), F::from_u64(8),
+            F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO,
         ];
-        let evals: Vec<F> = domain
-            .iter()
+        let evals: Vec<F> = domain.iter()
             .map(|&x| Radix2Interpolator::evaluate_coeffs(&coeffs, x))
             .collect();
 
@@ -414,10 +361,8 @@ mod tests {
         let proof = fri_prove(evals, domain.clone(), &mut prover_challenger, num_queries);
 
         let mut verifier_challenger = fresh_challenger();
-        assert!(
-            fri_verify(&domain, &proof, &mut verifier_challenger, num_queries),
-            "an honestly generated proof must verify against a freshly-seeded transcript"
-        );
+        assert!(fri_verify(&domain, &proof, &mut verifier_challenger, num_queries),
+            "an honestly generated proof must verify against a freshly-seeded transcript");
     }
 
     #[test]
@@ -434,25 +379,11 @@ mod tests {
         let domain = d;
 
         let coeffs = vec![
-            F::from_u64(2),
-            F::from_u64(0),
-            F::from_u64(1),
-            F::from_u64(3),
-            F::from_u64(0),
-            F::from_u64(0),
-            F::from_u64(0),
-            F::from_u64(0),
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
+            F::from_u64(2), F::from_u64(0), F::from_u64(1), F::from_u64(3),
+            F::from_u64(0), F::from_u64(0), F::from_u64(0), F::from_u64(0),
+            F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO,
         ];
-        let evals: Vec<F> = domain
-            .iter()
+        let evals: Vec<F> = domain.iter()
             .map(|&x| Radix2Interpolator::evaluate_coeffs(&coeffs, x))
             .collect();
 
@@ -464,10 +395,8 @@ mod tests {
         proof.query_proofs[0][0].opening_x.leaf_value = F::from_u64(7777777);
 
         let mut verifier_challenger = fresh_challenger();
-        assert!(
-            !fri_verify(&domain, &proof, &mut verifier_challenger, num_queries),
-            "a tampered query opening must cause verification to fail"
-        );
+        assert!(!fri_verify(&domain, &proof, &mut verifier_challenger, num_queries),
+            "a tampered query opening must cause verification to fail");
     }
 
     #[test]
@@ -484,25 +413,11 @@ mod tests {
         let domain = d;
 
         let coeffs = vec![
-            F::from_u64(1),
-            F::from_u64(1),
-            F::from_u64(1),
-            F::from_u64(1),
-            F::from_u64(0),
-            F::from_u64(0),
-            F::from_u64(0),
-            F::from_u64(0),
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
-            F::ZERO,
+            F::from_u64(1), F::from_u64(1), F::from_u64(1), F::from_u64(1),
+            F::from_u64(0), F::from_u64(0), F::from_u64(0), F::from_u64(0),
+            F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO, F::ZERO,
         ];
-        let evals: Vec<F> = domain
-            .iter()
+        let evals: Vec<F> = domain.iter()
             .map(|&x| Radix2Interpolator::evaluate_coeffs(&coeffs, x))
             .collect();
 
