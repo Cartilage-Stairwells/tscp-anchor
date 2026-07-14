@@ -1,0 +1,83 @@
+name: TSCP Verification Predicate CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    name: Formatting (cargo fmt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: rustfmt
+      - uses: swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Lints (cargo clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: clippy
+      - uses: swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  test:
+    name: Tests
+    needs: [fmt, clippy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: swatinem/rust-cache@v2
+      - name: Run tests (AVX-512 conditional)
+        run: |
+          if grep -q "avx512" /proc/cpuinfo 2>/dev/null; then
+            RUSTFLAGS="-C target-cpu=native" cargo test --workspace --release
+          else
+            cargo test --workspace --release
+          fi
+
+  audit:
+    name: Supply Chain (cargo audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@cargo-audit
+      - run: cargo audit
+
+  verify:
+    name: Verification Seal
+    needs: [fmt, clippy, test, audit]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate all gates
+        run: |
+          if [ "${{ needs.fmt.result }}" = "success" ] && \
+             [ "${{ needs.clippy.result }}" = "success" ] && \
+             [ "${{ needs.test.result }}" = "success" ] && \
+             [ "${{ needs.audit.result }}" = "success" ]; then
+            echo "TSCP VERIFICATION PREDICATE: PASS"
+          else
+            echo "TSCP VERIFICATION PREDICATE: FAIL"
+            exit 1
+          fi
