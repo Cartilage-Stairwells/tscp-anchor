@@ -1,0 +1,457 @@
+{
+  "generated": "2026-07-14",
+  "purpose": "Pre-cleanup state snapshot",
+  "repos": {
+    "Cartilage-Stairwells/tscp-anchor": {
+      "head_sha": "3752c6bd466f",
+      "branch": "master",
+      "size_kb": 299793,
+      "pushed_at": "2026-07-14",
+      "recent_commits": [
+        {
+          "sha": "3752c6bd466f",
+          "message": "chore: add .github/workflows/ci.yml [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "c5fe2e1337fc",
+          "message": "chore: add CONTRIBUTING.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "559339166cc1",
+          "message": "chore: add CHANGELOG.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "c13167281ee2",
+          "message": "chore: add LICENSE [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "60f918e62630",
+          "message": "Pin toolchain (stable + rustfmt/clippy), record build version, bump lock",
+          "author": "Triune-Oracle",
+          "date": "2026-07-05",
+          "verified": false
+        }
+      ],
+      "tags": [
+        {
+          "ref": "golden-corpus-0.6.1",
+          "sha": "041fe120ad76"
+        },
+        {
+          "ref": "golden-vector-v1",
+          "sha": "f62206e77b26"
+        },
+        {
+          "ref": "m8-cli-stable",
+          "sha": "7e05a7fd524e"
+        },
+        {
+          "ref": "m8-polyir-green-snapshot",
+          "sha": "05f37e34fa14"
+        },
+        {
+          "ref": "oracle-Layer-stable",
+          "sha": "5bf40c335600"
+        },
+        {
+          "ref": "plonky3-v0.6.1-validated",
+          "sha": "6299c42cf937"
+        },
+        {
+          "ref": "prover-server-v1-baseline",
+          "sha": "af58d16b1b72"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.1-edia-validated",
+          "sha": "3ecbf567ec41"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.1-freeze",
+          "sha": "552a154f6f5c"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.2-validated",
+          "sha": "87c17f607113"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.2-validated-current",
+          "sha": "b6457bb20214"
+        },
+        {
+          "ref": "tscp-freeze-0.6.1",
+          "sha": "602473106987"
+        },
+        {
+          "ref": "tscp-phase-2a-proof-boundary",
+          "sha": "d317c077ebf0"
+        },
+        {
+          "ref": "tscp-phase-2b-replay-boundary",
+          "sha": "d5e11f36ccff"
+        },
+        {
+          "ref": "tscp-phase-3a-wasm-artifact",
+          "sha": "af5d30e4b647"
+        },
+        {
+          "ref": "tscp-phase-3a-wasm-baseline",
+          "sha": "52aee0ff63f7"
+        },
+        {
+          "ref": "tscp-phase3-admission-v1",
+          "sha": "027743da98c1"
+        },
+        {
+          "ref": "tscp-protocol-v1",
+          "sha": "8472a438876e"
+        },
+        {
+          "ref": "tscp-v2.3-sealed",
+          "sha": "e6c4b4b2e9dd"
+        },
+        {
+          "ref": "v0.1-anchor",
+          "sha": "75d5b9fbb6d5"
+        },
+        {
+          "ref": "v0.1-artifact",
+          "sha": "b31c4ff651c2"
+        },
+        {
+          "ref": "v0.1-cbor-verifier-gate",
+          "sha": "3a0f8a35796d"
+        },
+        {
+          "ref": "v0.1-core-verified",
+          "sha": "8478615d31d7"
+        },
+        {
+          "ref": "v0.1-event-algebra",
+          "sha": "b3bae8f16b3c"
+        },
+        {
+          "ref": "v0.1-kernel",
+          "sha": "d0c05d0eebd4"
+        },
+        {
+          "ref": "v0.1-proof-layer",
+          "sha": "b31ce17dbd98"
+        },
+        {
+          "ref": "v0.1-verifier-contract-freeze",
+          "sha": "47293e7e4ac9"
+        },
+        {
+          "ref": "v0.1.0",
+          "sha": "3df9c90eb22e"
+        },
+        {
+          "ref": "v0.1.0-alpha-hardening",
+          "sha": "56f4ba92f486"
+        },
+        {
+          "ref": "v0.1.1-deepali-061-fixed",
+          "sha": "0c6fe269191d"
+        },
+        {
+          "ref": "v0.2.0",
+          "sha": "431c0ae51547"
+        },
+        {
+          "ref": "v0.3.0",
+          "sha": "aa2f2fd44559"
+        },
+        {
+          "ref": "v0.3.23",
+          "sha": "3f73df5d58de"
+        },
+        {
+          "ref": "verifier-contract-v1",
+          "sha": "043a115125aa"
+        }
+      ]
+    },
+    "Triune-Oracle/tscp-anchor": {
+      "head_sha": "bcca51e19129",
+      "branch": "master",
+      "size_kb": 299892,
+      "pushed_at": "2026-07-14",
+      "recent_commits": [
+        {
+          "sha": "bcca51e19129",
+          "message": "chore: add .github/workflows/ci.yml [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "fd41df017573",
+          "message": "chore: add CONTRIBUTING.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "756a449916fd",
+          "message": "chore: add CHANGELOG.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "3a53364dcaed",
+          "message": "chore: add LICENSE [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "33870fa1ac63",
+          "message": "ci: retrigger GitHub Actions",
+          "author": "Triune-Oracle",
+          "date": "2026-07-03",
+          "verified": false
+        }
+      ],
+      "tags": [
+        {
+          "ref": "golden-corpus-0.6.1",
+          "sha": "041fe120ad76"
+        },
+        {
+          "ref": "m8-cli-stable",
+          "sha": "7e05a7fd524e"
+        },
+        {
+          "ref": "plonky3-v0.6.1-validated",
+          "sha": "6299c42cf937"
+        },
+        {
+          "ref": "prover-server-v1-baseline",
+          "sha": "af58d16b1b72"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.1-edia-validated",
+          "sha": "3ecbf567ec41"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.1-freeze",
+          "sha": "552a154f6f5c"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.2-validated",
+          "sha": "87c17f607113"
+        },
+        {
+          "ref": "tscp-anchor-v0.6.2-validated-current",
+          "sha": "b6457bb20214"
+        },
+        {
+          "ref": "tscp-freeze-0.6.1",
+          "sha": "602473106987"
+        },
+        {
+          "ref": "tscp-phase-2a-proof-boundary",
+          "sha": "d317c077ebf0"
+        },
+        {
+          "ref": "tscp-phase-2b-replay-boundary",
+          "sha": "d5e11f36ccff"
+        },
+        {
+          "ref": "tscp-phase-3a-wasm-artifact",
+          "sha": "af5d30e4b647"
+        },
+        {
+          "ref": "tscp-phase-3a-wasm-baseline",
+          "sha": "52aee0ff63f7"
+        },
+        {
+          "ref": "tscp-phase3-admission-v1",
+          "sha": "027743da98c1"
+        },
+        {
+          "ref": "tscp-protocol-v1",
+          "sha": "8472a438876e"
+        },
+        {
+          "ref": "tscp-v2.3-sealed",
+          "sha": "e6c4b4b2e9dd"
+        },
+        {
+          "ref": "v0.1-anchor",
+          "sha": "75d5b9fbb6d5"
+        },
+        {
+          "ref": "v0.1-artifact",
+          "sha": "b31c4ff651c2"
+        },
+        {
+          "ref": "v0.1-cbor-verifier-gate",
+          "sha": "3a0f8a35796d"
+        },
+        {
+          "ref": "v0.1-core-verified",
+          "sha": "8478615d31d7"
+        },
+        {
+          "ref": "v0.1-event-algebra",
+          "sha": "b3bae8f16b3c"
+        },
+        {
+          "ref": "v0.1-kernel",
+          "sha": "d0c05d0eebd4"
+        },
+        {
+          "ref": "v0.1-proof-layer",
+          "sha": "b31ce17dbd98"
+        },
+        {
+          "ref": "v0.1-verifier-contract-freeze",
+          "sha": "47293e7e4ac9"
+        },
+        {
+          "ref": "v0.1.0",
+          "sha": "3df9c90eb22e"
+        },
+        {
+          "ref": "v0.1.0-anchor-verified",
+          "sha": "bfca3a2844df"
+        },
+        {
+          "ref": "v0.1.1-deepali-061-fixed",
+          "sha": "0c6fe269191d"
+        },
+        {
+          "ref": "v0.2.0",
+          "sha": "431c0ae51547"
+        },
+        {
+          "ref": "v0.3.0",
+          "sha": "aa2f2fd44559"
+        },
+        {
+          "ref": "verifier-contract-v1",
+          "sha": "043a115125aa"
+        }
+      ]
+    },
+    "Triune-Oracle/tscp-canon": {
+      "head_sha": "2ebf60fa5501",
+      "branch": "master",
+      "size_kb": 32476,
+      "pushed_at": "2026-07-14",
+      "recent_commits": [
+        {
+          "sha": "2ebf60fa5501",
+          "message": "chore: add .github/workflows/ci.yml [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "86dadd3accbe",
+          "message": "chore: add CONTRIBUTING.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "aa89c4fb15c8",
+          "message": "chore: add CHANGELOG.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "ca1c67756999",
+          "message": "chore: add LICENSE [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "8a6b6aae98fc",
+          "message": "Merge remote-tracking branch 'origin/tscp-proof-envelope-v2'",
+          "author": "Triune-Oracle",
+          "date": "2026-07-01",
+          "verified": false
+        }
+      ],
+      "tags": [
+        {
+          "ref": "tscp-canon-001-accepted",
+          "sha": "941359b7a3c3"
+        },
+        {
+          "ref": "tscp-canon-001-v1.0-archive",
+          "sha": "3bc9ef0443db"
+        },
+        {
+          "ref": "tscp-canon-proof-envelope-v2-validated",
+          "sha": "ff77651a5dde"
+        },
+        {
+          "ref": "tscp-canon-v2.0.0",
+          "sha": "bbc274a25cf9"
+        }
+      ]
+    },
+    "Cartilage-Stairwells/avx512-butterfly": {
+      "head_sha": "3f8f8f9865c4",
+      "branch": "master",
+      "size_kb": 848,
+      "pushed_at": "2026-07-14",
+      "recent_commits": [
+        {
+          "sha": "3f8f8f9865c4",
+          "message": "chore: add CONTRIBUTING.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "f7ca7b26c7ae",
+          "message": "chore: add CHANGELOG.md [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "67f290a30dc9",
+          "message": "chore: add LICENSE [migration 2026-07-14]",
+          "author": "Triune-Oracle",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "09e5acb82a5d",
+          "message": "iep: promotion-policy enforcement layer + full negative/positive test ma",
+          "author": "Cartilage-Stairwells",
+          "date": "2026-07-14",
+          "verified": false
+        },
+        {
+          "sha": "736e5d196e41",
+          "message": "iep: executable provenance protocol \u2014 kinds, policy, complete reference ",
+          "author": "Cartilage-Stairwells",
+          "date": "2026-07-14",
+          "verified": false
+        }
+      ],
+      "tags": []
+    }
+  }
+}
