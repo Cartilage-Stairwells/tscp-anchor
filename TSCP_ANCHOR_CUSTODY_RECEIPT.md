@@ -29,4 +29,4 @@ Historical branches preserved under archive/* namespace.
 - remote alignment: verified
 
 Date:
-2026-07-16
+2026-07-15
