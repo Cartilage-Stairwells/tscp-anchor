@@ -1,0 +1,20 @@
+[package]
+name = "tscp-backends"
+version = "0.1.0"
+edition = "2021"
+description = "NTT backend abstraction for TSCP — scalar and AVX-512 backends behind a uniform trait"
+authors = ["TSCP"]
+license = "MIT"
+
+[features]
+default = ["scalar"]
+scalar = []
+avx512 = ["std"]
+std = []
+
+[dependencies]
+p3-field = { workspace = true }
+p3-baby-bear = { workspace = true }
+p3-dft = { workspace = true }
+
+[dev-dependencies]
