@@ -1,0 +1,96 @@
+{
+  "evidence_id": "stage2-backend-verification-eb38fb6",
+  "evidence_type": "execution_verification",
+  "evidence_kind": "required",
+  "created": "2026-07-17T01:10:00Z",
+  "artifact": {
+    "name": "tscp-backends",
+    "version": "0.1.0",
+    "commit_hash": "eb38fb63a9f142f2e15ab660f7b704ad2c16b284",
+    "tree_hash": "902e7ad1b1fe1d3a07c6ea9eaeb84ba0946d905e",
+    "parent_hash": "c7bc83962f61466aa3924d5663da633f97e57022",
+    "branch": "stage2-backend-bindings",
+    "source_files": {
+      "crates/tscp-backends/src/backend.rs": "sha256:9dc1d53a60c289b1509a9277a8074395361d2f655e1cfa8bdd33c0f825f04307",
+      "crates/tscp-backends/src/scalar.rs": "sha256:973b6eb6de81eef67c23a6a3195acad31de6eced87435ea3a48f20acdc574897",
+      "crates/tscp-backends/src/avx512.rs": "sha256:b39b442e03c1d2bf646b256fa36b993067753d5d331d722b9476d01f05072d6b",
+      "crates/tscp-backends/src/lib.rs": "sha256:564a8023e7179b4a49037881c1209b2c270240db9dcfb1d773b9d9d51b601eb7",
+      "crates/tscp-backends/Cargo.toml": "sha256:56131d56c6ed852cd56433db99142a0f07643e539b90057bdf0106d58e09caee"
+    }
+  },
+  "environment_contract": {
+    "toolchain": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "toolchain_commit": "8bab26f4f68e0e26f0bb7960be334d5b520ea452",
+    "platform": "x86_64-unknown-linux-gnu",
+    "verification_site": "sandbox",
+    "p3_version": "0.6.1"
+  },
+  "verification_gates": [
+    {
+      "gate_id": "fmt",
+      "command": "cargo fmt -p tscp-backends -- --check",
+      "status": "pass",
+      "detail": "No formatting differences detected"
+    },
+    {
+      "gate_id": "clippy",
+      "command": "cargo clippy -p tscp-backends --all-targets --all-features -- -D warnings",
+      "status": "pass",
+      "detail": "No warnings or errors"
+    },
+    {
+      "gate_id": "test-scalar",
+      "command": "cargo test -p tscp-backends",
+      "status": "pass",
+      "tests_run": 2,
+      "tests_passed": 2,
+      "tests_failed": 0,
+      "test_names": [
+        "scalar::tests::scalar_backend_name",
+        "scalar::tests::scalar_forward_inverse_roundtrip"
+      ],
+      "detail": "2 passed, 0 failed, 0 ignored"
+    },
+    {
+      "gate_id": "test-avx512",
+      "command": "cargo test -p tscp-backends --features avx512",
+      "status": "pass",
+      "tests_run": 4,
+      "tests_passed": 4,
+      "tests_failed": 0,
+      "test_names": [
+        "avx512::tests::avx512_matches_scalar",
+        "avx512::tests::avx512_name",
+        "scalar::tests::scalar_backend_name",
+        "scalar::tests::scalar_forward_inverse_roundtrip"
+      ],
+      "detail": "4 passed, 0 failed, 0 ignored"
+    }
+  ],
+  "bugs_fixed": [
+    {
+      "id": "missing-trait-import",
+      "description": "TwoAdicSubgroupDft trait not in scope — .dft()/.idft() are trait methods on TwoAdicSubgroupDft, not inherent on Radix2Dit",
+      "fix": "Added 'use p3_dft::TwoAdicSubgroupDft' to scalar.rs and avx512.rs"
+    },
+    {
+      "id": "wrong-field-constructor",
+      "description": "from_canonical_u32 does not exist in p3 0.6.1 — BabyBear is MontyField31 which provides new(value: u32)",
+      "fix": "Replaced F::from_canonical_u32(i) with F::new(i as u32). Removed unused PrimeCharacteristicRing imports."
+    },
+    {
+      "id": "vec-unavailable-no-std",
+      "description": "Vec unavailable in no_std — p3_dft itself uses 'extern crate alloc' pattern",
+      "fix": "Added 'extern crate alloc' to lib.rs and 'use alloc::vec::Vec' to scalar.rs and avx512.rs"
+    }
+  ],
+  "overall_status": "pass",
+  "verification_methods": [
+    "cargo_fmt",
+    "cargo_clippy",
+    "cargo_test_scalar",
+    "cargo_test_avx512"
+  ],
+  "consensus": "all_gates_passed",
+  "next_step": "Re-sign commit with GPG key E747C3AF22573539, then promotion decision"
+}

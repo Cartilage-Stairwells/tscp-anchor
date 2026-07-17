@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "captured_at": "2026-06-25",
+  "commit": "b02f7e3185a56b593ffac0415771c35dc68a5d3d",
+  "tag": "v0.1-artifact",
+  "plonky3_version": "0.6.1",
+  "toolchain": "rust-1.96.0",
+  "target_arch": "aarch64-linux-android",
+  "binary_sha256": "5c78bef2bd32fde998050e7ffa58a3351b3855f937ae6e4f79bb988e92825c38",
+  "fri_timing_ms": {
+    "commit": 4.8,
+    "query": 16.7,
+    "total": 61.6
+  },
+  "source": "tscp-protocol-v1 tag annotation, Termux validation"
+}

@@ -1,0 +1,82 @@
+{
+  "tscp_id": "TSCP-AUDIT-MANIFEST-0001",
+  "version": "1.0.0",
+  "audit_type": "anchor_receipt_manifest",
+  "auditor": "Triune-Oracle",
+  "audited_at_utc": "2026-04-27T14:22:43Z",
+  "receipt_count": 9,
+  "receipts": [
+    {
+      "file": "anchor-receipts/2026-04-27T04-51-05-301Z-anchor.json",
+      "tscp_id": "TSCP-SPEC-0001",
+      "chain_id": 31337,
+      "tx_hash": "0x202b29fd10239db0aa59526fb0c5175eaa1b1854f267156793678b423cb4354c",
+      "batch_hash": "0x5412d7d5fc48546d38ffdd49b912891cf8d3b92ba2d82f46aa267d6cf5924a5d",
+      "sha256": "d9dcbae197470ee1d8360dcb7dfd9af30f2677f09fcbd25da2996abdd33efcf9"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T06-02-18-972Z-anchor.json",
+      "tscp_id": "TSCP-TEST-0001",
+      "chain_id": 31337,
+      "tx_hash": "0x33eb15eb079791c51a23ad84e18b60caaace9ffcaecadd5c372314bd1f9555fb",
+      "batch_hash": "0x45f0e7796d636a8a383fd9d737f837a6f426da8c6235d26c46202bd5d2f9a106",
+      "sha256": "1d7a86e75a5a69faa841275cc99e0dc163999fe94ef870f10f75f1d6abf4fcdc"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T08-10-13-934Z-anchor.json",
+      "tscp_id": "TSCP-SPEC-0001",
+      "chain_id": 31337,
+      "tx_hash": "0xd72f19babd58e27162fc12f72899873eaab09d6706a3fbe84fe3432d3bfe913f",
+      "batch_hash": "0x5412d7d5fc48546d38ffdd49b912891cf8d3b92ba2d82f46aa267d6cf5924a5d",
+      "sha256": "4db1c10fdf95eb37eb0d07b4ad6ef71fbd20705d6a1d5b071fbeb6dd66140cc4"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T08-33-52-506Z-sepolia-anchor.json",
+      "tscp_id": "TSCP-SPEC-0001",
+      "chain_id": 11155111,
+      "tx_hash": "0x8ece8c44141158d732b27457f951f2a22350afc4b2987ec5d1beed21b042e705",
+      "batch_hash": "0x5412d7d5fc48546d38ffdd49b912891cf8d3b92ba2d82f46aa267d6cf5924a5d",
+      "sha256": "caef6518504b4169f4384d5cf19cfa3f1345d589bab6f44bf1e25fb1347d5cd6"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T08-35-15-781Z-sepolia-anchor.json",
+      "tscp_id": "TSCP-GOV-0001",
+      "chain_id": 11155111,
+      "tx_hash": "0x5afb88220c22b1b6d56011313db35c2537268d1624374c8b622e6f6560716da8",
+      "batch_hash": "0x126b44d63d4a28eae731398e1890954cddf3a6e2bf3ce7fc456c7a520ec1927a",
+      "sha256": "ebaec07921694cae1ee73d7e32fc43f04ba71d93346d39cebab501ad9d5fdf9e"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T08-35-26-786Z-sepolia-anchor.json",
+      "tscp_id": "TSCP-IMPL-0001",
+      "chain_id": 11155111,
+      "tx_hash": "0x8b832f56ddcc2ce4400d52578201ec73facaff8082938dd07412fafef6cce78a",
+      "batch_hash": "0x41a7960e6f0b4d241b79320d4a736d24bc31fca8296701a88b92e0dc6749eb78",
+      "sha256": "f1f63ef5770441c146a6aa418fc4b362fc2ce58702209c6840ab2deba6a0ba45"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T08-35-37-857Z-sepolia-anchor.json",
+      "tscp_id": "TSCP-TEST-0001",
+      "chain_id": 11155111,
+      "tx_hash": "0x68a63a253610f854ac3c5c2af763bf29cd4d79a3607af93d10e7d8a1ec5be1e5",
+      "batch_hash": "0x45f0e7796d636a8a383fd9d737f837a6f426da8c6235d26c46202bd5d2f9a106",
+      "sha256": "4243e32b708938d9bb237c3a17d28687d183b65d6a2dcde702599c6081ea25d8"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T09-44-15-417Z-sepolia-anchor.json",
+      "tscp_id": "TSCP-IMPL-ANCHOR-0001",
+      "chain_id": 11155111,
+      "tx_hash": "0x4e6281a47f1bf9d5d6f3ebb1fc090ebc5c54b98c7e10ad5fcd2347ec1d25c1dd",
+      "batch_hash": "0x330ebda2f33d638948eda5d7e1262f90ef6adb774933f39689b5792756ae0ddb",
+      "sha256": "8fed6f94da85788804afd519b6188e2279c150e8fa0e5fb0a80ed1bf6dd16761"
+    },
+    {
+      "file": "anchor-receipts/2026-04-27T11-01-50-617Z-sepolia-anchor.json",
+      "tscp_id": "TSCP-IMPL-ANCHOR-0001",
+      "chain_id": 11155111,
+      "tx_hash": "0x46f61d06ebae07b8e6f4e16f1503e6357812042864242f2d71a3b8cde8dc8356",
+      "batch_hash": "0x6c1094c9d0b796338bee8347edf484102f813629800c82652f10bd11f6e16d17",
+      "sha256": "895b4bc3627a91a0e0beb37c991a5035879b88548bab4d49fa081eabe8146df4"
+    }
+  ]
+}

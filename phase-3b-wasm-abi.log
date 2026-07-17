@@ -1,0 +1,45 @@
+TSCP Phase 3B WASM ABI
+Tue Jun 30 19:48:00 PDT 2026
+
+tscp_protocol.wasm:	file format wasm 0x1
+module name: <tscp_protocol.wasm>
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> i32
+Function[1]:
+ - func[0] sig=0 <tscp_version>
+Table[1]:
+ - table[0] type=funcref initial=1 max=1
+Memory[1]:
+ - memory[0] pages: initial=16
+Global[3]:
+ - global[0] i32 mutable=1 <__stack_pointer> - init i32=1048576
+ - global[1] i32 mutable=0 <__data_end> - init i32=1048576
+ - global[2] i32 mutable=0 <__heap_base> - init i32=1048576
+Export[4]:
+ - memory[0] -> "memory"
+ - func[0] <tscp_version> -> "tscp_version"
+ - global[1] -> "__data_end"
+ - global[2] -> "__heap_base"
+Code[1]:
+ - func[0] size=4 <tscp_version>
+Custom:
+ - name: "name"
+ - module <tscp_protocol.wasm>
+ - func[0] <tscp_version>
+ - global[0] <__stack_pointer>
+Custom:
+ - name: "producers"
+Custom:
+ - name: "target_features"
+  - [+] bulk-memory
+  - [+] bulk-memory-opt
+  - [+] call-indirect-overlong
+  - [+] multivalue
+  - [+] mutable-globals
+  - [+] nontrapping-fptoint
+  - [+] reference-types
+  - [+] sign-ext
+db4b5cb62c39923201559bd5beee7703e3a3358b7a7030c0c5a218716cb3b1ad  target/wasm32-unknown-unknown/release/tscp_protocol.wasm

@@ -1,0 +1,26 @@
+# Build outputs
+target/
+build-*.log
+*.log
+
+# Seals (never version in git)
+tscp-core-seal-*.tar.gz
+CORE_COMMIT
+CORE_HASHES
+
+# Backups
+*.bak
+*.bak2
+
+# Experimental / local workspace
+tscp-polyir-verification/
+
+# Runtime / generated state (decide later if needed)
+events.cbor
+
+# OS noise
+.DS_Store
+tscp-core-seal-*.tar.gz
+build-*.log
+CORE_COMMIT
+CORE_HASHES

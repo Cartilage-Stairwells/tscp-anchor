@@ -1,0 +1,29 @@
+{
+  "name": "tscp-anchor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "verify:offline": "node scripts/verify-receipt.mjs anchor-receipts/*.json",
+    "verify:rpc:sepolia": "node scripts/verify-receipt.mjs anchor-receipts/*-sepolia-anchor.json --rpc=$SEPOLIA_RPC_URL",
+    "audit:offline": "node scripts/audit-receipts.mjs offline",
+    "audit:sepolia": "node scripts/audit-receipts.mjs sepolia",
+    "audit:manifest": "node scripts/create-audit-manifest.mjs anchor-receipts/*.json --out=audit-manifest.json --auditor=Triune-Oracle",
+    "verify:audit:manifest": "node scripts/verify-audit-manifest.mjs audit-manifest.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "hardhat": "^2.28.6"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "ethers": "^6.16.0",
+    "ganache": "^7.9.2",
+    "solc": "^0.8.34",
+    "zod": "^4.3.6"
+  }
+}

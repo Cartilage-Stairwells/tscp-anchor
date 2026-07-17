@@ -1,0 +1,13 @@
+TSCP Phase 3A WASM Artifact
+==========================
+Tue Jun 30 19:29:09 PDT 2026
+rustc 1.96.0 (ac68faa20 2026-05-25) (built from a source tarball)
+cargo 1.96.0 (30a34c682 2026-05-25) (built from a source tarball)
+
+Build:
+
+Artifact:
+-rwx------. 1 u0_a463 u0_a463 378 Jun 30 19:29 target/wasm32-unknown-unknown/release/tscp_protocol.wasm
+
+SHA256:
+caf24efc9de536b01734c93c7211b437fa131ef1dd15c0b99c9a6186262a5d58  target/wasm32-unknown-unknown/release/tscp_protocol.wasm

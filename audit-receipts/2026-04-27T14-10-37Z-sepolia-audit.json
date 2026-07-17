@@ -1,0 +1,18 @@
+{
+  "tscp_id": "TSCP-AUDIT-0001",
+  "version": "1.0.0",
+  "audit_type": "receipt_verification",
+  "mode": "sepolia",
+  "timestamp_utc": "2026-04-27T14:10:37Z",
+  "git_commit": "32b83378d71c6e2dae2c6d07baf3cdf010df2d8e",
+  "git_dirty": false,
+  "node_version": "v24.14.1",
+  "npm_version": "11.12.1",
+  "command": "npm run verify:rpc:sepolia",
+  "status": "PASS",
+  "receipt_count": 6,
+  "stdout_sha256": "6a4a3b9d750a6d75819a21ffdcf1ce94c3a086ba074dc437c4b8332621380cce",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout": "\n> tscp-anchor@1.0.0 verify:rpc:sepolia\n> node scripts/verify-receipt.mjs anchor-receipts/*-sepolia-anchor.json --rpc=$SEPOLIA_RPC_URL\n\nTSCP-SPEC-0001 → VALID (rpc)\nTSCP-GOV-0001 → VALID (rpc)\nTSCP-IMPL-0001 → VALID (rpc)\nTSCP-TEST-0001 → VALID (rpc)\nTSCP-IMPL-ANCHOR-0001 → VALID (rpc)\nTSCP-IMPL-ANCHOR-0001 → VALID (rpc)\n",
+  "stderr": ""
+}
