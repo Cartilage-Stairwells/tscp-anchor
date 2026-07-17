@@ -18,32 +18,16 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install --omit=optional --ignore-scripts --no-audit
-
-      - name: Check secrets
-        id: check_secrets
-        env:
-          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
-          SEPOLIA_CONTRACT_ADDRESS: ${{ secrets.SEPOLIA_CONTRACT_ADDRESS }}
-        run: |
-          if [ -z "$SEPOLIA_RPC_URL" ] || [ -z "$DEPLOYER_PRIVATE_KEY" ] || [ -z "$SEPOLIA_CONTRACT_ADDRESS" ]; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "Sepolia secrets not configured — skipping anchor step"
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
+        run: npm install --omit=optional --no-audit
 
       - name: Anchor RATIFIED artifacts
-        if: steps.check_secrets.outputs.skip != 'true'
         env:
           SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-          DEPLOYER_PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
-          SEPOLIA_CONTRACT_ADDRESS: ${{ secrets.SEPOLIA_CONTRACT_ADDRESS }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          ANCHOR_CONTRACT_ADDRESS: ${{ secrets.ANCHOR_CONTRACT_ADDRESS }}
         run: node scripts/scan-ratified.mjs
 
       - name: Upload receipts
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: anchor-receipts

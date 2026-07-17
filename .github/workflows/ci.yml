@@ -48,7 +48,7 @@ jobs:
         with:
           toolchain: nightly
       - uses: swatinem/rust-cache@v2
-      - name: Run tests
+      - name: Run tests (AVX-512 conditional)
         run: |
           if grep -q "avx512" /proc/cpuinfo 2>/dev/null; then
             RUSTFLAGS="-C target-cpu=native" cargo test --workspace --release
@@ -59,7 +59,6 @@ jobs:
   audit:
     name: Supply Chain (cargo audit)
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/install-action@cargo-audit
@@ -73,15 +72,11 @@ jobs:
     steps:
       - name: Evaluate all gates
         run: |
-          echo "fmt: ${{ needs.fmt.result }}"
-          echo "clippy: ${{ needs.clippy.result }}"
-          echo "test: ${{ needs.test.result }}"
-          echo "audit: ${{ needs.audit.result }}"
           if [ "${{ needs.fmt.result }}" = "success" ] && \
              [ "${{ needs.clippy.result }}" = "success" ] && \
-             [ "${{ needs.test.result }}" = "success" ]; then
+             [ "${{ needs.test.result }}" = "success" ] && \
+             [ "${{ needs.audit.result }}" = "success" ]; then
             echo "TSCP VERIFICATION PREDICATE: PASS"
-            echo "Note: cargo audit is non-blocking (continue-on-error)"
           else
             echo "TSCP VERIFICATION PREDICATE: FAIL"
             exit 1
