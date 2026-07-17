@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
- "crates/tscp-cli","crates/oracle-layer", "crates/batch-merkle", "crates/prover-server", "crates/commitment", "crates/tscp-kernel", "crates/tscp-protocol", "crates/tscp-wasm-smoke", "tscp-m83"]
+ "crates/tscp-cli","crates/oracle-layer", "crates/batch-merkle", "crates/prover-server", "crates/commitment", "crates/tscp-kernel", "crates/tscp-protocol", "crates/tscp-wasm-smoke", "tscp-m83", "crates/tscp-backends"]
 
 [workspace.dependencies]
 p3-field = "0.6.1"
@@ -20,4 +20,3 @@ serde_json = "1.0"
 shellexpand = "3.0"
 lazy_static = "1.4"
 tempfile = "3.0"
-

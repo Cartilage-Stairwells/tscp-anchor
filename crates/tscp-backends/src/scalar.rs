@@ -1,0 +1,63 @@
+use alloc::vec::Vec;
+use p3_dft::{Radix2Dit, TwoAdicSubgroupDft};
+use p3_field::TwoAdicField;
+
+use crate::backend::NttBackend;
+
+pub struct ScalarBackend<F: TwoAdicField> {
+    dft: Radix2Dit<F>,
+}
+
+impl<F: TwoAdicField> Default for ScalarBackend<F> {
+    fn default() -> Self {
+        ScalarBackend {
+            dft: Radix2Dit::default(),
+        }
+    }
+}
+
+impl<F: TwoAdicField> NttBackend for ScalarBackend<F> {
+    type Field = F;
+
+    fn forward(&self, vals: &mut [Self::Field]) {
+        let owned: Vec<F> = self.dft.dft(vals.to_vec());
+        vals.copy_from_slice(&owned);
+    }
+
+    fn inverse(&self, vals: &mut [Self::Field]) {
+        let owned: Vec<F> = self.dft.idft(vals.to_vec());
+        vals.copy_from_slice(&owned);
+    }
+
+    fn name(&self) -> &'static str {
+        "scalar-radix2-dit"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use p3_baby_bear::BabyBear;
+
+    type F = BabyBear;
+
+    #[test]
+    fn scalar_forward_inverse_roundtrip() {
+        let backend = ScalarBackend::<F>::default();
+        let original: Vec<F> = (0..8).map(|i| F::new(i as u32)).collect();
+        let mut vals = original.clone();
+
+        backend.forward(&mut vals);
+        backend.inverse(&mut vals);
+
+        for (a, b) in original.iter().zip(vals.iter()) {
+            assert_eq!(*a, *b, "roundtrip failed");
+        }
+    }
+
+    #[test]
+    fn scalar_backend_name() {
+        let backend = ScalarBackend::<F>::default();
+        assert_eq!(backend.name(), "scalar-radix2-dit");
+    }
+}

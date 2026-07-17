@@ -1,0 +1,98 @@
+name: Stage 2 Backend Verification
+
+on:
+  push:
+    branches: [ "stage2-backend-bindings" ]
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "crates/tscp-backends/**"
+  workflow_dispatch:
+
+concurrency:
+  group: stage2-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: rustfmt
+      - uses: swatinem/rust-cache@v2
+      - run: cargo fmt -p tscp-backends -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: clippy
+      - uses: swatinem/rust-cache@v2
+      - run: cargo clippy -p tscp-backends --all-targets --all-features -- -D warnings
+
+  test-scalar:
+    name: Tests (scalar)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: swatinem/rust-cache@v2
+      - name: Run scalar tests
+        run: cargo test -p tscp-backends 2>&1 | tee test-scalar.log
+      - name: Upload test log
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-scalar-log
+          path: test-scalar.log
+
+  test-avx512:
+    name: Tests (avx512 feature)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: swatinem/rust-cache@v2
+      - name: Run avx512 feature tests
+        run: cargo test -p tscp-backends --features avx512 2>&1 | tee test-avx512.log
+      - name: Upload test log
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-avx512-log
+          path: test-avx512.log
+
+  verify-seal:
+    name: Verification Seal
+    needs: [fmt, clippy, test-scalar, test-avx512]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate all gates
+        run: |
+          echo "fmt: ${{ needs.fmt.result }}"
+          echo "clippy: ${{ needs.clippy.result }}"
+          echo "test-scalar: ${{ needs.test-scalar.result }}"
+          echo "test-avx512: ${{ needs.test-avx512.result }}"
+          if [ "${{ needs.fmt.result }}" = "success" ] && \
+             [ "${{ needs.clippy.result }}" = "success" ] && \
+             [ "${{ needs.test-scalar.result }}" = "success" ] && \
+             [ "${{ needs.test-avx512.result }}" = "success" ]; then
+            echo "STAGE2 VERIFICATION: PASS"
+          else
+            echo "STAGE2 VERIFICATION: FAIL"
+            exit 1
+          fi
