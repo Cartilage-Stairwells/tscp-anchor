@@ -1,19 +1,9 @@
-//! ScalarBackend — reference NTT using p3-dft's Radix2Dit.
-//!
-//! This is the correctness reference. It uses the same scalar
-//! radix-2 DFT that the commitment and oracle-layer crates already
-//! use directly. The backend trait wraps it so call sites can switch
-//! backends without changing their DFT call.
-
+use alloc::vec::Vec;
+use p3_dft::{Radix2Dit, TwoAdicSubgroupDft};
 use p3_field::TwoAdicField;
-use p3_dft::Radix2Dit;
 
 use crate::backend::NttBackend;
 
-/// Scalar reference backend using p3-dft's Radix2Dit.
-///
-/// This is the default and the correctness reference. All other
-/// backends must produce identical results to this one.
 pub struct ScalarBackend<F: TwoAdicField> {
     dft: Radix2Dit<F>,
 }
@@ -48,16 +38,13 @@ impl<F: TwoAdicField> NttBackend for ScalarBackend<F> {
 mod tests {
     use super::*;
     use p3_baby_bear::BabyBear;
-    use p3_field::PrimeCharacteristicRing;
 
     type F = BabyBear;
 
     #[test]
     fn scalar_forward_inverse_roundtrip() {
         let backend = ScalarBackend::<F>::default();
-        let original: Vec<F> = (0..8)
-            .map(|i| F::from_canonical_u32(i))
-            .collect();
+        let original: Vec<F> = (0..8).map(|i| F::new(i as u32)).collect();
         let mut vals = original.clone();
 
         backend.forward(&mut vals);
