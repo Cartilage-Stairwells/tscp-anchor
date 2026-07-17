@@ -1,30 +1,9 @@
-//! AVX-512 Backend — SIMD-accelerated NTT.
-//!
-//! Feature-gated behind `avx512`. Only compiled for x86_64 targets
-//! with AVX-512F and AVX-512DQ support.
-//!
-//! Currently delegates to ScalarBackend because the AVX-512 butterfly
-//! implementation lives in the separate avx512-butterfly repository.
-//! This module exists to:
-//!   1. Establish the feature-gated entry point
-//!   2. Verify the trait is implementable behind a feature gate
-//!   3. Provide the compile-time plumbing for when the real
-//!      AVX-512 butterfly is wired in
-//!
-//! When the avx512-butterfly butterfly is integrated, this module
-//! will use std::arch::x86_64 intrinsics directly. Until then,
-//! correctness is preserved by delegation to the scalar reference.
-
+use alloc::vec::Vec;
+use p3_dft::{Radix2Dit, TwoAdicSubgroupDft};
 use p3_field::TwoAdicField;
-use p3_dft::Radix2Dit;
 
 use crate::backend::NttBackend;
 
-/// AVX-512-accelerated NTT backend.
-///
-/// Currently delegates to scalar. When the real SIMD butterfly is
-/// wired in, this will use __m512i intrinsics for the radix-2
-/// butterfly with Montgomery reduction.
 pub struct Avx512Backend<F: TwoAdicField> {
     dft: Radix2Dit<F>,
 }
@@ -41,8 +20,6 @@ impl<F: TwoAdicField> NttBackend for Avx512Backend<F> {
     type Field = F;
 
     fn forward(&self, vals: &mut [Self::Field]) {
-        // TODO: Replace with AVX-512 butterfly when avx512-butterfly is integrated.
-        // Until then, delegate to scalar to preserve correctness.
         let owned: Vec<F> = self.dft.dft(vals.to_vec());
         vals.copy_from_slice(&owned);
     }
@@ -60,9 +37,8 @@ impl<F: TwoAdicField> NttBackend for Avx512Backend<F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use p3_baby_bear::BabyBear;
-    use p3_field::PrimeCharacteristicRing;
     use crate::scalar::ScalarBackend;
+    use p3_baby_bear::BabyBear;
 
     type F = BabyBear;
 
@@ -71,9 +47,7 @@ mod tests {
         let scalar = ScalarBackend::<F>::default();
         let avx = Avx512Backend::<F>::default();
 
-        let input: Vec<F> = (0..16)
-            .map(|i| F::from_canonical_u32(i * 7 + 3))
-            .collect();
+        let input: Vec<F> = (0..16).map(|i| F::new(i * 7 + 3)).collect();
 
         let mut s_vals = input.clone();
         let mut a_vals = input.clone();
