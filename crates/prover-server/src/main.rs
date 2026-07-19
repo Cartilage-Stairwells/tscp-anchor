@@ -436,7 +436,7 @@ mod tests {
     #[test]
     fn tampered_round_message_fails_verification() {
         let mut proof = run_prover(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
-        proof.rounds[0].0 = proof.rounds[0].0 + F::ONE;
+        proof.rounds[0].0 += F::ONE;
 
         let mut verifier_challenger = fresh_challenger();
         for &v in &[
@@ -465,7 +465,7 @@ mod tests {
     #[test]
     fn wrong_claimed_sum_fails_verification() {
         let mut proof = run_prover(vec![1, 2, 3, 4], vec![5, 6, 7, 8], 3);
-        proof.claimed_sum = proof.claimed_sum + F::ONE;
+        proof.claimed_sum += F::ONE;
 
         let mut verifier_challenger = fresh_challenger();
         for &v in &[
@@ -530,8 +530,8 @@ mod golden_check {
 
     #[test]
     fn smoke_test_input_claim_is_88() {
-        let col0: Vec<F> = vec![1, 2, 3, 4].iter().map(|&v| F::from_u32(v)).collect();
-        let col1: Vec<F> = vec![5, 6, 7, 8].iter().map(|&v| F::from_u32(v)).collect();
+        let col0: Vec<F> = [1, 2, 3, 4].iter().map(|&v| F::from_u32(v)).collect();
+        let col1: Vec<F> = [5, 6, 7, 8].iter().map(|&v| F::from_u32(v)).collect();
         let alpha = F::from_u32(3);
         let n_vars = 2;
 
