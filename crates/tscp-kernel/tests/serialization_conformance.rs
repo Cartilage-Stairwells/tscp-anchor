@@ -116,14 +116,15 @@ fn test_round_trip_hash_stability() {
 
 // ─── Predicate 4: Mutation Sensitivity ─────────────────────────────────────
 
-/// #4 positive: any single-bit change in the receipt produces a changed
-/// identity hash (deterministic avalanche).
+/// #4 positive: any field change in the receipt produces a changed
+/// identity hash. Covers all five fields: parent_state_hash, event_hash,
+/// child_state_hash, kernel_version, and kind.
 #[test]
 fn test_mutation_changes_hash() {
     let r = sample_receipt();
     let h_original = receipt_hash(&r);
 
-    // Flip each bit in each field, verify hash changes
+    // Flip each bit in each hash field, verify hash changes
     for byte_idx in 0..32 {
         let mut r2 = r.clone();
         r2.parent_state_hash[byte_idx] ^= 0x01;
@@ -162,15 +163,17 @@ fn test_mutation_changes_hash() {
     assert_ne!(h_original, receipt_hash(&r2), "kind change must change hash");
 }
 
-/// #4 negative: mutation detection is always enforced — no mutation
-/// escapes detection. Exhaustive check across all single-byte mutations
-/// of all 96 hash bytes + metadata.
+/// #4 negative: mutation detection is always enforced — exhaustive bit-flip
+/// across all 96 bytes of the three hash fields (parent, event, child).
+///
+/// Note: kernel_version and kind are covered by test_mutation_changes_hash.
+/// This test is exhaustive over hash-field bytes only: 96 bytes × 8 bits = 768
+/// individual bit-flip mutations, all of which must change the output hash.
 #[test]
 fn test_mutation_always_detected() {
     let r = sample_receipt();
     let h_original = receipt_hash(&r);
 
-    // Exhaustive single-byte mutation across all 96 bytes of hash fields
     let fields: [(&str, usize); 3] = [
         ("parent", 32),
         ("event", 32),
@@ -264,8 +267,6 @@ fn test_cross_domain_no_collision() {
 
 /// #6: toolchain reproducibility — the same source compiled with the same
 /// toolchain produces bitwise-identical serialized output.
-/// This test verifies that serialization is deterministic within the
-/// current toolchain environment.
 #[test]
 fn test_reproducible_build() {
     let r = sample_receipt();
@@ -290,21 +291,15 @@ fn test_reproducible_build() {
 
 // ─── Predicate 7: Authority Boundary Preservation ────────────────────────
 
-/// #7 positive: authority boundary compile — the EvidenceArtifact type
-/// does not contain custody-related fields. This is a compile-time
-/// guarantee enforced by the type system.
-///
-/// We verify that the TransitionReceipt (an evidence record) contains only
-/// data fields and no custody decision fields (no "promote", "reject",
-/// "approve", "custody" fields).
+/// #7 positive: authority boundary — the TransitionReceipt type is sealed
+/// with `#[serde(deny_unknown_fields)]`. This test verifies that the type
+/// compiles and round-trips cleanly with exactly the five defined fields.
 #[test]
 fn test_authority_boundary_compile() {
     let r = sample_receipt();
     let bytes = to_cbor(&r).unwrap();
 
     // The serialized form must NOT contain custody decision keywords
-    // This is a structural check — the type itself has no such fields,
-    // but we verify the serialized form doesn't accidentally include them
     let serialized_str = String::from_utf8_lossy(&bytes);
 
     assert!(!serialized_str.contains("promote"), "evidence record must not contain 'promote'");
@@ -312,9 +307,7 @@ fn test_authority_boundary_compile() {
     assert!(!serialized_str.contains("approve"), "evidence record must not contain 'approve'");
     assert!(!serialized_str.contains("custody"), "evidence record must not contain 'custody'");
 
-    // Verify the type only has the expected fields
     let r2: TransitionReceipt = from_cbor(&bytes).unwrap();
-    // Access all fields to confirm they're the only ones
     let _ = r2.parent_state_hash;
     let _ = r2.event_hash;
     let _ = r2.child_state_hash;
@@ -322,36 +315,36 @@ fn test_authority_boundary_compile() {
     let _ = r2.kind;
 }
 
-/// #7 negative: custody expression blocked — verify that attempting to
-/// construct a custody-like structure from serialized evidence is rejected
-/// by the type system. The TransitionReceipt has no fields for custody
-/// decisions, so any such data would be rejected during deserialization.
+/// #7 negative: custody expression blocked — a CBOR payload containing a
+/// "custody" field MUST be rejected by `from_cbor::<TransitionReceipt>`.
+///
+/// This test constructs a CBOR map with the valid five fields plus an extra
+/// "custody" key and asserts that deserialization fails. This is enforced
+/// by `#[serde(deny_unknown_fields)]` on TransitionReceipt.
 #[test]
 fn test_custody_expression_blocked() {
-    // Attempt to inject custody-like data into the CBOR stream
-    // by creating a modified CBOR map with extra fields.
-    let r = sample_receipt();
-    let bytes = to_cbor(&r).unwrap();
+    use serde_cbor::Value;
+    use std::collections::BTreeMap;
 
-    // serde_cbor uses self-describing format. We verify that adding
-    // extra unknown fields would cause deserialization to fail
-    // (since TransitionReceipt uses derive(Deserialize) without
-    // #[serde(default)] or deny_unknown_fields — extra fields are
-    // actually ignored by default in serde, which is correct behavior
-    // because the type simply doesn't expose them).
+    // Build a CBOR map with all five valid fields + an extra "custody" field.
+    // serde_cbor uses string keys for struct field names.
+    let mut map: BTreeMap<Value, Value> = BTreeMap::new();
+    map.insert(Value::Text("parent_state_hash".into()), Value::Bytes(vec![0xAB; 32]));
+    map.insert(Value::Text("event_hash".into()),        Value::Bytes(vec![0xCD; 32]));
+    map.insert(Value::Text("child_state_hash".into()),  Value::Bytes(vec![0xEF; 32]));
+    map.insert(Value::Text("kernel_version".into()),    Value::Integer(1));
+    map.insert(Value::Text("kind".into()),              Value::Text("ClaimCreated".into()));
+    // Inject forbidden field
+    map.insert(Value::Text("custody".into()),           Value::Text("approve".into()));
 
-    // The key structural guarantee is that even if extra data is present
-    // in the CBOR stream, the TransitionReceipt type has no way to
-    // access or express custody decisions. The fields don't exist.
+    let cbor_bytes = serde_cbor::to_vec(&Value::Map(map))
+        .expect("building test CBOR must succeed");
 
-    // Verify by round-tripping
-    let r2: TransitionReceipt = from_cbor(&bytes).unwrap();
-    assert_eq!(r, r2, "round-trip must preserve only the defined fields");
-
-    // The type's field count is fixed at 5 — there's no 6th field for custody
-    // This is enforced at compile time by the struct definition.
-    // We verify the hash doesn't change if we add noise:
-    let h1 = receipt_hash(&r);
-    let h2 = receipt_hash(&r2);
-    assert_eq!(h1, h2, "hash must be stable — no custody expression possible");
+    // With #[serde(deny_unknown_fields)], this MUST fail
+    let result: Result<TransitionReceipt, _> = from_cbor(&cbor_bytes);
+    assert!(
+        result.is_err(),
+        "TransitionReceipt must reject CBOR payloads containing unknown fields (e.g. 'custody'). \
+         This failure means #[serde(deny_unknown_fields)] is not in effect — add it to TransitionReceipt."
+    );
 }
