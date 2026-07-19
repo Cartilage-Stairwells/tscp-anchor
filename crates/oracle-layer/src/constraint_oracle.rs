@@ -1,12 +1,12 @@
-use p3_field::Field;
 use crate::constraint::Constraint;
 use crate::oracle::MleOracle;
+use p3_field::Field;
 
 /// An oracle that evaluates a constraint over a trace of rows.
 /// The trace is a hypercube: each row is a vector of field elements.
 /// The oracle maps a binary index (as a field vector) to the constraint evaluation at that row.
 pub struct ConstraintOracle<F: Field, C: Constraint<F>> {
-    trace: Vec<Vec<F>>,   // rows x columns
+    trace: Vec<Vec<F>>, // rows x columns
     constraint: C,
 }
 
