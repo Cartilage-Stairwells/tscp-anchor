@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "exceptions": [
+    {
+      "exception_id": "EX-0001",
+      "status": "RESOLVED",
+      "dependency": "serde_cbor v0.11.2",
+      "owner": "Cartilage-Stairwells",
+      "evidence": [
+        "RUSTSEC-2021-0127",
+        "merge commit 1e5e8249",
+        "CI run on 1e5e8249 (all 4 workflows green)",
+        "cargo audit no longer reports this advisory"
+      ],
+      "resolution": "Migrated to ciborium v0.2.2 (actively maintained, IETF RFC 8949 compliant). Codec implementation change, not canonical identity transition. Identity primitive (BLAKE3 on structured fields) unchanged. 12/12 serialization conformance tests pass. test_custody_expression_blocked passed without modification.",
+      "first_recorded": "2026-07-19",
+      "last_reviewed": "2026-07-19",
+      "notes": "Classification: codec migration, NOT identity transition. Acceptance gate: serialization conformance suite (12 tests)."
+    },
+    {
+      "exception_id": "EX-0002",
+      "status": "ACTIVE",
+      "dependency": "crossbeam-epoch v0.9.18 (transitive via wasmtime)",
+      "owner": "Cartilage-Stairwells",
+      "evidence": [
+        "RUSTSEC-2026-0204",
+        "cargo audit on CI run 1e5e8249"
+      ],
+      "resolution": "Transitive dependency via wasmtime. Not a direct dependency. Upgrade to crossbeam-epoch >=0.9.20 requires wasmtime version bump. Tracked under EX-0003 batch upgrade.",
+      "audit": "RUSTSEC-2026-0204",
+      "first_recorded": "2026-07-19",
+      "last_reviewed": "2026-07-19",
+      "planned_mitigations": "Upgrade wasmtime to >=36.x (resolves both EX-0002 and EX-0003)",
+      "next_review": "2026-08-19"
+    },
+    {
+      "exception_id": "EX-0003",
+      "status": "ACTIVE",
+      "dependency": "wasmtime v29.0.1",
+      "owner": "Cartilage-Stairwells",
+      "evidence": [
+        "RUSTSEC-2026-0088",
+        "RUSTSEC-2026-0093",
+        "RUSTSEC-2026-0087",
+        "RUSTSEC-2026-0092",
+        "RUSTSEC-2026-0021",
+        "RUSTSEC-2025-0118",
+        "cargo audit on CI run 1e5e8249"
+      ],
+      "resolution": "wasmtime is used only by tscp-wasm-smoke (runtime smoke test), not by the core serialization or proving stack. No untrusted WASM is executed. Upgrade path: wasmtime >=36.0.7 resolves all 6 advisories. Major version bump (29 to 36+) requires API migration.",
+      "audit": "RUSTSEC-2026-0088,RUSTSEC-2026-0093,RUSTSEC-2026-0087,RUSTSEC-2026-0092,RUSTSEC-2026-0021,RUSTSEC-2025-0118",
+      "first_recorded": "2026-07-19",
+      "last_reviewed": "2026-07-19",
+      "planned_mitigations": "Upgrade wasmtime to >=36.0.7 (API migration required)",
+      "next_review": "2026-08-19"
+    }
+  ]
+}
