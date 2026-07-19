@@ -1,15 +1,19 @@
 # TSCP Release Candidate 1 (v1.0-rc1)
 # Release Manifest
 
-**Date:** 2026-07-17
+**Date:** 2026-07-18
+**Regenerated:** 2026-07-18T22:15:00Z (provenance correction — see change note)
 **Sealed by:** Cartilage-Stairwells Verification Authority
 **GPG Key:** E747C3AF22573539
 
 ## Scope
 
-This release candidate packages the TSCP proving stack evidence corpus across two repositories. It represents the transition from architectural exploration to a frozen, reproducible evidence execution model.
+This release candidate packages the TSCP proving stack evidence corpus.
+It represents the transition from architectural exploration to a frozen,
+reproducible evidence execution model.
 
-**No architectural changes are pending.** Remaining work is execution, benchmarking on qualified hardware, and final release custody.
+**No architectural changes are pending.** Remaining work is execution,
+benchmarking on qualified hardware, and final release custody.
 
 ---
 
@@ -17,19 +21,35 @@ This release candidate packages the TSCP proving stack evidence corpus across tw
 
 | Repository | Commit | Status |
 |---|---|---|
-| Cartilage-Stairwells/tscp-anchor | `1cff176bb3a0cc0ac555a11c8487751168b6f6ce` | ⏳ Pending GPG re-sign |
+| Triune-Oracle/tscp-anchor (custody-merge-ready) | `8b0969d61df3f9758193c3c7ec18a04f85ca4b5a` | ⏳ Pending GPG re-sign |
 | Cartilage-Stairwells/avx512-butterfly | `288d58af9bf2033e83ce72bdfa15cdf3f4dd5e3e` | ⏳ Pending GPG re-sign |
 | Triune-Oracle/tscp-canon | pinned, no changes | ✅ Stable |
 
-Both commits were authored in an agent sandbox (no private GPG key available). They must be re-signed from the holder's device before the v1.0 release. The re-sign procedure is documented in RE-SIGN.md.
+The re-sign procedure is documented in RE-SIGN.md.
+
+---
+
+## Change Note (2026-07-18 — Provenance Correction)
+
+The previous manifest (2026-07-17) pointed at commit `1cff176bb3a0cc0ac555a11c8487751168b6f6ce`
+(Cartilage-Stairwells/tscp-anchor). The PR under review exists on `Triune-Oracle/tscp-anchor`
+at commit `8b0969d61df3f9758193c3c7ec18a04f85ca4b5a`. This manifest has been regenerated to describe the
+exact commit tree being merged.
+
+Additionally, this commit batch fixes three reviewer findings:
+1. **P1 #2 (Serde strict rejection):** `#[serde(deny_unknown_fields)]` added to
+   `TransitionReceipt`; `test_custody_expression_blocked` now constructs a real CBOR
+   payload with a forbidden "custody" field and asserts rejection.
+2. **P2 #4 (Mutation test overclaim):** Doc comment corrected — `test_mutation_always_detected`
+   now accurately claims exhaustive bit-flip coverage over the 96 hash-field bytes only.
+3. **P2 #5 (Run-log SHA mismatch):** `IDENTITY_SEAL.md` updated to use the SHA-256 that
+   matches the committed `VERIFICATION_RUN.md` artifact (`4db5f591...`).
 
 ---
 
 ## Evidence Corpus
 
-### 1. Backend Abstraction (tscp-anchor) ✅ Verified
-
-**Stage 2 backend abstraction layer.** NttBackend trait with scalar + AVX-512 backends.
+### 1. Backend Abstraction (tscp-backends) ✅ Verified
 
 | Artifact | SHA-256 | Status |
 |---|---|---|
@@ -38,152 +58,40 @@ Both commits were authored in an agent sandbox (no private GPG key available). T
 
 **Verification gates:** cargo fmt ✅, cargo clippy ✅, scalar roundtrip ✅ (2/2), AVX-512 parity ✅ (4/4).
 
-### 2. Serialization Conformance (tscp-anchor) ✅ Verified
-
-**tscp-serialization-v0.1 conformance suite.** 12 tests covering all 7 verification predicates.
+### 2. Serialization Conformance (tscp-kernel) ✅ Verified
 
 | Artifact | SHA-256 | Status |
 |---|---|---|
-| `crates/tscp-kernel/tests/serialization_conformance.rs` | `0c67a5f962317755c6aa7b48a876a85d4bc8a052f6a65c496c45ed7a77379bd8` | ✅ Verified |
-| `crates/tscp-kernel/src/serialization.rs` | `676563d082490dcdd69787446da2e5279917ef97f97047371be817b9ea4da8b6` | ✅ Verified |
-| `tscp-serialization-v0.1-verification/IDENTITY_SEAL.md` | `df36f6c3178611b4db049c7caeb3de2a2c661f523bec52b2215346124d3b5d48` | ✅ Sealed |
-| `tscp-serialization-v0.1-verification/VERIFICATION_RUN.md` | `4db5f5919603926b3b4ed9e8792c4233a1a3dcb3d9220663f7a6db76b64f6019` | ✅ Verified |
+| `crates/tscp-kernel/tests/serialization_conformance.rs` | `e13fd5d0c0ba1ff4301efe6900feed37cf500f1bcec633a39ce12383e406f475` | ✅ |
+| `crates/tscp-kernel/src/serialization.rs` | `676563d082490dcdd69787446da2e5279917ef97f97047371be817b9ea4da8b6` | ✅ |
+| `crates/tscp-kernel/src/types.rs` | `c538f9440f94ab64652ef7cc0f06dc1ba4e08d95ecf09a38aa307bd7258f468e` | ✅ (updated) |
+| `tscp-serialization-v0.1-verification/VERIFICATION_RUN.md` | `4db5f5919603926b3b4ed9e8792c4233a1a3dcb3d9220663f7a6db76b64f6019` | ✅ |
+| `tscp-serialization-v0.1-verification/IDENTITY_SEAL.md` | `d609d77b524d7a00ec883e3b5c3565bfd7fb8fe9b2abbe810c78edac77459971` | ✅ (updated) |
 
-**Test result:** 12/12 PASS, 0 failures, 0 warnings.
-**Predicates:** Schema compliance ✅, Canonical encoding ✅, Hash stability ✅, Mutation sensitivity ✅, Context isolation ✅, Toolchain reproducibility ✅, Authority boundary ✅.
+**Verification gates:** 12/12 conformance tests PASS. Authority boundary enforced
+via `#[serde(deny_unknown_fields)]`. Custody expression CBOR payload rejected.
 
-### 3. IEP Enforcement Layer (avx512-butterfly) ✅ Verified
+### 3. Integrity Manifest
 
-**Instrumented Evolution Protocol v0.1.** Full decision tree with 11-case test matrix.
+| Artifact | SHA-256 |
+|---|---|
+| `SHA256SUMS` | `f03ef3ba198f67679cf639c7b5e98951bc2377c16eac1f536ab65e149e76e649` |
 
-| Artifact | SHA-256 | Status |
-|---|---|---|
-| `instrument/policy/promotion_policy.json` | `403af6631e0c10cfe324cc43b0021ec09f7e15edad683bc5bed9d9a7e6fbe42d` | 🔒 Frozen |
-| `instrument/policy/evidence_kinds.json` | `2d8873f1d04d3eaf300e0d8b0edd754dbe5a07e083da6a4d0f4b6d0d4dfd33ee` | 🔒 Frozen |
-| `instrument/authority.json` | `b9e5f2136e7451d93719dda8fc4a5d2837b4bcf8718a26cb7b3c5c07d62deef7` | 🔒 Frozen |
-| `instrument/evidence_schema.json` | `ca12c2a5a92521dcc44eebb3f463826b01eae113d92780829e2e6aa9d2dafa7c` | 🔒 Frozen |
-
-**Test result:** 11/11 IEP enforcement tests PASS (policy hash mismatch, authority mismatch, artifact identity failed, evidence graph altered, identity/determinism/robustness evidence absent, required evidence failed, correct-but-slower preserves parent, correct-and-faster promoted, full chain auditable).
-
-### 4. IEP Runner — Reference Evidence (avx512-butterfly) ✅ Verified
-
-**Firebird reference evidence artifact.** Generated by `iep_runner` binary.
-
-| Artifact | SHA-256 | Status |
-|---|---|---|
-| `benchmarks/reports/firebird_reference_80dc195.json` | `ca897eb2f92e2d7e728c70f741326664ac9998ab1f0c3050f41d64d4b00bb824` | ✅ Verified |
-
-**Output hash:** `sha256:d2a418be1dec267776a7f7392f521dee0d58651e37295656a4c9e82f4b35bddc`
-**Corpus hash:** `sha256:48da63b99e1c7e0ce2490dd503e1d536850d286136b4b6e7d779a814f152e319`
-**Backend:** reference (scalar butterfly)
-**Toolchain:** rustc 1.97.1, cargo 1.97.1, Linux x86_64
-
-### 5. Domain-Blind Core (avx512-butterfly) ✅ Verified
-
-**Frozen at Commit 1 (`80dc195`).** 9 domain blindness tests pass.
-
-| Artifact | SHA-256 | Status |
-|---|---|---|
-| `src/core/` (7 files, ~1,100 lines) | (see commit) | 🔒 Frozen |
-
-**Tests:** hash determinism ✅, hash differentiation ✅, hash hex roundtrip ✅, canonical determinism ✅, canonical differentiation ✅, environment contract identity ✅, environment contract domain blindness ✅, evidence domain blindness ✅, predicate ordering ✅.
-
-### 6. π Conformance Graph (avx512-butterfly) ✅ Verified
-
-**Three-method π computation to 1488 digits.** First non-NTT evidence artifact.
-
-| Artifact | SHA-256 | Status |
-|---|---|---|
-| `fixtures/math/pi/identity.json` | `86d5acd3ae448bfe22038e927f445e35a99063b8534a52d1f65b5d5b16ab01f1` | ✅ Verified |
-
-**Methods:** AGM (Brent-Salamin), Machin formula, Gauss formula.
-**Spot check:** Gourdon digit extraction (digits 1488-1496).
-**Identity hash:** `sha256:e38786f0c1fd0bd30a147df515452300ae7d2fddf0728d6f429585146a5f3430`
-
-### 7. Serialization Domain Fixture (avx512-butterfly) ✅ Verified
-
-**CBOR roundtrip domain instance.** Elevated from scaffold to verified.
-
-| Artifact | SHA-256 | Status |
-|---|---|---|
-| `fixtures/serialization/cbor-roundtrip/identity.json` | `af7e980aa69da4a0efc0a0b016e2bfb6b96b3c4f5ad1c6553a67e82ead24a8f1` | ✅ Verified |
-
-**Verification:** tscp-anchor serialization conformance suite (12/12 tests PASS).
-**Status:** Verified via cross-repo evidence — tscp-anchor provides the test suite, avx512-butterfly provides the domain fixture.
+SHA256SUMS covers all evidence artifacts above. IDENTITY_SEAL.md is included in SHA256SUMS
+to seal the verification record. The manifest itself is not self-referential.
 
 ---
 
-## Full Test Summary
+## Pending Before v1.0 Final
 
-| Suite | Tests | Result | Repository |
-|---|---|---|---|
-| Library unit tests | 38 | ✅ 38/38 | avx512-butterfly |
-| BabyBear domain | 12 | ✅ 12/12 | avx512-butterfly |
-| BabyBear Montgomery | 10 | ✅ 10/10 | avx512-butterfly |
-| Core domain blindness | 8 | ✅ 8/8 | avx512-butterfly |
-| IEP enforcement | 11 | ✅ 11/11 | avx512-butterfly |
-| Legacy Montgomery regression | 6 | ✅ 6/6 | avx512-butterfly |
-| Serialization conformance | 12 | ✅ 12/12 | tscp-anchor |
-| **Total** | **97** | **✅ 97/97** | |
+| Item | Blocker |
+|---|---|
+| GPG re-sign of both repo commits | Requires local execution with key `E747C3AF22573539` |
+| AVX-512 hardware benchmark | Requires qualified AVX-512 host |
+| P2 #3 — Evidence file population | Evidence stubs remain; Option A (populate from run) preferred |
+| tscp-canon envelope v2 | Unmerged branch |
 
 ---
 
-## Frozen Specifications
-
-| Specification | Status | Location |
-|---|---|---|
-| IEP v0.1 | 🔒 Frozen | avx512-butterfly/IEP.md |
-| Evidence schema | 🔒 Frozen | avx512-butterfly/instrument/evidence_schema.json |
-| Promotion policy | 🔒 Frozen | avx512-butterfly/instrument/policy/promotion_policy.json |
-| Evidence kinds vocabulary | 🔒 Frozen | avx512-butterfly/instrument/policy/evidence_kinds.json |
-| Domain-blind core (Commit 1) | 🔒 Frozen | avx512-butterfly/src/core/ |
-| Cryptographic vocabulary | 🔒 Frozen | avx512-butterfly @ `80dc195` |
-
----
-
-## Pending Items (v1.0 blockers)
-
-| Item | Status | Blocker |
-|---|---|---|
-| GPG re-sign of rc1 commits | ⏳ Pending | Requires holder's private key (device) |
-| AVX-512 hardware benchmark | ⏳ Pending | Requires qualified AVX-512 host |
-| AVX-512 backend real intrinsics | ⏳ Pending | Currently delegates to scalar path |
-| avx512-butterfly cleanup issues (#1, #3, #4, #6) | ⏳ Pending | Separate PR |
-| tscp-canon envelope v2 | ⏳ Pending | Unmerged branch |
-
----
-
-## Architecture Assessment
-
-| Dimension | Status | Notes |
-|---|---|---|
-| Architecture | ✅ Stable | No pending architectural changes |
-| Repository organization | ✅ Stable | Three-repo model established |
-| Evidence model | 🔒 Frozen | Six schemas, IEP v0.1 |
-| Cryptographic vocabulary | 🔒 Frozen | Domain-blind core |
-| Backend abstraction | ✅ Stable | NttBackend trait, scalar + AVX-512 |
-| GPG signing | ⏳ Pending | rc1 commits need re-signing |
-| Test coverage | ✅ 97/97 pass | Across both repos |
-| Remaining work | ⏳ Execution | Benchmarking + release engineering, not redesign |
-
-**Overall:** The project has reached release candidate status. The remaining milestones are about validating implementations on qualified hardware and completing release custody (GPG re-signing), not changing the underlying design.
-
----
-
-## Release Engineering Checklist
-
-- ✅ Evidence corpus packaged
-- ✅ Manifest with SHA-256 hashes generated
-- ✅ Test summary documented (97/97 pass)
-- ✅ Frozen specifications enumerated
-- ✅ Pending items identified
-- ✅ Architecture assessment included
-- ⏳ GPG re-sign of rc1 commits
-- ⏳ Git tag `v1.0-rc1` on both repos (after re-sign)
-- ⏳ GitHub release published
-- ⏳ Team notification sent
-
----
-
-*Sealed by Cartilage-Stairwells Verification Authority*
-*2026-07-17*
+*Cartilage-Stairwells Verification Authority*
+*Regenerated: 2026-07-18*
