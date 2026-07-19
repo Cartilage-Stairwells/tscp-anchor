@@ -463,7 +463,7 @@ where
 
         let mut combined = vec![BabyBear::ZERO; max_degree];
 
-        for (_i, quotient) in quotients.iter().enumerate() {
+        for quotient in quotients.iter() {
             let weight: BabyBear = challenger.sample();
             for (j, &coeff) in quotient.iter().enumerate() {
                 combined[j] += weight * coeff;
@@ -497,6 +497,7 @@ fn interpolate_lagrange_naive(evaluations: &[BabyBear]) -> Result<Vec<BabyBear>,
 
     let mut coeffs = vec![BabyBear::ZERO; n];
 
+    #[allow(clippy::needless_range_loop)]
     for i in 0..n {
         let mut basis = vec![BabyBear::ONE];
         let mut denom = BabyBear::ONE;
