@@ -23,7 +23,7 @@ impl<F: Field> Constraint<F> for CompositeConstraint<F> {
         let mut sum = F::ZERO;
         for c in &self.constraints {
             let val = c.evaluate(vars);
-            sum = sum + val * val; // degree 2 each -> squared -> degree 4
+            sum += val * val; // degree 2 each -> squared -> degree 4
         }
         sum
     }
