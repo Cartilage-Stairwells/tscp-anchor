@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Cartilage-Stairwells/tscp-anchor/schemas/exceptions.schema.json",
+  "title": "Supply Chain Exception Registry",
+  "description": "Schema v1.0 — frozen structure, not implementation",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Schema version. Structural changes require increment."
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/exceptionRecord"
+      }
+    }
+  },
+  "required": ["schema_version", "exceptions"],
+  "$defs": {
+    "exceptionRecord": {
+      "type": "object",
+      "properties": {
+        "exception_id": {
+          "type": "string",
+          "pattern": "^EX-\\d{4}$",
+          "description": "Permanent identifier. SHALL NOT be reassigned."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["PROPOSED", "ACTIVE", "MITIGATED", "RESOLVED", "ARCHIVED"],
+          "description": "Machine-readable lifecycle state."
+        },
+        "dependency": {
+          "type": "string",
+          "description": "Crate name and version."
+        },
+        "owner": {
+          "type": "string",
+          "description": "Person or team responsible for the exception lifecycle."
+        },
+        "evidence": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "References to CI runs, commits, advisory IDs. By reference, not embedding."
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Action taken (RESOLVED/MITIGATED) or rationale (ACTIVE/PROPOSED)."
+        },
+        "first_recorded": {
+          "type": "string",
+          "format": "date",
+          "description": "Original date this exception entered the registry."
+        },
+        "last_reviewed": {
+          "type": "string",
+          "format": "date",
+          "description": "Most recent governance review date."
+        },
+        "associated_advisories": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "RUSTSEC IDs or other advisory database references."
+        },
+        "planned_mitigations": {
+          "type": "string",
+          "description": "Scheduled actions with target dates."
+        },
+        "next_review": {
+          "type": "string",
+          "format": "date",
+          "description": "Date for next mandatory review."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-form context."
+        },
+        "audit": {
+          "type": "string",
+          "description": "RUSTSEC ID(s) ignored in audit.toml. Comma-separated for multiple. Required when status is ACTIVE."
+        }
+      },
+      "required": [
+        "exception_id",
+        "status",
+        "dependency",
+        "owner",
+        "evidence",
+        "resolution",
+        "first_recorded",
+        "last_reviewed"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ACTIVE"
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "required": ["audit"]
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  }
+}

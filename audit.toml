@@ -1,7 +1,17 @@
 # cargo-audit configuration
-# Ignore advisories that have been reviewed and accepted as non-applicable
+# Ignore advisories that have been reviewed and accepted in the supply chain governance registry.
+# See: schemas/exceptions.json for the full exception registry.
+# See: SUPPLY_CHAIN_EXCEPTIONS.md for the governance document.
 
 [advisories]
-# Add specific advisory IDs to ignore here if they are false positives
-# Example:
-# ignore = ["RUSTSEC-2021-0145"]
+# Active exceptions (EX-0002, EX-0003) — reviewed and tracked in the governance registry.
+# These are surfaced as CI warnings but do not block the verification seal.
+ignore = [
+  "RUSTSEC-2026-0204",   # EX-0002: crossbeam-epoch 0.9.18 (transitive via wasmtime)
+  "RUSTSEC-2026-0088",   # EX-0003: wasmtime 29.0.1 — data leakage pooling allocators (low)
+  "RUSTSEC-2026-0093",   # EX-0003: wasmtime 29.0.1 — heap OOB read UTF-16 (medium 6.9)
+  "RUSTSEC-2026-0087",   # EX-0003: wasmtime 29.0.1 — segfault f64x2.splat Cranelift (medium 4.1)
+  "RUSTSEC-2026-0092",   # EX-0003: wasmtime 29.0.1 — panic misaligned UTF-16 (medium 5.9)
+  "RUSTSEC-2026-0021",   # EX-0003: wasmtime 29.0.1 — panic excessive fields wasi:http (medium 6.9)
+  "RUSTSEC-2025-0118",   # EX-0003: wasmtime 29.0.1 — unsound shared linear memory (low 1.8)
+]

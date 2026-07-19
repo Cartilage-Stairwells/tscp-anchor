@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-19T23:48:29.878966+00:00",
+  "git_commit": "1e5e82497d7f84cdee8ad8ea39210f3e5b7a1b57",
+  "conformance": "PASS",
+  "checks": [
+    {
+      "name": "registry-schema",
+      "status": "PASS",
+      "artifact": "schemas/exceptions.json"
+    },
+    {
+      "name": "audit-mapping",
+      "status": "PASS",
+      "artifact": "audit.toml"
+    }
+  ],
+  "exceptions": {
+    "total": 3,
+    "active": 2,
+    "resolved": 1,
+    "proposed": 0,
+    "mitigated": 0,
+    "archived": 0
+  }
+}
