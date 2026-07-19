@@ -2141,15 +2141,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tscp-backends"
-version = "0.1.0"
-dependencies = [
- "p3-baby-bear",
- "p3-dft",
- "p3-field",
-]
-
-[[package]]
 name = "tscp-cli"
 version = "0.1.0"
 dependencies = [

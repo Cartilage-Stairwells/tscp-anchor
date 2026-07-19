@@ -1,0 +1,7 @@
+# cargo-audit configuration
+# Ignore advisories that have been reviewed and accepted as non-applicable
+
+[advisories]
+# Add specific advisory IDs to ignore here if they are false positives
+# Example:
+# ignore = ["RUSTSEC-2021-0145"]

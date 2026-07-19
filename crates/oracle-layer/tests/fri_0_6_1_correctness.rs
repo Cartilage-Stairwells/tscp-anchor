@@ -1,6 +1,6 @@
-use oracle_layer::fri_query::fri_prove;
 use oracle_layer::fri_protocol::Challenger;
-use p3_baby_bear::{BabyBear, default_babybear_poseidon2_16};
+use oracle_layer::fri_query::fri_prove;
+use p3_baby_bear::{default_babybear_poseidon2_16, BabyBear};
 
 type F = BabyBear;
 
