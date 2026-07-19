@@ -15,7 +15,20 @@ pub enum TransitionKind {
     ClaimVerified = 2,
 }
 
+/// An evidence record produced by the TSCP kernel.
+///
+/// # Authority boundary invariant
+///
+/// This type is sealed against unknown fields at deserialization time via
+/// `#[serde(deny_unknown_fields)]`. Any CBOR payload carrying additional
+/// fields — including custody decision fields such as "custody", "promote",
+/// "approve", or "reject" — will be rejected with a deserialization error.
+///
+/// This is the structural enforcement of the authority boundary:
+///   TransitionReceipt is an evidence record, NOT a custody record.
+///   A custody decision cannot be expressed through this type.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct TransitionReceipt {
     pub parent_state_hash: StateHash,
     pub event_hash: EventHash,
