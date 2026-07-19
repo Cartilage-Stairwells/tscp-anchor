@@ -1,4 +1,3 @@
-use p3_field::PrimeCharacteristicRing;
 use p3_field::Field;
 
 /// The TOPO-LOCK compliant storage abstraction.
@@ -36,6 +35,7 @@ impl<'a, F: Field> TraceProvider<F> for VecTraceProvider<'a, F> {
 mod tests {
     use super::*;
     use p3_baby_bear::BabyBear;
+    use p3_field::PrimeCharacteristicRing;
 
     #[test]
     fn vec_trace_provider_preserves_layout_and_consistency() {
