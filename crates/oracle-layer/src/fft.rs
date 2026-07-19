@@ -1,6 +1,5 @@
 use p3_field::Field;
 #[allow(unused_imports)]
-#[allow(unused_imports)]
 use p3_field::PrimeCharacteristicRing;
 
 /// Radix-2 DIT FFT/IFFT over a field with a known root of unity.
@@ -124,7 +123,7 @@ impl Radix2Interpolator {
 mod tests {
     use super::*;
     use p3_baby_bear::BabyBear;
-    use p3_field::{PrimeField64};
+    use p3_field::PrimeField64;
 
     type F = BabyBear;
 
@@ -144,7 +143,11 @@ mod tests {
         let w2 = w * w;
         let w4 = w2 * w2;
         assert_eq!(w4, F::ONE, "omega^4 must be 1");
-        assert_ne!(w2, F::ONE, "omega^2 must not be 1 (omega must have exact order 4)");
+        assert_ne!(
+            w2,
+            F::ONE,
+            "omega^2 must not be 1 (omega must have exact order 4)"
+        );
     }
 
     #[test]
@@ -168,8 +171,10 @@ mod tests {
         for i in 0..4u64 {
             let point = w.exp_u64(i);
             let direct = Radix2Interpolator::evaluate_coeffs(&coeffs, point);
-            assert_eq!(evals[i as usize], direct,
-                "fft output at index {i} must match direct Horner evaluation");
+            assert_eq!(
+                evals[i as usize], direct,
+                "fft output at index {i} must match direct Horner evaluation"
+            );
         }
     }
 
@@ -197,9 +202,7 @@ mod tests {
         let evals_a = Radix2Interpolator::fft(&col_a, w);
         let evals_b = Radix2Interpolator::fft(&col_b, w);
 
-        let matrix: Vec<Vec<F>> = (0..4)
-            .map(|i| vec![evals_a[i], evals_b[i]])
-            .collect();
+        let matrix: Vec<Vec<F>> = (0..4).map(|i| vec![evals_a[i], evals_b[i]]).collect();
 
         let recovered = Radix2Interpolator::interpolate_matrix(&matrix, w);
         assert_eq!(recovered[0], col_a, "column 0 must recover independently");
