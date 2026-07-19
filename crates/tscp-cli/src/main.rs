@@ -16,7 +16,10 @@ fn main() {
             let receipts = ReplayEngine::replay(&events, 1).expect("replay failed");
             println!("replay successful");
             println!("receipts: {}", receipts.len());
-            println!("final_state: {:?}", receipts.last().map(|r| r.child_state_hash));
+            println!(
+                "final_state: {:?}",
+                receipts.last().map(|r| r.child_state_hash)
+            );
         }
         _ => {
             println!("usage:");
@@ -32,8 +35,14 @@ fn arg_value(args: &[String], flag: &str) -> Option<String> {
 }
 
 fn produce(args: &[String]) {
-    let count: usize = arg_value(args, "--count").unwrap_or("10".to_string()).parse().unwrap();
-    let seed: u8 = arg_value(args, "--seed").unwrap_or("1".to_string()).parse().unwrap();
+    let count: usize = arg_value(args, "--count")
+        .unwrap_or("10".to_string())
+        .parse()
+        .unwrap();
+    let seed: u8 = arg_value(args, "--seed")
+        .unwrap_or("1".to_string())
+        .parse()
+        .unwrap();
 
     let mut engine = ReplayEngine::new(1);
     let mut events = Vec::new();
