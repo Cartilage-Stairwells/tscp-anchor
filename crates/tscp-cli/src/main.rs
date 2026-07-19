@@ -12,7 +12,8 @@ fn main() {
             let path = args.get(2).expect("usage: tscp-cli replay <events.cbor>");
             println!("replaying {}", path);
             let bytes = fs::read(path).expect("failed reading event file");
-            let events: Vec<EventEnvelope> = serde_cbor::from_slice(&bytes).expect("invalid cbor");
+            let events: Vec<EventEnvelope> =
+                ciborium::de::from_reader(bytes.as_slice()).expect("invalid cbor");
             let receipts = ReplayEngine::replay(&events, 1).expect("replay failed");
             println!("replay successful");
             println!("receipts: {}", receipts.len());
@@ -58,7 +59,8 @@ fn produce(args: &[String]) {
         events.push(event);
     }
 
-    let bytes = serde_cbor::to_vec(&events).expect("encode failed");
+    let mut bytes = Vec::new();
+    ciborium::ser::into_writer(&events, &mut bytes).expect("encode failed");
     fs::write("events.cbor", bytes).expect("write failed");
     println!("wrote events.cbor");
     println!("events: {}", count);
