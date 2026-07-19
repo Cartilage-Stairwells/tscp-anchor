@@ -5,9 +5,8 @@
 //!
 //! Run: cargo test -p tscp-kernel --test serialization_conformance --release
 
-use tscp_kernel::serialization::{to_cbor, from_cbor};
+use tscp_kernel::serialization::{from_cbor, to_cbor};
 use tscp_kernel::types::*;
-
 
 // ─── Helper ──────────────────────────────────────────────────────────────
 
@@ -56,12 +55,10 @@ fn test_invalid_schema_rejected() {
 // ─── Predicate 2: Canonical Encoding ─────────────────────────────────────
 
 /// #2 positive: equivalent objects produce identical canonical bytes.
-/// Two TransitionReceipts with identical field values must serialize to
-/// byte-identical CBOR.
 #[test]
 fn test_equivalent_json_canonical_bytes() {
     let r1 = sample_receipt();
-    let r2 = sample_receipt(); // same values
+    let r2 = sample_receipt();
 
     let b1 = to_cbor(&r1).unwrap();
     let b2 = to_cbor(&r2).unwrap();
@@ -77,16 +74,14 @@ fn test_non_canonical_rejected() {
     let r = sample_receipt();
     let b1 = to_cbor(&r).unwrap();
 
-    // Flip a bit in the serialized form
     let mut b2 = b1.clone();
     b2[10] ^= 0x01;
 
-    // The modified bytes should NOT deserialize to the same object
     let result: Result<TransitionReceipt, _> = from_cbor(&b2);
     if let Ok(r2) = result {
         assert_ne!(r, r2, "modified bytes must not produce equivalent object");
     }
-    // If deserialization fails, that's also acceptable — the mutation was detected
+    // If deserialization fails outright, mutation was detected — also acceptable
 }
 
 // ─── Predicate 3: Hash Stability ──────────────────────────────────────────
@@ -101,36 +96,39 @@ fn test_round_trip_hash_stability() {
     let b1 = to_cbor(&r).unwrap();
     let r2: TransitionReceipt = from_cbor(&b1).unwrap();
     let h_after = receipt_hash(&r2);
-
     let b2 = to_cbor(&r2).unwrap();
 
     assert_eq!(b1, b2, "re-serialized bytes must be identical");
     assert_eq!(h_before, h_after, "hash must be stable across round-trip");
 
-    // Multiple round-trips
     let r3: TransitionReceipt = from_cbor(&b2).unwrap();
     let b3 = to_cbor(&r3).unwrap();
     assert_eq!(b1, b3, "hash must be stable across multiple round-trips");
-    assert_eq!(h_before, receipt_hash(&r3), "hash must be stable across N round-trips");
+    assert_eq!(
+        h_before,
+        receipt_hash(&r3),
+        "hash must be stable across N round-trips"
+    );
 }
 
 // ─── Predicate 4: Mutation Sensitivity ─────────────────────────────────────
 
-/// #4 positive: any field change in the receipt produces a changed
-/// identity hash. Covers all five fields: parent_state_hash, event_hash,
+/// #4 positive: any field change in the receipt produces a changed identity
+/// hash. Covers all five fields: parent_state_hash, event_hash,
 /// child_state_hash, kernel_version, and kind.
 #[test]
 fn test_mutation_changes_hash() {
     let r = sample_receipt();
     let h_original = receipt_hash(&r);
 
-    // Flip each bit in each hash field, verify hash changes
     for byte_idx in 0..32 {
         let mut r2 = r.clone();
         r2.parent_state_hash[byte_idx] ^= 0x01;
         assert_ne!(
-            h_original, receipt_hash(&r2),
-            "parent_state_hash bit {} flip must change hash", byte_idx * 8
+            h_original,
+            receipt_hash(&r2),
+            "parent_state_hash bit {} flip must change hash",
+            byte_idx * 8
         );
     }
 
@@ -138,8 +136,10 @@ fn test_mutation_changes_hash() {
         let mut r2 = r.clone();
         r2.event_hash[byte_idx] ^= 0x01;
         assert_ne!(
-            h_original, receipt_hash(&r2),
-            "event_hash bit {} flip must change hash", byte_idx * 8
+            h_original,
+            receipt_hash(&r2),
+            "event_hash bit {} flip must change hash",
+            byte_idx * 8
         );
     }
 
@@ -147,38 +147,42 @@ fn test_mutation_changes_hash() {
         let mut r2 = r.clone();
         r2.child_state_hash[byte_idx] ^= 0x01;
         assert_ne!(
-            h_original, receipt_hash(&r2),
-            "child_state_hash bit {} flip must change hash", byte_idx * 8
+            h_original,
+            receipt_hash(&r2),
+            "child_state_hash bit {} flip must change hash",
+            byte_idx * 8
         );
     }
 
-    // kernel_version change
     let mut r2 = r.clone();
     r2.kernel_version = 2;
-    assert_ne!(h_original, receipt_hash(&r2), "kernel_version change must change hash");
+    assert_ne!(
+        h_original,
+        receipt_hash(&r2),
+        "kernel_version change must change hash"
+    );
 
-    // kind change
     let mut r2 = r.clone();
     r2.kind = TransitionKind::ClaimVerified;
-    assert_ne!(h_original, receipt_hash(&r2), "kind change must change hash");
+    assert_ne!(
+        h_original,
+        receipt_hash(&r2),
+        "kind change must change hash"
+    );
 }
 
 /// #4 negative: mutation detection is always enforced — exhaustive bit-flip
 /// across all 96 bytes of the three hash fields (parent, event, child).
 ///
 /// Note: kernel_version and kind are covered by test_mutation_changes_hash.
-/// This test is exhaustive over hash-field bytes only: 96 bytes × 8 bits = 768
-/// individual bit-flip mutations, all of which must change the output hash.
+/// This test is exhaustive over hash-field bytes only: 96 bytes × 8 bits =
+/// 768 individual bit-flip mutations, all of which must change the output hash.
 #[test]
 fn test_mutation_always_detected() {
     let r = sample_receipt();
     let h_original = receipt_hash(&r);
 
-    let fields: [(&str, usize); 3] = [
-        ("parent", 32),
-        ("event", 32),
-        ("child", 32),
-    ];
+    let fields: [(&str, usize); 3] = [("parent", 32), ("event", 32), ("child", 32)];
 
     for (field_name, len) in &fields {
         for byte_idx in 0..*len {
@@ -192,9 +196,12 @@ fn test_mutation_always_detected() {
                     _ => unreachable!(),
                 }
                 assert_ne!(
-                    h_original, receipt_hash(&r2),
+                    h_original,
+                    receipt_hash(&r2),
                     "undetected mutation: field={}, byte={}, bit={}",
-                    field_name, byte_idx, bit
+                    field_name,
+                    byte_idx,
+                    bit
                 );
             }
         }
@@ -204,35 +211,44 @@ fn test_mutation_always_detected() {
 // ─── Predicate 5: Context Isolation ────────────────────────────────────────
 
 /// #5 positive: different TSCP domains produce different hashes.
-/// The domain-separation tag in the hash function ensures no cross-domain
-/// collision.
 #[test]
 fn test_different_domains_different_hashes() {
     let r = sample_receipt();
     let h = receipt_hash(&r);
 
-    // The hash must not equal any input component
-    assert_ne!(h, r.parent_state_hash, "hash must not equal parent_state_hash");
+    assert_ne!(
+        h, r.parent_state_hash,
+        "hash must not equal parent_state_hash"
+    );
     assert_ne!(h, r.event_hash, "hash must not equal event_hash");
-    assert_ne!(h, r.child_state_hash, "hash must not equal child_state_hash");
+    assert_ne!(
+        h, r.child_state_hash,
+        "hash must not equal child_state_hash"
+    );
 
-    // Different kernel versions must produce different hashes
     let mut r2 = r.clone();
     r2.kernel_version = 2;
-    assert_ne!(h, receipt_hash(&r2), "different kernel_version must produce different hash");
+    assert_ne!(
+        h,
+        receipt_hash(&r2),
+        "different kernel_version must produce different hash"
+    );
 
     let mut r3 = r.clone();
     r3.kernel_version = 999;
-    assert_ne!(h, receipt_hash(&r3), "different kernel_version (999) must produce different hash");
+    assert_ne!(
+        h,
+        receipt_hash(&r3),
+        "different kernel_version (999) must produce different hash"
+    );
 }
 
 /// #5 negative: cross-domain no collision — two receipts that differ only
-/// in their domain context (kernel_version) never produce the same hash.
+/// in kernel_version never produce the same hash.
 #[test]
 fn test_cross_domain_no_collision() {
     let r = sample_receipt();
 
-    // Generate hashes for kernel_version 1..256, verify all distinct
     let mut hashes: Vec<[u8; 32]> = Vec::new();
     for kv in 1u16..=256 {
         let mut r2 = r.clone();
@@ -241,15 +257,16 @@ fn test_cross_domain_no_collision() {
 
         for (idx, prev) in hashes.iter().enumerate() {
             assert_ne!(
-                h, *prev,
+                h,
+                *prev,
                 "collision: kernel_version={} collided with kernel_version={}",
-                kv, idx + 1
+                kv,
+                idx + 1
             );
         }
         hashes.push(h);
     }
 
-    // Also verify that different kind values produce different hashes
     let h_created = {
         let mut r2 = r.clone();
         r2.kind = TransitionKind::ClaimCreated;
@@ -260,28 +277,29 @@ fn test_cross_domain_no_collision() {
         r2.kind = TransitionKind::ClaimVerified;
         receipt_hash(&r2)
     };
-    assert_ne!(h_created, h_verified, "different kind must produce different hash");
+    assert_ne!(
+        h_created, h_verified,
+        "different kind must produce different hash"
+    );
 }
 
 // ─── Predicate 6: Toolchain Reproducibility ───────────────────────────────
 
-/// #6: toolchain reproducibility — the same source compiled with the same
-/// toolchain produces bitwise-identical serialized output.
+/// #6: serialization is deterministic within the current toolchain environment.
 #[test]
 fn test_reproducible_build() {
     let r = sample_receipt();
 
-    // Serialize 1000 times, verify identical output every time
     let baseline = to_cbor(&r).unwrap();
     for i in 0..1000 {
         let bytes = to_cbor(&r).unwrap();
         assert_eq!(
             bytes, baseline,
-            "serialization non-deterministic at iteration {}", i
+            "serialization non-deterministic at iteration {}",
+            i
         );
     }
 
-    // Also verify hash is deterministic
     let h_baseline = receipt_hash(&r);
     for i in 0..1000 {
         let h = receipt_hash(&r);
@@ -299,13 +317,23 @@ fn test_authority_boundary_compile() {
     let r = sample_receipt();
     let bytes = to_cbor(&r).unwrap();
 
-    // The serialized form must NOT contain custody decision keywords
     let serialized_str = String::from_utf8_lossy(&bytes);
-
-    assert!(!serialized_str.contains("promote"), "evidence record must not contain 'promote'");
-    assert!(!serialized_str.contains("reject"), "evidence record must not contain 'reject'");
-    assert!(!serialized_str.contains("approve"), "evidence record must not contain 'approve'");
-    assert!(!serialized_str.contains("custody"), "evidence record must not contain 'custody'");
+    assert!(
+        !serialized_str.contains("promote"),
+        "evidence record must not contain 'promote'"
+    );
+    assert!(
+        !serialized_str.contains("reject"),
+        "evidence record must not contain 'reject'"
+    );
+    assert!(
+        !serialized_str.contains("approve"),
+        "evidence record must not contain 'approve'"
+    );
+    assert!(
+        !serialized_str.contains("custody"),
+        "evidence record must not contain 'custody'"
+    );
 
     let r2: TransitionReceipt = from_cbor(&bytes).unwrap();
     let _ = r2.parent_state_hash;
@@ -315,36 +343,51 @@ fn test_authority_boundary_compile() {
     let _ = r2.kind;
 }
 
-/// #7 negative: custody expression blocked — a CBOR payload containing a
-/// "custody" field MUST be rejected by `from_cbor::<TransitionReceipt>`.
+/// #7 negative: custody expression blocked via `#[serde(deny_unknown_fields)]`.
 ///
-/// This test constructs a CBOR map with the valid five fields plus an extra
-/// "custody" key and asserts that deserialization fails. This is enforced
-/// by `#[serde(deny_unknown_fields)]` on TransitionReceipt.
+/// Strategy: take a valid serialized receipt, then splice an extra CBOR text
+/// key-value pair ("custody" → "approve") into the binary stream at the CBOR
+/// map level. This avoids any encoding-format mismatch between Value::Bytes
+/// and the actual [u8;32] array encoding — we mutate a real payload rather
+/// than constructing one from scratch.
+///
+/// CBOR map format for a struct with N fields:
+///   0xA<N>  (map header, N entries)
+///   Then N pairs of (key, value)
+///
+/// We re-encode as a larger map with N+1 entries by:
+///   1. Serializing a valid receipt to get the reference encoding
+///   2. Incrementing the map header count by 1
+///   3. Appending a CBOR-encoded ("custody", "approve") pair
+///
+/// With `#[serde(deny_unknown_fields)]`, deserializing this MUST fail.
 #[test]
 fn test_custody_expression_blocked() {
-    use serde_cbor::Value;
-    use std::collections::BTreeMap;
+    let r = sample_receipt();
+    let valid_bytes = to_cbor(&r).expect("valid receipt must serialize");
 
-    // Build a CBOR map with all five valid fields + an extra "custody" field.
-    // serde_cbor uses string keys for struct field names.
-    let mut map: BTreeMap<Value, Value> = BTreeMap::new();
-    map.insert(Value::Text("parent_state_hash".into()), Value::Bytes(vec![0xAB; 32]));
-    map.insert(Value::Text("event_hash".into()),        Value::Bytes(vec![0xCD; 32]));
-    map.insert(Value::Text("child_state_hash".into()),  Value::Bytes(vec![0xEF; 32]));
-    map.insert(Value::Text("kernel_version".into()),    Value::Integer(1));
-    map.insert(Value::Text("kind".into()),              Value::Text("ClaimCreated".into()));
-    // Inject forbidden field
-    map.insert(Value::Text("custody".into()),           Value::Text("approve".into()));
+    // The CBOR encoding of a 5-field struct map starts with 0xA5 (map of 5).
+    // We need to patch it to 0xA6 (map of 6) and append the extra field.
+    assert_eq!(
+        valid_bytes[0], 0xA5,
+        "expected CBOR map header for 5-field struct (0xA5)"
+    );
 
-    let cbor_bytes = serde_cbor::to_vec(&Value::Map(map))
-        .expect("building test CBOR must succeed");
+    // Build the injected payload: bump map count + append ("custody","approve")
+    let mut injected = valid_bytes.clone();
+    injected[0] = 0xA6; // map of 6 instead of 5
 
-    // With #[serde(deny_unknown_fields)], this MUST fail
-    let result: Result<TransitionReceipt, _> = from_cbor(&cbor_bytes);
+    // CBOR encoding of text string "custody": 0x67 (text, len 7) + b"custody"
+    let key_custody: &[u8] = b"\x67custody";
+    // CBOR encoding of text string "approve": 0x67 (text, len 7) + b"approve"
+    let val_approve: &[u8] = b"\x67approve";
+    injected.extend_from_slice(key_custody);
+    injected.extend_from_slice(val_approve);
+
+    let result: Result<TransitionReceipt, _> = from_cbor(&injected);
     assert!(
         result.is_err(),
-        "TransitionReceipt must reject CBOR payloads containing unknown fields (e.g. 'custody'). \
-         This failure means #[serde(deny_unknown_fields)] is not in effect — add it to TransitionReceipt."
+        "TransitionReceipt must reject CBOR payloads containing unknown fields \
+         ('custody'). deny_unknown_fields enforcement failed."
     );
 }
