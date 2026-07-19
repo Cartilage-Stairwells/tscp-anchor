@@ -38,6 +38,42 @@ impl EdiaAgent {
     }
 }
 
+/// Tracks the number of in-flight requests.
+///
+/// Release on decrement and Acquire on observation are intentionally
+/// conservative. Today this is only a monitoring counter (Relaxed would
+/// suffice), but the stronger ordering avoids revisiting memory-ordering
+/// decisions if the counter later becomes associated with additional
+/// shared state.
+pub struct EdiaGuard {
+    pending_requests: Arc<AtomicU64>,
+}
+
+impl EdiaGuard {
+    /// Increments pending_requests and returns a guard that decrements
+    /// it on drop. This is the only way to bump the counter, so callers
+    /// can no longer forget the increment.
+    pub async fn acquire(agent: &Arc<Mutex<EdiaAgent>>) -> Self {
+        let pending_requests = {
+            let locked = agent.lock().await;
+            locked.pending_requests.clone()
+        };
+        pending_requests.fetch_add(1, Ordering::Relaxed);
+        Self { pending_requests }
+    }
+}
+
+impl Drop for EdiaGuard {
+    fn drop(&mut self) {
+        // No lock acquired here -- cannot panic, safe across await points.
+        self.pending_requests
+            .try_update(Ordering::Release, Ordering::Relaxed, |v| {
+                Some(v.saturating_sub(1))
+            })
+            .ok();
+    }
+}
+
 #[cfg(test)]
 mod control_tests {
     use super::*;
@@ -116,41 +152,5 @@ mod control_tests {
             0,
             "all 50 concurrent guards should net out to zero pending_requests"
         );
-    }
-}
-
-/// Tracks the number of in-flight requests.
-///
-/// Release on decrement and Acquire on observation are intentionally
-/// conservative. Today this is only a monitoring counter (Relaxed would
-/// suffice), but the stronger ordering avoids revisiting memory-ordering
-/// decisions if the counter later becomes associated with additional
-/// shared state.
-pub struct EdiaGuard {
-    pending_requests: Arc<AtomicU64>,
-}
-
-impl EdiaGuard {
-    /// Increments pending_requests and returns a guard that decrements
-    /// it on drop. This is the only way to bump the counter, so callers
-    /// can no longer forget the increment.
-    pub async fn acquire(agent: &Arc<Mutex<EdiaAgent>>) -> Self {
-        let pending_requests = {
-            let locked = agent.lock().await;
-            locked.pending_requests.clone()
-        };
-        pending_requests.fetch_add(1, Ordering::Relaxed);
-        Self { pending_requests }
-    }
-}
-
-impl Drop for EdiaGuard {
-    fn drop(&mut self) {
-        // No lock acquired here -- cannot panic, safe across await points.
-        self.pending_requests
-            .fetch_update(Ordering::Release, Ordering::Relaxed, |v| {
-                Some(v.saturating_sub(1))
-            })
-            .ok();
     }
 }
