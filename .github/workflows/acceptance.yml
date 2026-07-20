@@ -4,10 +4,6 @@
 #   1. Serialization conformance (12/12 tests)
 #   2. Supply chain governance (schema + audit mapping + evidence manifest)
 #   3. Artifact integrity (SHA256SUMS verification)
-#   4. Receipt verification (offline, no RPC)
-#
-# This workflow is designed to be a required status check for branch protection.
-# The 'TSCP Acceptance Seal' job is the gate — it passes only if all 4 gates pass.
 #
 # Required status check name: TSCP Acceptance Seal
 # Tag protection rule: TSCP-RELEASE-CUSTODY (refs/tags/tscp-*)
@@ -42,7 +38,6 @@ jobs:
           echo "=== TSCP Serialization Conformance Suite ==="
           cargo test -p tscp-kernel --test serialization_conformance --release -- --nocapture 2>&1 | tee conformance_output.txt
 
-          # Extract pass count
           PASS_COUNT=$(grep -c "^test .* \.\.\. ok$" conformance_output.txt || true)
           FAIL_COUNT=$(grep -c "^test .* \.\.\. FAILED$" conformance_output.txt || true)
           TOTAL=$((PASS_COUNT + FAIL_COUNT))
@@ -85,10 +80,10 @@ jobs:
             --audit audit.toml \
             --out supply-chain-evidence/evidence_manifest.json
 
-      - name: Verify no RESOLVED exceptions are in audit.toml
+      - name: Verify no RESOLVED exceptions in audit.toml
         run: |
           echo "=== Checking audit.toml for RESOLVED exception IDs ==="
-          python3 << 'PYCHECK'
+          python3 -c "
           import json, re, sys
 
           with open('schemas/exceptions.json') as f:
@@ -100,21 +95,20 @@ jobs:
           with open('audit.toml') as f:
               audit_content = f.read()
 
-          # Extract commented exception IDs from audit.toml
           comment_pattern = re.compile(r'#\s*(EX-\d{4})')
           audit_ids = set(comment_pattern.findall(audit_content))
 
           leaked = [eid for eid in resolved if eid in audit_ids]
           if leaked:
-              print(f"FAIL: RESOLVED exceptions still referenced in audit.toml: {leaked}")
+              print(f'FAIL: RESOLVED exceptions still in audit.toml: {leaked}')
               sys.exit(1)
 
-          print("PASS: No RESOLVED exceptions leaked into audit.toml")
-          PYCHECK
+          print('PASS: No RESOLVED exceptions leaked into audit.toml')
+          "
 
       - name: Check exception review dates
         run: |
-          python3 << 'PYCHECK'
+          python3 -c "
           import json, sys
           from datetime import date
 
@@ -128,12 +122,12 @@ jobs:
                   if next_review:
                       review_date = date.fromisoformat(next_review)
                       if review_date < today:
-                          print(f"FAIL: EX-{exc['exception_id']} review overdue (next_review: {next_review})")
+                          print(f'FAIL: {exc[\"exception_id\"]} review overdue (next_review: {next_review})')
                           sys.exit(1)
-                      print(f"OK: {exc['exception_id']} next_review: {next_review}")
+                      print(f'OK: {exc[\"exception_id\"]} next_review: {next_review}')
 
-          print("PASS: All ACTIVE exceptions within review window")
-          PYCHECK
+          print('PASS: All ACTIVE exceptions within review window')
+          "
 
       - name: Upload governance evidence
         if: always()
@@ -159,7 +153,6 @@ jobs:
             exit 1
           fi
 
-          # Verify each file hash
           FAILURES=0
           while IFS= read -r line; do
             EXPECTED=$(echo "$line" | awk '{print $1}')
@@ -221,29 +214,34 @@ jobs:
           echo "integrity:  ${{ needs.integrity.result }}"
           echo ""
 
-          ALL_PASS=true
+          CONF="${{ needs.conformance.result }}"
+          GOV="${{ needs.governance.result }}"
+          INT="${{ needs.integrity.result }}"
 
-          for gate in conformance governance integrity; do
-            RESULT=$(eval echo "\${{ needs.$gate.result }}")
-            if [ "$RESULT" != "success" ]; then
-              echo "FAIL: $gate gate did not pass (result: $RESULT)"
-              ALL_PASS=false
-            fi
-          done
+          if [ "$CONF" != "success" ]; then
+            echo "FAIL: conformance gate did not pass (result: $CONF)"
+          fi
+          if [ "$GOV" != "success" ]; then
+            echo "FAIL: governance gate did not pass (result: $GOV)"
+          fi
+          if [ "$INT" != "success" ]; then
+            echo "FAIL: integrity gate did not pass (result: $INT)"
+          fi
 
-          echo ""
-          if [ "$ALL_PASS" = "true" ]; then
+          if [ "$CONF" = "success" ] && [ "$GOV" = "success" ] && [ "$INT" = "success" ]; then
+            echo ""
             echo "TSCP ACCEPTANCE SEAL: PASS"
             echo ""
             echo "All acceptance gates cleared:"
-            echo "  ✅ Serialization conformance (12/12)"
-            echo "  ✅ Supply chain governance (schema + audit + review dates)"
-            echo "  ✅ Artifact integrity (SHA256SUMS + receipts)"
+            echo "  conformance: 12/12 serialization tests"
+            echo "  governance: schema + audit + review dates"
+            echo "  integrity: SHA256SUMS + receipts"
             echo ""
             echo "Commit: ${{ github.sha }}"
             echo "Branch: ${{ github.ref }}"
             echo "Run:    ${{ github.run_id }}"
           else
+            echo ""
             echo "TSCP ACCEPTANCE SEAL: FAIL"
             exit 1
           fi
