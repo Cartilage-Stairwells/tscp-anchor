@@ -1,0 +1,80 @@
+# TSCP L3 Release Enforcement Workflow
+#
+# This workflow runs the full TSCP verification chain on any release artifact.
+# The release cannot complete unless the TSCP verifier exits 0.
+#
+# Verification order (dependency order):
+#   1. Source Identity → 2. Builder Identity → 3. Artifact Identity
+#   → 4. Provenance → 5. Transparency → 6. Custody Decision
+#
+# A valid signature on the wrong artifact is still failure.
+
+name: TSCP L3 Release Verification
+
+on:
+  workflow_run:
+    workflows: ["TSCP Build (Trusted Builder)"]
+    types: [completed]
+
+jobs:
+  verify:
+    name: TSCP L3 Verification
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import signing key
+        run: |
+          gpg --import signer-public-key.asc || true
+
+      - name: Download release bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: tscp-l3-release
+          path: tscp-l3-release/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Run TSCP verifier
+        run: |
+          echo "=== TSCP L3 Release Verification ==="
+          echo "Verifying release from workflow run ${{ github.event.workflow_run.id }}"
+          echo ""
+          echo "Verification order: source → builder → artifact → provenance → transparency → custody"
+          echo ""
+
+          python3 tscp-l3/scripts/tscp_verify_release.py \
+            --artifact tscp-l3-release/artifact.tar.gz \
+            --attestation tscp-l3-release/custody/release-attestation.json \
+            --release-dir . \
+            --output tscp-l3-release/verification-result.json
+
+          VERIFIER_EXIT=$?
+          echo ""
+          echo "Verifier exit code: $VERIFIER_EXIT"
+
+          if [ $VERIFIER_EXIT -eq 0 ]; then
+            echo ""
+            echo "=== TSCP L3 VERIFICATION: PASS ==="
+            echo "All custody gates satisfied."
+            cat tscp-l3-release/verification-result.json
+          else
+            echo ""
+            echo "=== TSCP L3 VERIFICATION: REJECT ==="
+            cat tscp-l3-release/verification-result.json
+            exit 1
+          fi
+
+      - name: Upload verification result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tscp-l3-verification-result
+          path: tscp-l3-release/verification-result.json
