@@ -1,100 +1,131 @@
-# ARCHIVE_INDEX.md
+# Archive Index
 
-This document is the master index for all repositories across **Triune-Oracle** (canonical production)
-and **Cartilage-Stairwells** (archive / experimental lab).
+This document is the master index for all TSCP project repositories,
+sealed artifacts, tags, and milestones.
 
-## Hybrid Model
+## Repository Map
 
-| Account | Role |
-|---|---|
-| **Triune-Oracle** | Canonical production: active protocol, verification, and tooling |
-| **Cartilage-Stairwells** | Archive / lab: historical research, experiments, compliance anchors |
+### Primary Repositories
 
-A new contributor can identify the authoritative code, understand historical lineage,
-and verify security posture without requiring private context.
+| Repo | Account | Visibility | Role | Status |
+|:---|:---|:---|:---|:---|
+| **tscp-anchor** | Cartilage-Stairwells | Public | Integration, verification, governance | ACTIVE — canonical |
+| **avx512-butterfly** | Cartilage-Stairwells | Private | AVX-512 NTT kernels, VEP evidence | ACTIVE — sealed at vep-0.1.4 |
+| **tscp-anchor** | Triune-Oracle | Public (billing-locked) | Legacy remote | ARCHIVED — CI non-functional |
+
+### Historical / Legacy Repositories (Triune-Oracle)
+
+| Repo | Cluster | Status | Notes |
+|:---|:---|:---|:---|
+| tscp-pl-phase1 | TSCP | ARCHIVE (compliance anchor) | 27 Lean 4 theorems, 0 sorry. `phase1-freeze` is read-only. |
+| tscp-canon | TSCP | ARCHIVE | Conformance fixtures and canonical test vectors. |
+| tscp-crown-capsule | TSCP | REVIEW | PLpgSQL, 3kb. Purpose unclear. |
+| toolintell | TSCP / TOOLS | REVIEW | TSCP runtime artifacts, FRI/STARK analysis. |
+| triune-swarm-engine | TRIUMVIRATE | MIGRATE | Python multi-agent orchestrator. |
+| *(~30 other repos)* | Various | ARCHIVE/DELETE | Inactive, templates, or disposable. |
+
+## Sealed Artifacts
+
+### Tags on tscp-anchor (Cartilage-Stairwells)
+
+| Tag | Commit | Type | Signed | Date |
+|:---|:---|:---|:---|:---|
+| `v1.0-rc1` | `abb7ad53` | Release candidate | Yes | 2026-07-17 |
+| `tscp-serialization-v0.1.0-rc1-signed` | `81ead102` | Feature seal | Yes | 2026-07-19 |
+| `tscp-serialization-v0.1.0-rc1` | `81ead102` | Feature seal (unsigned) | No | 2026-07-19 |
+| `tscp-mini-ntt-parity-v1` | `27de2f10` | Acceptance package | Yes | 2026-07-18 |
+| `tscp-anchor-custody-v1` | — | Custody marker | — | 2026-07-17 |
+| `custody-migration-2026-07-17` | — | Migration marker | — | 2026-07-17 |
+| `pre-stage2-custody-merge` | — | Pre-merge marker | — | 2026-07-17 |
+
+### Tags on avx512-butterfly (Cartilage-Stairwells)
+
+| Tag | Commit | Type | Signed | Date |
+|:---|:---|:---|:---|:---|
+| `v1.0-rc1` | `a330235` | Release candidate | Yes | 2026-07-17 |
+| `vep-0.1.4-sealed` | `49eac02` | VEP milestone seal | Yes | 2026-07-17 |
+| `avx512-v1-evidence-sealed` | `49eac02` | Evidence boundary | Yes | 2026-07-17 |
+| `avx512-opt-start-v0.1.0` | `49eac02` | Optimization start | Annotated | 2026-07-17 |
+
+## Acceptance Packages
+
+### tscp-mini-ntt-parity-v1
+
+| Field | Value |
+|:---|:---|
+| Repository | tscp-anchor |
+| Commit | `27de2f100b7e0ad2dc4a5ad09899c93ff361f85f` |
+| Tag | `tscp-mini-ntt-parity-v1` (GPG-signed) |
+| Verification | 24/24 PASS (vector_generator.py → verify.py) |
+| SHA256SUMS | `2c9125388a2b08c70596f03f06af39e5435841c901e919f6820fbd36a9c5f0d3` |
+| GPG key | `84692E6294128CC1C4ACCD15E747C3AF22573539` |
+| Date | 2026-07-18 |
+
+## VEP Milestones
+
+| Milestone | Status | Date | Commit (avx512-butterfly) |
+|:---|:---|:---|:---|
+| VEP-0.1.1 — Minimal Evidence Loop | SEALED | 2026-07-17 | `823775b` |
+| VEP-0.1.2 — Full Evidence Bundle | SEALED | 2026-07-17 | `3dab112` |
+| VEP-0.1.3 — Submission Packaging | SEALED | 2026-07-17 | `2e31ab8` |
+| VEP-0.1.4 — CI Enforcement | SEALED | 2026-07-17 | `0d09b10` |
+
+All VEP milestones GPG-signed, verified on GitHub, CI green.
+
+## CI Workflows
+
+### tscp-anchor (Cartilage-Stairwells)
+
+| Workflow | File | Triggers | Status |
+|:---|:---|:---|:---|
+| TSCP Verification Predicate CI | `.github/workflows/ci.yml` | push, PR | Active |
+| TSCP Anchor Pipeline | `.github/workflows/anchor.yml` | push (master) | Active |
+| Verify Receipts | `.github/workflows/verify-receipts.yml` | push, PR | Active |
+| WASM Smoke Test (JIT) | `.github/workflows/wasm-smoke.yml` | push, PR | Active |
+| Supply Chain Governance | `.github/workflows/supply-chain-governance.yml` | push, PR (registry files) | Active |
+| Stage 2 Backend Verification | `.github/workflows/stage2-verify.yml` | push | Active |
+
+### avx512-butterfly (Cartilage-Stairwells)
+
+| Workflow | File | Triggers | Status |
+|:---|:---|:---|:---|
+| VEP Validation | `.github/workflows/vep-validation.yml` | push, PR | Active |
+
+## Cryptographic Anchors
+
+| Anchor | Value |
+|:---|:---|
+| GPG signing key | `8469 2E62 9412 8CC1 C4AC CD15 E747 C3AF 2257 3539` |
+| Key holder | Sean Christopher Southwick |
+| Key type | ECDSA P-384 |
+| Primary email | `adamantinespine@gmail.com` |
+| Secondary email | `schlagetorren@gmail.com` |
+| Public key file | `signer-public-key.asc` |
+
+## Supply Chain Exceptions Summary
+
+| ID | Status | Dependency | Next Review |
+|:---|:---|:---|:---|
+| EX-0001 | RESOLVED | serde_cbor v0.11.2 | — |
+| EX-0002 | ACTIVE | crossbeam-epoch v0.9.18 | 2026-08-19 |
+| EX-0003 | ACTIVE | wasmtime v29.0.1 | 2026-08-19 |
+
+## Commit Signing History
+
+Signed commits (verified=True on GitHub):
+- `1e5e824` — ciborium merge (2026-07-19)
+- `58c18a7` — test signing key (2026-07-19)
+- `81ead10` — custody merge (2026-07-19)
+
+Historical unsigned commits (documented in SECURITY.md):
+- `e176f88` — ciborium feature commit (2026-07-19)
+- `c048743` through `5bb0bb2` — cargo fmt/clippy cleanup (16 commits, 2026-07-19)
+
+Policy: protect future commits, document historical unsigned commits,
+do not rewrite history unless an explicit provenance migration is decided.
 
 ---
 
-## Repository Index
-
-| Repo | Account | Cluster | Status | Date Range | Canonical Replacement | Notes |
-|:---|:---|:---|:---|:---|:---|:---|
-| **avx512-butterfly** | Cartilage-Stairwells | COMPUTE | MIGRATED → T-O | 2025– | triune-kernel | AVX-512 NTT butterfly kernels, BabyBear field, IEP layer. Lab remains as historical compute origin. |
-| **tscp-pl-phase1** | Cartilage-Stairwells | TSCP | ARCHIVE (compliance anchor) | Phase 1 freeze | None | 27 Lean 4 theorems, 0 sorry. `phase1-freeze` is read-only. Do not rebase or force-push. |
-| **tscp-anchor** | Cartilage-Stairwells | TSCP | MIGRATED → T-O (canonical) | 2025– | Triune-Oracle/tscp-anchor | 1 commit ahead of T-O version. History contains 299MB packfile bloat from node_modules + target/. git-filter-repo cleanup pending. |
-| **tscp-anchor** | Triune-Oracle | TSCP | MIGRATE (sync from C-S) | 2025– | ← C-S version is canonical | Keccak256 EVM commitment layer. Plonky3 ZK stack. |
-| **tscp-canon** | Triune-Oracle | TSCP | MIGRATE | Active | None | Conformance fixtures and canonical test vectors. 32MB target/ bloat pending cleanup. |
-| **tscp-crown-capsule** | Triune-Oracle | TSCP | REVIEW | Legacy | None | PLpgSQL, 3kb. Purpose unclear — needs architectural classification. |
-| **toolintell** | Triune-Oracle | TSCP / TOOLS | REVIEW → triune-tools | Active June 2026 | None | Contains TSCP runtime artifacts, FRI/STARK analysis, mutation harnesses. Likely triune-tools or triune-execution. |
-| **triune-swarm-engine** | Triune-Oracle | TRIUMVIRATE | MIGRATE | Active | None | Python multi-agent orchestrator. 1 open issue. Core operational layer. |
-| **Triune-Oracle** | Triune-Oracle | TRIUMVIRATE | MIGRATE | Active | None | Public org profile repo. |
-| **TtriumvirateMonitor-Mobile** | Triune-Oracle | TRIUMVIRATE | ARCHIVE | Inactive | None | TypeScript mobile monitor. |
-| **Triune_Command_UI** | Triune-Oracle | TRIUMVIRATE | ARCHIVE | Inactive | None | JS command UI. |
-| **Legio-Cognito** | Triune-Oracle | TRIUMVIRATE | ARCHIVE | Historical | None | 35MB images in Vault_of_Relics/. Historical blueprints. |
-| **Triune--retrieval--node** | Triune-Oracle | TRIUMVIRATE | ARCHIVE | Inactive | None | Retrieval node. |
-| **MirrorWatcherAI** | Triune-Oracle | TRIUMVIRATE | ARCHIVE | Inactive | None | Monitoring agent. |
-| **Trumvirate-System-Memory-Merge-Protocol** | Triune-Oracle | TRIUMVIRATE | ARCHIVE | Legacy | None | Note: typo in name. Deprecated merge protocol. |
-| **triumvirate-agent-framework** | Triune-Oracle | TRIUMVIRATE | ARCHIVE | Legacy | None | Prior agent framework. |
-| **logos-agency-mvp-dashboard** | Triune-Oracle | LOGOS | REVIEW | Active | None | TypeScript. 1 open issue. Possible active deployment. |
-| **Logos_Agency** | Triune-Oracle | LOGOS | ARCHIVE | Historical | None | Go-based agency framework. |
-| **LogosTalisman** | Triune-Oracle | LOGOS | ARCHIVE | Legacy | None | |
-| **logostalisman-presentation** | Triune-Oracle | LOGOS | ARCHIVE | Legacy | None | Presentation materials. |
-| **logostalisman-marketing** | Triune-Oracle | LOGOS | ARCHIVE | Legacy | None | Marketing collateral. |
-| **logos-talisman-fractal-ai** | Triune-Oracle | LOGOS | ARCHIVE | Legacy | None | Experimental fractal AI. |
-| **Adamantine-Spine** | Triune-Oracle | MISC | ARCHIVE | Legacy | None | Next.js + Stripe/Prisma payout ledger. Internal name: catch-basin. No active deployment found. |
-| **catch-basin** | Triune-Oracle | MISC | ARCHIVE | Legacy | None | Related to Adamantine-Spine. |
-| **glyphicspore** | Triune-Oracle | MISC | ARCHIVE | Legacy | None | Neo4j graph viz layer for TriumvirateSwarm. |
-| **sovereign-scroll-cycle** | Triune-Oracle | MISC | ARCHIVE | Legacy | None | |
-| **integrated-pipeline-platform** | Triune-Oracle | MISC | ARCHIVE | Legacy | None | |
-| **pinata-api-keys** | Triune-Oracle | SECURITY ⚠️ | DELETE after scrub | — | None | Credentials rotated. History scrub required before deletion. |
-| **CulturalCodex** | Triune-Oracle | SECURITY ⚠️ | REVIEW | Historical | None | .env with Polygon key + Infura key. Both revoked. History scrub required. |
-| **keys-and-rituals** | Triune-Oracle | SECURITY | REVIEW | — | None | ManusAI deployment spec for thecodexai.com. No live credentials found. |
-| **nextjs-ai-chatbot** | Triune-Oracle | STARTERS | ARCHIVE/DELETE | Template | None | |
-| **empathic-voice-interface-starter** | Triune-Oracle | STARTERS | ARCHIVE/DELETE | Template | None | |
-| **empathic-voice-interface-launcher** | Triune-Oracle | STARTERS | ARCHIVE/DELETE | Template | None | |
-| **nextjs-ai-chatbot-launcher** | Triune-Oracle | STARTERS | ARCHIVE/DELETE | Template | None | |
-| **nextjs-ai-hackbot** | Triune-Oracle | STARTERS | ARCHIVE/DELETE | Template | None | |
-| **vite-react** | Triune-Oracle | STARTERS | ARCHIVE/DELETE | Template | None | |
-| *(~20 remaining misc repos)* | Triune-Oracle | MISC | ARCHIVE/DELETE | Various | None | Inactive, templates, or disposable. Review individually before deletion. |
-
----
-
-## Canonical Triune-Oracle Target Structure
-
-```
-Triune-Oracle/
-  triune-protocol       ← tscp-pl-phase1 content (frozen spec)
-  triune-verifier       ← serialization seal + verification package
-  triune-kernel         ← avx512-butterfly (NTT compute core)
-  triune-execution      ← tscp-anchor (cleaned, history-rewritten)
-  triune-benchmarks     ← π corpus, FRI/STARK analysis artifacts
-  triune-tools          ← toolintell + utilities
-  triune-documentation  ← architecture docs, dossier, this index
-
-Cartilage-Stairwells/
-  avx512-butterfly      ← lab origin (retained, read-only)
-  tscp-pl-phase1        ← compliance anchor (phase1-freeze, permanent)
-  tscp-anchor           ← canonical pre-migration state
-```
-
----
-
-## Pending Actions
-
-| Action | Target | Priority |
-|---|---|---|
-| git-filter-repo bloat cleanup | tscp-anchor (both accounts) | HIGH |
-| git-filter-repo bloat cleanup | tscp-canon | HIGH |
-| History scrub + delete | pinata-api-keys | HIGH |
-| History scrub | CulturalCodex (.env) | HIGH |
-| GPG key setup + enforce signing | All active repos | HIGH |
-| Add LICENSE, CHANGELOG, CONTRIBUTING | TSCP cluster (4 repos) | HIGH |
-| Deploy CI verification gates | tscp-anchor, tscp-canon | HIGH |
-| Classify and migrate | toolintell | MEDIUM |
-| Classify | tscp-crown-capsule | MEDIUM |
-| Archive or delete | ~30 inactive repos | LOW |
-
----
-
-*Date: 2026-07-14*
-*Maintained by Triune-Oracle*
+*Last updated: 2026-07-19*
+*Maintained by: Cartilage-Stairwells*
+*Canonical repository: https://github.com/Cartilage-Stairwells/tscp-anchor*
