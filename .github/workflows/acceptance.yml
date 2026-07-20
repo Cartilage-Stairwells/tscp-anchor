@@ -1,0 +1,247 @@
+# TSCP Acceptance Workflow
+#
+# Comprehensive acceptance gate that validates the full TSCP integration layer:
+#   1. Serialization conformance (12/12 tests)
+#   2. Supply chain governance (schema + audit mapping + evidence manifest)
+#   3. Artifact integrity (SHA256SUMS verification)
+#
+# Required status check name: TSCP Acceptance Seal
+# Tag protection rule: TSCP-RELEASE-CUSTODY (refs/tags/tscp-*)
+
+name: TSCP Acceptance
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  conformance:
+    name: Serialization Conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+      - uses: swatinem/rust-cache@v2
+      - name: Run serialization conformance suite (12 tests)
+        run: |
+          echo "=== TSCP Serialization Conformance Suite ==="
+          cargo test -p tscp-kernel --test serialization_conformance --release -- --nocapture 2>&1 | tee conformance_output.txt
+
+          PASS_COUNT=$(grep -c "^test .* \.\.\. ok$" conformance_output.txt || true)
+          FAIL_COUNT=$(grep -c "^test .* \.\.\. FAILED$" conformance_output.txt || true)
+          TOTAL=$((PASS_COUNT + FAIL_COUNT))
+
+          echo ""
+          echo "=== Conformance Results ==="
+          echo "Pass: $PASS_COUNT / $TOTAL"
+          echo "Fail: $FAIL_COUNT"
+
+          if [ "$FAIL_COUNT" -gt 0 ] || [ "$TOTAL" -lt 12 ]; then
+            echo "FAIL: Expected 12/12 passing, got $PASS_COUNT/$TOTAL"
+            exit 1
+          fi
+
+          echo "PASS: 12/12 serialization conformance tests passed"
+
+      - name: Upload conformance output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-output
+          path: conformance_output.txt
+
+  governance:
+    name: Supply Chain Governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install jsonschema
+
+      - name: Validate governance registry
+        run: |
+          echo "=== TSCP Supply Chain Governance Validation ==="
+          python3 scripts/validate_governance.py \
+            --schema schemas/exceptions.schema.json \
+            --data schemas/exceptions.json \
+            --audit audit.toml \
+            --out supply-chain-evidence/evidence_manifest.json
+
+      - name: Verify no RESOLVED exceptions in audit.toml
+        run: |
+          echo "=== Checking audit.toml for RESOLVED exception IDs ==="
+          python3 -c "
+          import json, re, sys
+
+          with open('schemas/exceptions.json') as f:
+              registry = json.load(f)
+
+          resolved = [e['exception_id'] for e in registry['exceptions']
+                      if e['status'] == 'RESOLVED']
+
+          with open('audit.toml') as f:
+              audit_content = f.read()
+
+          comment_pattern = re.compile(r'#\s*(EX-\d{4})')
+          audit_ids = set(comment_pattern.findall(audit_content))
+
+          leaked = [eid for eid in resolved if eid in audit_ids]
+          if leaked:
+              print(f'FAIL: RESOLVED exceptions still in audit.toml: {leaked}')
+              sys.exit(1)
+
+          print('PASS: No RESOLVED exceptions leaked into audit.toml')
+          "
+
+      - name: Check exception review dates
+        run: |
+          python3 -c "
+          import json, sys
+          from datetime import date
+
+          today = date.today()
+          with open('schemas/exceptions.json') as f:
+              registry = json.load(f)
+
+          for exc in registry['exceptions']:
+              if exc['status'] == 'ACTIVE':
+                  next_review = exc.get('next_review', '')
+                  if next_review:
+                      review_date = date.fromisoformat(next_review)
+                      if review_date < today:
+                          print(f'FAIL: {exc[\"exception_id\"]} review overdue (next_review: {next_review})')
+                          sys.exit(1)
+                      print(f'OK: {exc[\"exception_id\"]} next_review: {next_review}')
+
+          print('PASS: All ACTIVE exceptions within review window')
+          "
+
+      - name: Upload governance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-evidence
+          path: |
+            supply-chain-evidence/
+            schemas/exceptions.json
+            audit.toml
+
+  integrity:
+    name: Artifact Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify SHA256SUMS
+        run: |
+          echo "=== TSCP Artifact Integrity Verification ==="
+          if [ ! -f SHA256SUMS ]; then
+            echo "FAIL: SHA256SUMS file not found"
+            exit 1
+          fi
+
+          FAILURES=0
+          while IFS= read -r line; do
+            EXPECTED=$(echo "$line" | awk '{print $1}')
+            FILE=$(echo "$line" | awk '{print $2}')
+
+            if [ ! -f "$FILE" ]; then
+              echo "MISSING: $FILE"
+              FAILURES=$((FAILURES + 1))
+              continue
+            fi
+
+            ACTUAL=$(sha256sum "$FILE" | awk '{print $1}')
+            if [ "$ACTUAL" = "$EXPECTED" ]; then
+              echo "OK: $FILE"
+            else
+              echo "FAIL: $FILE"
+              echo "  expected: $EXPECTED"
+              echo "  actual:   $ACTUAL"
+              FAILURES=$((FAILURES + 1))
+            fi
+          done < SHA256SUMS
+
+          echo ""
+          echo "Integrity failures: $FAILURES"
+          if [ "$FAILURES" -gt 0 ]; then
+            echo "FAIL: SHA256SUMS verification failed"
+            exit 1
+          fi
+
+          echo "PASS: All SHA256SUMS verified"
+
+      - name: Verify receipts (offline)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --omit=optional --ignore-scripts --no-audit
+      - name: Run offline receipt verification
+        run: |
+          echo "=== TSCP Receipt Verification (offline) ==="
+          if ls anchor-receipts/*.json 1>/dev/null 2>&1; then
+            npm run verify:offline
+            echo "PASS: Receipt verification completed"
+          else
+            echo "SKIP: No anchor-receipts found (expected for non-anchor commits)"
+          fi
+
+  seal:
+    name: TSCP Acceptance Seal
+    needs: [conformance, governance, integrity]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate acceptance gates
+        run: |
+          echo "=== TSCP ACCEPTANCE SEAL ==="
+          echo ""
+          echo "conformance: ${{ needs.conformance.result }}"
+          echo "governance: ${{ needs.governance.result }}"
+          echo "integrity:  ${{ needs.integrity.result }}"
+          echo ""
+
+          CONF="${{ needs.conformance.result }}"
+          GOV="${{ needs.governance.result }}"
+          INT="${{ needs.integrity.result }}"
+
+          if [ "$CONF" != "success" ]; then
+            echo "FAIL: conformance gate did not pass (result: $CONF)"
+          fi
+          if [ "$GOV" != "success" ]; then
+            echo "FAIL: governance gate did not pass (result: $GOV)"
+          fi
+          if [ "$INT" != "success" ]; then
+            echo "FAIL: integrity gate did not pass (result: $INT)"
+          fi
+
+          if [ "$CONF" = "success" ] && [ "$GOV" = "success" ] && [ "$INT" = "success" ]; then
+            echo ""
+            echo "TSCP ACCEPTANCE SEAL: PASS"
+            echo ""
+            echo "All acceptance gates cleared:"
+            echo "  conformance: 12/12 serialization tests"
+            echo "  governance: schema + audit + review dates"
+            echo "  integrity: SHA256SUMS + receipts"
+            echo ""
+            echo "Commit: ${{ github.sha }}"
+            echo "Branch: ${{ github.ref }}"
+            echo "Run:    ${{ github.run_id }}"
+          else
+            echo ""
+            echo "TSCP ACCEPTANCE SEAL: FAIL"
+            exit 1
+          fi
