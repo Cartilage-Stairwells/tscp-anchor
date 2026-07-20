@@ -1,13 +1,9 @@
 import Lake
 open Lake DSL
 
-package "oracle-layer" where
-  leanOptions := #[
-    ⟨`pp.unicode.fun, true⟩,
-    ⟨`pp.proofs.withType, false⟩
-  ]
+package «tscp-formal» where
 
-lean_lib `TraceCoreProver where
-  roots := #["TraceCoreProver"]
-
-require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "master"
+lean_lib «TSCP» where
+  roots := #[`TSCP.Formal.TSCP_Formal_Backbone, `TSCP.Formal.BridgePreservation,
+    `TSCP.Formal.Examples.PropositionalKernel, `TSCP.Formal.Examples.NormalizationBridge,
+    `TSCP.Formal.Evidence.ManifestBinding, `TSCP.Formal.Core]
