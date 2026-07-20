@@ -1,0 +1,83 @@
+{
+  "profile": {
+    "name": "TSCP-SLSA-L3",
+    "version": 1,
+    "description": "TSCP custody profile for SLSA Build Level 3 compliance"
+  },
+  "requirements": {
+    "source": {
+      "signed_commits": "required",
+      "protected_tags": "required",
+      "protected_branches": "required",
+      "no_force_push": "required"
+    },
+    "builder": {
+      "github_actions": "required",
+      "reusable_workflow": "required",
+      "isolated_runner": "required",
+      "build_locked": "required"
+    },
+    "provenance": {
+      "slsa": ">=3",
+      "subject_digest_match": "required",
+      "workflow_identity_verified": "required",
+      "attestation_signature_verified": "required"
+    },
+    "transparency": {
+      "sigstore": "required",
+      "rekor_inclusion": "required",
+      "evidence_archived": "required"
+    },
+    "determinism": {
+      "replay_validation": "required",
+      "toolchain_pinned": "required",
+      "action_refs_pinned": "recommended"
+    },
+    "custody": {
+      "policy_evaluation": "required",
+      "custody_decision_recorded": "required",
+      "immutable_release_evidence": "required",
+      "verifier_exit_code_zero": "required"
+    }
+  },
+  "verification_order": [
+    "source",
+    "builder",
+    "artifact",
+    "provenance",
+    "transparency",
+    "custody"
+  ],
+  "verifier_contract": {
+    "input": {
+      "artifact": "path to artifact.tar.gz",
+      "attestation": "path to release-attestation.json",
+      "release_dir": "path to tscp-l3-release/ directory"
+    },
+    "output_pass": {
+      "decision": "PASS",
+      "checks": {
+        "source": "PASS",
+        "builder": "PASS",
+        "artifact": "PASS",
+        "provenance": "PASS",
+        "transparency": "PASS",
+        "custody": "PASS"
+      }
+    },
+    "output_reject": {
+      "decision": "REJECT",
+      "reason": "<gate>_failure",
+      "failed_gate": "<gate>"
+    },
+    "exit_codes": {
+      "0": "PASS",
+      "1": "source_failure",
+      "2": "builder_failure",
+      "3": "artifact_failure",
+      "4": "provenance_failure",
+      "5": "transparency_failure",
+      "6": "custody_failure"
+    }
+  }
+}
