@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "custody_boundary_commit": "c7eadcb9d47075f4fae9bbbee4da8172a716598e",
+  "description": "Historical unsigned commits preceding TSCP custody enforcement",
+  "historical_commits": [
+    {
+      "commit": "c4e913183fd6abd5046672d0ebbaff5b274bc8dd",
+      "purpose": "Initial TSCP Acceptance workflow"
+    },
+    {
+      "commit": "068f34f711b5287e51941a48e60e5bf6f8030509",
+      "purpose": "Acceptance Seal workflow correction"
+    },
+    {
+      "commit": "c4e552fb5049b064aa7e451e213cf8dd23e59a9a",
+      "purpose": "SHA256SUMS regeneration after ciborium migration"
+    }
+  ]
+}
