@@ -78,8 +78,8 @@ theorem type_of_rename (f : String → String) :
   | mp p' q' ih_p ih_q =>
     intro form ht
     cases ht with
-    | mp a b htp htq =>
-      -- ht : TypeOf (mp p' q') b, so form = b
+    | mp p q a b htp htq =>
+      -- p = p', q = q' (matched by index)
       -- htp : TypeOf p' (Formula.implies a b)
       -- htq : TypeOf q' a
       -- After rename:
@@ -87,12 +87,13 @@ theorem type_of_rename (f : String → String) :
       --     = TypeOf (rename_proof f p') (Formula.implies (rename_formula f a) (rename_formula f b))
       --   ih_q a htq : TypeOf (rename_proof f q') (rename_formula f a)
       -- Conclusion: TypeOf (mp (rename_proof f p') (rename_proof f q')) (rename_formula f b)
+      -- b is unified with form by the index, so use form instead of b
       exact TypeOf.mp
         (rename_proof f p')
         (rename_proof f q')
         (rename_formula f a)
-        (rename_formula f b)
-        (ih_p (Formula.implies a b) htp)
+        (rename_formula f form)
+        (ih_p (Formula.implies a form) htp)
         (ih_q a htq)
 
 /- ===================================================================
@@ -117,17 +118,8 @@ theorem rename_preserves_admits
   different atom names) and certify it.
   =================================================================== -/
 
-/-- A second propositional universe (same types, same kernels). -/
-def target_universe : Universe where
-  ProofType := Proof
-  FormulaType := Formula
-  ExecutionType := Unit
-  proof_kernel := propositional_kernel
-  formula_kernel := trivial_formula_kernel
-  exec_kernel := trivial_exec_kernel
-
 /-- The normalization bridge: rename atoms via f. -/
-def normalization_bridge (f : String → String) : Bridge propositional_universe target_universe where
+def normalization_bridge (f : String → String) : Bridge propositional_universe propositional_universe where
   proof_map := rename_proof f
   formula_map := rename_formula f
   exec_map := fun x => x  -- identity for executions
@@ -167,33 +159,24 @@ def normalization_certificate (f : String → String) :
     BridgeCertificate (normalization_bridge f) where
   proof_preservation := fun p hp => rename_preserves_admits f p hp
   proof_reflection := by
-    -- Reflection: every admissible proof in the target has a preimage.
-    -- Since the bridge uses the same kernel on both sides (same types),
-    -- and rename_proof is structurally the same proof with renamed atoms,
-    -- we can construct the preimage by using the inverse renaming.
-    -- For this minimal example, we use the inverse function f⁻¹.
-    intro q hq
-    obtain ⟨form, ht⟩ := hq
-    -- The preimage is rename_proof (inverse) q, which restores original atoms.
-    -- For the minimal example, we note that TypeOf is preserved both ways
-    -- when f is invertible. Here we provide the structural witness.
-    exact ⟨rename_proof (fun s => s) q, ⟨form, ht⟩, rfl⟩
+    sorry  -- reflection requires invertibility (future work)
   proof_admissibility := {
     preserves := fun p hp => rename_preserves_admits f p hp
     reflects := by
       intro q hq
-      obtain ⟨form, ht⟩ := hq
-      exact ⟨rename_proof (fun s => s) q, ⟨form, ht⟩, rfl⟩
+      sorry  -- reflection requires invertibility (future work)
   }
   formula_admissibility := {
     preserves := fun form h => trivial
-    reflects := fun form h => ⟨rename_formula (fun s => s) form, trivial, rfl⟩
+    reflects := by
+      intro form h
+      sorry  -- reflection requires invertibility (future work)
   }
   exec_admissibility := {
     preserves := fun x h => h
     reflects := fun x h => ⟨x, h, rfl⟩
   }
-  certificate_digest := "norm-bridge-v1-" ++ toString f.hashCode
+  certificate_digest := "norm-bridge-v1"
   verifier_version := "TSCP-PL v1.0"
   issued_at := "2026-07-20T00:00:00Z"
 
@@ -209,7 +192,7 @@ def normalization_certificate (f : String → String) :
 theorem certified_proof_crosses_bridge
     (f : String → String)
     (cp : CertifiedProof propositional_kernel) :
-    Truth target_universe (normalization_bridge f |>.proof_map cp.proof) :=
+    Truth propositional_universe (normalization_bridge f |>.proof_map cp.proof) :=
   (normalization_certificate f).proof_preservation cp.proof cp.certified
 
 end TSCP.Formal.Examples

@@ -84,20 +84,17 @@ def type_of : Proof → Option Formula
 /-- Soundness: type_of returns a formula only if TypeOf holds. -/
 theorem type_of_sound : ∀ (p : Proof) (f : Formula),
     type_of p = some f → TypeOf p f := by
-  intro p f
+  intro p
   induction p with
   | assume form =>
-    intro h
+    intro f h
     simp only [type_of] at h
-    -- type_of (assume form) = some form, and h : some form = some f, so form = f
     injection h with h_eq
     rw [← h_eq]
     exact TypeOf.assume form
   | mp p' q' ih_p ih_q =>
-    intro h
+    intro f h
     simp only [type_of] at h
-    -- type_of (mp p' q') = match type_of p', type_of q' with ...
-    -- Need to deconstruct the match
     cases hpt : type_of p' with
     | none => simp [hpt] at h
     | some pt =>
@@ -107,21 +104,12 @@ theorem type_of_sound : ∀ (p : Proof) (f : Formula),
         cases pt with
         | atom s => simp [hpt, hqt] at h
         | implies a b =>
-          -- type_of p' = some (implies a b), type_of q' = some qt
-          -- match gives: if a = qt then some b else none
-          -- h : (if a = qt then some b else none) = some f
           by_cases h_eq : a = qt
-          · -- a = qt, so result = some b, f = b
-            simp [hpt, hqt, h_eq] at h
-            injection h with hf
-            rw [← hf]
-            -- TypeOf (mp p' q') b
-            -- Need TypeOf p' (implies a b) and TypeOf q' a
-            have htp := ih_p (Formula.implies a b) hpt
-            have htq := ih_q a (by rw [← h_eq, hqt])
-            exact TypeOf.mp p' q' a b htp htq
-          · -- a ≠ qt, result = none ≠ some f
-            simp [hpt, hqt, h_eq] at h
+          · subst h_eq
+            simp [hpt, hqt] at h
+            rw [← h]
+            exact TypeOf.mp p' q' a b (ih_p (Formula.implies a b) hpt) (ih_q a hqt)
+          · simp [hpt, hqt, h_eq] at h
 
 /-- Completeness: if TypeOf holds, type_of returns the formula. -/
 theorem type_of_complete : ∀ (p : Proof) (f : Formula),
@@ -134,10 +122,6 @@ theorem type_of_complete : ∀ (p : Proof) (f : Formula),
     -- ih_p : type_of p' = some (implies a b)
     -- ih_q : type_of q' = some a
     simp [type_of, ih_p, ih_q]
-    -- match some (implies a b), some a with
-    --   | some (implies a' b'), some c' => if a' = c' then some b' else none
-    -- a' = a, b' = b, c' = a, so if a = a then some b = some b
-    rfl
 
 /-- Admissibility is decidable (via the computable type checker). -/
 instance admits_decidable (p : Proof) : Decidable (admits p) :=
@@ -146,7 +130,7 @@ instance admits_decidable (p : Proof) : Decidable (admits p) :=
     intro h_admits
     obtain ⟨f, ht⟩ := h_admits
     rw [type_of_complete p f ht] at hp
-    exact hp rfl)
+    simp at hp)
   | some f => isTrue (by
     exact ⟨f, type_of_sound p f hp⟩)
 
