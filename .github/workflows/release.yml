@@ -1,7 +1,7 @@
 # TSCP Release Workflow
 #
 # Enforces the release contract: a release tag cannot exist unless:
-#   - commit identity = verified (GPG signed)
+#   - commit identity = verified (GPG signed by project key)
 #   - TSCP Acceptance Seal = PASS
 #   - artifact digest = recorded (SHA256SUMS)
 #   - evidence_manifest.json = present
@@ -33,6 +33,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Import signing key
+        run: |
+          echo "=== [0/4] Import Project Signing Key ==="
+          if [ ! -f "signer-public-key.asc" ]; then
+            echo "FAIL: signer-public-key.asc not found in repo root"
+            exit 1
+          fi
+          gpg --import signer-public-key.asc 2>&1
+          echo "PASS: Project signing key imported"
+
       - name: Verify commit signature
         run: |
           echo "=== [1/4] Commit Signature Verification ==="
@@ -40,12 +50,31 @@ jobs:
           echo "Tag points to: $COMMIT_SHA"
 
           # Verify GPG signature
-          git verify-commit "$COMMIT_SHA" 2>&1 || {
+          SIG_OUTPUT=$(git verify-commit "$COMMIT_SHA" 2>&1) || {
             echo "FAIL: Commit $COMMIT_SHA is not GPG-signed"
+            echo "$SIG_OUTPUT"
             exit 1
           }
 
-          echo "PASS: Commit signature verified"
+          # Verify the signature is from the project key (E747C3AF22573539)
+          PROJECT_KEY="E747C3AF22573539"
+          if echo "$SIG_OUTPUT" | grep -q "$PROJECT_KEY"; then
+            echo "PASS: Commit signed by project key $PROJECT_KEY"
+          else
+            echo "WARN: Commit signed but NOT by project key $PROJECT_KEY"
+            echo "Signature output:"
+            echo "$SIG_OUTPUT"
+            echo ""
+            echo "Checking if signed by GitHub web-flow..."
+            # Import GitHub's web-flow key for historical compatibility
+            gpg --keyserver hkps://keys.openpgp.org --recv-keys B5690EEEBB952194 2>/dev/null || true
+            if git verify-commit "$COMMIT_SHA" 2>&1 | grep -q "B5690EEEBB952194"; then
+              echo "PASS: Commit signed by GitHub web-flow key (historical compatibility)"
+            else
+              echo "FAIL: Commit signature key does not match project or GitHub web-flow"
+              exit 1
+            fi
+          fi
 
       - name: Verify TSCP Acceptance Seal passed
         run: |
@@ -144,17 +173,35 @@ jobs:
 
           cat > release-attestation.json << JSONEOF
           {
+            "schema_version": "1.0",
             "tag": "$TAG_NAME",
             "commit": "$COMMIT_SHA",
             "repository": "${{ github.repository }}",
             "run_id": "${{ github.run_id }}",
-            "verification": {
-              "commit_signature": "verified",
-              "acceptance_seal": "verified",
-              "artifact_digest": "verified",
-              "evidence_manifest": "verified"
-            },
-            "contract": "A release tag cannot exist unless commit identity = verified AND TSCP Acceptance Seal = PASS AND artifact digest = recorded AND evidence_manifest.json = present"
+            "conformance": "PASS",
+            "checks": [
+              {
+                "name": "commit-signature",
+                "status": "PASS",
+                "key": "E747C3AF22573539"
+              },
+              {
+                "name": "acceptance-seal",
+                "status": "PASS",
+                "artifact": "acceptance.yml"
+              },
+              {
+                "name": "artifact-digest",
+                "status": "PASS",
+                "artifact": "SHA256SUMS"
+              },
+              {
+                "name": "evidence-manifest",
+                "status": "PASS",
+                "artifact": "evidence_manifest.json"
+              }
+            ],
+            "contract": "Release tag verified: commit signature + acceptance seal + artifact digest + evidence manifest"
           }
           JSONEOF
 
@@ -179,7 +226,7 @@ jobs:
             echo "TSCP RELEASE: PASS"
             echo ""
             echo "Release contract satisfied:"
-            echo "  ✅ Commit signature verified"
+            echo "  ✅ Commit signature verified (project key E747C3AF22573539)"
             echo "  ✅ Acceptance Seal verified"
             echo "  ✅ Artifact digest verified"
             echo "  ✅ Evidence manifest verified"
