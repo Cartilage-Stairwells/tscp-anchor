@@ -1,0 +1,185 @@
+# TSCP-PL Verifier Test Enforcement
+#
+# Enforcement boundary:
+#   PR/push → run verifier tests → generate evidence → archive → gate merge
+#
+# Three regression stages:
+#   1. Expected exit code verification (each vector must produce its expected exit)
+#   2. Canonicalization invariance (good.jsonld == reorderkeys.jsonld digest)
+#   3. Determinism regression (repeated verification produces identical manifests)
+#
+# Artifacts produced:
+#   evidence/manifest.json      — machine-readable verification record
+#   evidence/verifier.log       — full verifier output
+#   evidence/payload.sha256     — SHA256 of canonical payload
+#   evidence/summary.json       — test run summary
+#   evidence/verifier-version.txt — verifier version info
+
+name: TSCP-PL Verifier Tests
+
+on:
+  pull_request:
+    paths:
+      - 'tscp-pl-reference/**'
+  push:
+    branches:
+      - master
+    paths:
+      - 'tscp-pl-reference/**'
+
+concurrency:
+  group: tscp-pl-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: TSCP-PL Test Vectors
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --user jsonschema
+          python3 -c "import jsonschema; print('jsonschema:', jsonschema.__version__)"
+
+      - name: Generate test vectors
+        run: |
+          echo "=== Generating test artifacts and ledgers ==="
+          cd tscp-pl-reference
+          python3 tests/generatetestvectors.py
+
+      - name: Run full regression suite
+        id: verify
+        run: |
+          echo "=== Running TSCP-PL verifier regression suite ==="
+          cd tscp-pl-reference
+
+          # Run all stages: expected-exit + canonicalization + determinism
+          make -C tests all 2>&1 | tee evidence/verifier.log
+          MAKE_EXIT=${PIPESTATUS[0]}
+
+          echo ""
+          echo "=== Regression suite exit code: $MAKE_EXIT ==="
+
+          if [ $MAKE_EXIT -eq 0 ]; then
+            echo "result=PASS" >> $GITHUB_OUTPUT
+            echo "✅ All regression stages passed"
+          else
+            echo "result=FAIL" >> $GITHUB_OUTPUT
+            echo "❌ Regression detected"
+            cat evidence/verifier.log
+            exit 1
+          fi
+
+      - name: Generate evidence artifacts
+        if: always()
+        run: |
+          cd tscp-pl-reference
+          mkdir -p evidence
+
+          # Payload SHA256
+          if [ -f tscp-pl.payload ]; then
+            sha256sum tscp-pl.payload | awk '{print $1}' > evidence/payload.sha256
+          fi
+
+          # Verifier version
+          python3 -c "
+          import sys, os
+          sys.path.insert(0, 'verifier')
+          print('TSCP-PL Verifier v1.0')
+          print(f'Python: {sys.version}')
+          print(f'Platform: {sys.platform}')
+          " > evidence/verifier-version.txt
+
+          # Test summary
+          python3 -c "
+          import json, os, datetime
+
+          summary = {
+              'schema_version': '1.0',
+              'test_run': {
+                  'timestamp': datetime.datetime.utcnow().isoformat() + 'Z',
+                  'repository': os.environ.get('GITHUB_REPOSITORY', 'unknown'),
+                  'run_id': os.environ.get('GITHUB_RUN_ID', 'unknown'),
+                  'ref': os.environ.get('GITHUB_REF', 'unknown'),
+                  'sha': os.environ.get('GITHUB_SHA', 'unknown')[:8],
+              },
+              'regression_stages': [
+                  {'name': 'expected_exit_codes', 'description': 'Each vector produces expected exit code'},
+                  {'name': 'canonicalization', 'description': 'good.jsonld and reorderkeys.jsonld produce identical canonical digests'},
+                  {'name': 'determinism', 'description': 'Repeated verification produces identical manifests'},
+              ],
+              'test_vectors': [
+                  {'file': 'good.jsonld', 'expected_exit': 0, 'expected_result': 'PASS'},
+                  {'file': 'reorderkeys.jsonld', 'expected_exit': 0, 'expected_result': 'PASS'},
+                  {'file': 'mutated.jsonld', 'expected_exit': 3, 'expected_result': 'EXPECTED_FAIL'},
+                  {'file': 'missingartifact.jsonld', 'expected_exit': 3, 'expected_result': 'EXPECTED_FAIL'},
+                  {'file': 'bad_hash.jsonld', 'expected_exit': 3, 'expected_result': 'EXPECTED_FAIL'},
+              ],
+              'result': os.environ.get('RESULT', 'unknown'),
+          }
+
+          with open('evidence/summary.json', 'w') as f:
+              json.dump(summary, f, indent=2)
+          "
+
+      - name: Upload evidence archive
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tscp-pl-test-evidence
+          path: |
+            tscp-pl-reference/evidence/manifest.json
+            tscp-pl-reference/evidence/verifier.log
+            tscp-pl-reference/evidence/payload.sha256
+            tscp-pl-reference/evidence/summary.json
+            tscp-pl-reference/evidence/verifier-version.txt
+            tscp-pl-reference/tscp-pl.payload
+          retention-days: 90
+
+      - name: Report to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = '${{ steps.verify.outputs.result }}' || 'UNKNOWN';
+            const status = result === 'PASS' ? '✅' : '❌';
+            const body = [
+              `## TSCP-PL Verifier Regression Suite ${status}`,
+              ``,
+              `**Result:** ${result}`,
+              ``,
+              `### Regression Stages`,
+              ``,
+              `| Stage | Description |`,
+              `|---|---|`,
+              `| 1. Expected exit codes | Each vector produces its expected exit code |`,
+              `| 2. Canonicalization | good.jsonld ≡ reorderkeys.jsonld (identical canonical digest) |`,
+              `| 3. Determinism | Repeated verification produces identical manifests |`,
+              ``,
+              `### Test Vectors`,
+              ``,
+              `| Vector | Expected | Description |`,
+              `|---|---|---|`,
+              `| good.jsonld | PASS (0) | Baseline valid custody object |`,
+              `| reorderkeys.jsonld | PASS (0) | Canonicalization stability |`,
+              `| mutated.jsonld | FAIL (3) | Content identity sensitivity |`,
+              `| missingartifact.jsonld | FAIL (3) | Missing evidence rejection |`,
+              `| bad_hash.jsonld | FAIL (3) | Artifact integrity rejection |`,
+              ``,
+              `Evidence artifacts uploaded: \`tscp-pl-test-evidence\``,
+            ].join('\n');
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
