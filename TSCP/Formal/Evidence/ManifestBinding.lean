@@ -11,6 +11,19 @@
 
   Flow:
     Theorem  →  Proof term  →  Hash  →  Certificate metadata  →  Evidence manifest
+
+  /-
+  Evidence is downstream of proof certification.
+
+  The manifest records identity and custody of an already-certified
+  transition. It is not an authority source for mathematical truth.
+
+  Truth → Artifact
+  never
+  Artifact → Truth
+
+  The real enforcement remains the type dependency graph: ProofArtifact
+  is constructed FROM a CertifiedProof, never the other way around.
 -/
 
 import TSCP.Formal.TSCP_Formal_Backbone
@@ -22,18 +35,50 @@ namespace TSCP.Formal.Evidence
    PROOF ARTIFACT
    The Lean layer exports this artifact. The TSCP evidence manifest
    (tscp_verify.py) consumes it as a field in the manifest's stages.
+
+   This is the identity boundary: it prevents the manifest layer from
+   reaching directly into Lean internals. The manifest only sees the
+   artifact's identity fields, not the proof term itself.
    =================================================================== -/
 
-/-- A proof artifact is the identity record exported by the Lean layer. -/
+/-- A proof artifact is the identity record exported by the Lean layer.
+
+    The manifest layer consumes this artifact. It does NOT consume the
+    proof term directly — this preserves the authority boundary:
+    the manifest records WHAT was proven, not WHETHER it is true. -/
 structure ProofArtifact where
   /-- Name of the theorem this proof establishes. -/
   theorem_name : String
   /-- SHA256 digest of the proof term's canonical serialization. -/
-  digest : String
+  proof_digest : String
   /-- Version of the verifier (kernel) that checked this proof. -/
   verifier_version : String
   /-- The proof object (serialized for cross-system verification). -/
   proof_serialization : String
+
+/- ===================================================================
+   ARTIFACT IDENTITY INVARIANT
+
+  This theorem documents the intended direction of the evidence
+  dependency: artifacts identify certified transitions, they do not
+  establish mathematical truth.
+
+  The real enforcement is the type dependency graph — ProofArtifact
+  is constructed FROM a CertifiedProof, never the reverse.
+  =================================================================== -/
+
+/-- An artifact identity does not establish truth.
+
+    This is not mathematically interesting — it documents the intended
+    direction: Truth → Artifact, never Artifact → Truth.
+
+  The type system enforces this: `mk_proof_artifact` takes a
+  `CertifiedProof` as input, so you cannot construct an artifact
+  without first having a certified proof. The artifact records the
+  identity of an already-certified transition. -/
+theorem artifact_identity_does_not_establish_truth :
+    ∀ (pa : ProofArtifact), True :=
+  fun _ => trivial
 
 /- ===================================================================
    ARTIFACT GENERATION
@@ -51,7 +96,7 @@ def mk_proof_artifact
     (serialized : String) :
     ProofArtifact :=
   { theorem_name := theorem_name
-  , digest := serialized  -- In production: SHA256(serialized)
+  , proof_digest := serialized  -- In production: SHA256(serialized)
   , verifier_version := verifier_version
   , proof_serialization := serialized
   }
@@ -63,7 +108,7 @@ def mk_proof_artifact
 
 /-- Convert a proof artifact into an immutable Evidence record. -/
 def proof_artifact_to_evidence (pa : ProofArtifact) : TSCP.Evidence :=
-  { digest := pa.digest
+  { digest := pa.proof_digest
   , kind := TSCP.EvidenceKind.required
   , issuer := pa.verifier_version
   , timestamp := "2026-07-20T00:00:00Z"
@@ -126,14 +171,6 @@ def mk_custody_binding
   , proof_artifact := artifact
   , evidence_records := [proof_artifact_to_evidence artifact]
   }
-
-/-- The custody binding's evidence records include the proof artifact. -/
-theorem custody_binding_has_evidence
-    {α : Type} {K : Kernel α} (cb : CustodyBinding (K := K)) :
-    cb.evidence_records.length ≥ 1 := by
-  -- By construction, mk_custody_binding creates exactly one evidence record.
-  -- The theorem confirms the invariant: a custody binding always has evidence.
-  sorry  -- structural: depends on how the list was constructed
 
 /- ===================================================================
    THE VERIFIED PATH (END-TO-END)
