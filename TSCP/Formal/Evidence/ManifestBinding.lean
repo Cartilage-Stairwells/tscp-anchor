@@ -12,7 +12,6 @@
   Flow:
     Theorem  →  Proof term  →  Hash  →  Certificate metadata  →  Evidence manifest
 
-  /-
   Evidence is downstream of proof certification.
 
   The manifest records identity and custody of an already-certified
