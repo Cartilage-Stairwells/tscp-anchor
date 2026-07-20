@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "exceptions": [
+    {
+      "exception_id": "EX-0001",
+      "status": "RESOLVED",
+      "dependency": "serde_cbor v0.11.2",
+      "owner": "Cartilage-Stairwells",
+      "evidence": [
+        "RUSTSEC-2021-0127",
+        "merge commit 1e5e8249",
+        "CI run on 1e5e8249 (all 4 workflows green)",
+        "cargo audit no longer reports this advisory"
+      ],
+      "resolution": "Migrated to ciborium v0.2.2 (actively maintained, IETF RFC 8949 compliant). Codec implementation change, not canonical identity transition. Identity primitive (BLAKE3 on structured fields) unchanged. 12/12 serialization conformance tests pass. test_custody_expression_blocked passed without modification.",
+      "first_recorded": "2026-07-19",
+      "last_reviewed": "2026-07-19",
+      "notes": "Classification: codec migration, NOT identity transition. Acceptance gate: serialization conformance suite (12 tests)."
+    },
+    {
+      "exception_id": "EX-0002",
+      "status": "ACTIVE",
+      "dependency": "crossbeam-epoch v0.9.18 (transitive via wasmtime)",
+      "owner": "Cartilage-Stairwells",
+      "evidence": [
+        "RUSTSEC-2026-0204",
+        "cargo audit on CI run 1e5e8249"
+      ],
+      "resolution": "Transitive dependency via wasmtime. Not a direct dependency. Upgrade to crossbeam-epoch >=0.9.20 requires wasmtime version bump. Tracked under EX-0003 batch upgrade.",
+      "audit": "RUSTSEC-2026-0204",
+      "first_recorded": "2026-07-19",
+      "last_reviewed": "2026-07-19",
+      "planned_mitigations": "Upgrade wasmtime to >=36.x (resolves both EX-0002 and EX-0003)",
+      "next_review": "2026-08-19"
+    },
+    {
+      "exception_id": "EX-0003",
+      "status": "ACTIVE",
+      "dependency": "wasmtime v29.0.1",
+      "owner": "Cartilage-Stairwells",
+      "evidence": [
+        "RUSTSEC-2026-0114 (medium, panic table allocation)",
+        "RUSTSEC-2026-0088 (low 2.3, data leakage pooling allocators)",
+        "RUSTSEC-2026-0093 (medium 6.9, heap OOB read UTF-16)",
+        "RUSTSEC-2026-0087 (medium 4.1, segfault f64x2.splat Cranelift x86-64)",
+        "RUSTSEC-2026-0092 (medium 5.9, panic misaligned UTF-16)",
+        "RUSTSEC-2026-0086 (low, host data leakage 64-bit tables Winch)",
+        "RUSTSEC-2026-0085 (medium, panic lifting flags component value)",
+        "RUSTSEC-2026-0095 (critical, Winch compiler sandbox-escaping memory access)",
+        "RUSTSEC-2026-0089 (medium, host panic Winch table.fill)",
+        "RUSTSEC-2026-0091 (medium, OOB write transcoding strings)",
+        "RUSTSEC-2026-0096 (critical, miscompiled guest heap aarch64 sandbox escape)",
+        "RUSTSEC-2026-0090 (low, use-after-free cloning wasmtime::Linker)",
+        "RUSTSEC-2026-0094 (medium, improperly masked table.grow Winch)",
+        "RUSTSEC-2026-0021 (medium 6.9, panic excessive fields wasi:http)",
+        "RUSTSEC-2026-0020 (medium, resource exhaustion WASI)",
+        "RUSTSEC-2026-0022 (medium, panic dropping call_async future)",
+        "RUSTSEC-2026-0006 (medium, segfault f64.copysign x86-64)",
+        "RUSTSEC-2025-0118 (low 1.8, unsound shared linear memory)",
+        "RUSTSEC-2025-0112 (host crash host-to-wasm component intrinsics)",
+        "RUSTSEC-2025-0046 (low, host panic fd_renumber WASIp1)",
+        "RUSTSEC-2024-0440 (medium, runtime crash tail calls stack traces)",
+        "RUSTSEC-2024-0439 (low, race condition CF integrity)",
+        "RUSTSEC-2024-0441 (low, panic dropped extenref element segment)",
+        "RUSTSEC-2024-0438 (Windows device filenames sandbox)",
+        "RUSTSEC-2023-0093 (low, i8x16.select miscompilation x86_64)",
+        "RUSTSEC-2023-0090 (critical, guest OOB read/write x86_64)",
+        "RUSTSEC-2023-0092 (low, undefined behavior runtime functions)",
+        "RUSTSEC-2023-0091 (low, i64x2.shr_s miscompilation x86_64)",
+        "RUSTSEC-2022-0097 (OOB write trap_code C API)",
+        "RUSTSEC-2022-0099 (use after free externrefs epoch interruption)",
+        "RUSTSEC-2022-0100 (use after free externrefs Wasmtime)",
+        "RUSTSEC-2022-0096 (invalid drop VMExternRef pooling allocator)",
+        "RUSTSEC-2022-0098 (high, data leakage pooling allocator)",
+        "RUSTSEC-2022-0095 (i8x16.swizzle select v128 miscompilation)",
+        "RUSTSEC-2022-0101 (constant values division AArch64 miscompilation)",
+        "RUSTSEC-2022-0102 (medium, OOB read/write zero-memory-pages)",
+        "RUSTSEC-2022-0076 (high, pooling instance allocator bug)",
+        "RUSTSEC-2022-0075 (pooling instance allocator bug)",
+        "RUSTSEC-2022-0016 (use after free externrefs epoch interruption)",
+        "RUSTSEC-2021-0110 (medium, multiple vulnerabilities Wasmtime)",
+        "cargo audit on CI run 27cac78"
+      ],
+      "resolution": "Rationale: wasmtime is used only by tscp-wasm-smoke (runtime smoke test), not by the core serialization or proving stack. No untrusted WASM is executed. Upgrade path: wasmtime >=36.0.7 resolves all advisories. Major version bump (29 to 36+) requires API migration. All 40 known wasmtime advisories are tracked here. cargo-audit only reports advisories that affect the installed version (29.0.1); the full ignore list ensures all applicable advisories are suppressed.",
+      "audit": "RUSTSEC-2026-0114, RUSTSEC-2026-0088, RUSTSEC-2026-0093, RUSTSEC-2026-0087, RUSTSEC-2026-0092, RUSTSEC-2026-0086, RUSTSEC-2026-0085, RUSTSEC-2026-0095, RUSTSEC-2026-0089, RUSTSEC-2026-0091, RUSTSEC-2026-0096, RUSTSEC-2026-0090, RUSTSEC-2026-0094, RUSTSEC-2026-0021, RUSTSEC-2026-0020, RUSTSEC-2026-0022, RUSTSEC-2026-0006, RUSTSEC-2025-0118, RUSTSEC-2025-0112, RUSTSEC-2025-0046, RUSTSEC-2024-0440, RUSTSEC-2024-0439, RUSTSEC-2024-0441, RUSTSEC-2024-0438, RUSTSEC-2023-0093, RUSTSEC-2023-0090, RUSTSEC-2023-0092, RUSTSEC-2023-0091, RUSTSEC-2022-0097, RUSTSEC-2022-0099, RUSTSEC-2022-0100, RUSTSEC-2022-0096, RUSTSEC-2022-0098, RUSTSEC-2022-0095, RUSTSEC-2022-0101, RUSTSEC-2022-0102, RUSTSEC-2022-0076, RUSTSEC-2022-0075, RUSTSEC-2022-0016, RUSTSEC-2021-0110",
+      "first_recorded": "2026-07-19",
+      "last_reviewed": "2026-07-19",
+      "planned_mitigations": "Upgrade wasmtime to >=36.0.7 (API migration required)",
+      "next_review": "2026-08-19"
+    }
+  ]
+}

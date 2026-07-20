@@ -1,7 +1,70 @@
 # cargo-audit configuration
-# Ignore advisories that have been reviewed and accepted as non-applicable
+# Ignore advisories that have been reviewed and accepted in the supply chain governance registry.
+# See: schemas/exceptions.json for the full exception registry.
+# See: SUPPLY_CHAIN_EXCEPTIONS.md for the governance document.
+#
+# EX-0002: crossbeam-epoch 0.9.18 (transitive via wasmtime) — 1 advisory
+# EX-0003: wasmtime 29.0.1 (smoke test only, not core stack) — all advisories below
+#
+# Rationale: wasmtime is used only by tscp-wasm-smoke (runtime smoke test),
+# not by the core serialization or proving stack. No untrusted WASM is executed.
+# Upgrade path: wasmtime >=36.0.7 resolves all advisories (API migration required).
 
 [advisories]
-# Add specific advisory IDs to ignore here if they are false positives
-# Example:
-# ignore = ["RUSTSEC-2021-0145"]
+ignore = [
+  # EX-0002: crossbeam-epoch 0.9.18 (transitive via wasmtime)
+  "RUSTSEC-2026-0204",
+
+  # EX-0003: wasmtime 29.0.1 — all advisories from RustSec database
+  # 2026 advisories
+  "RUSTSEC-2026-0114",   # Panic when allocating a table exceeding host address space
+  "RUSTSEC-2026-0088",   # Data leakage between pooling allocator instances (low)
+  "RUSTSEC-2026-0093",   # Heap OOB read in component model UTF-16 transcoding (medium 6.9)
+  "RUSTSEC-2026-0087",   # Segfault f64x2.splat on Cranelift x86-64 (medium 4.1)
+  "RUSTSEC-2026-0092",   # Panic when transcoding misaligned UTF-16 strings (medium 5.9)
+  "RUSTSEC-2026-0086",   # Host data leakage with 64-bit tables and Winch (low)
+  "RUSTSEC-2026-0085",   # Panic when lifting flags component value (medium)
+  "RUSTSEC-2026-0095",   # Winch compiler sandbox-escaping memory access (critical)
+  "RUSTSEC-2026-0089",   # Host panic when Winch executes table.fill (medium)
+  "RUSTSEC-2026-0091",   # Out-of-bounds write or crash transcoding strings (medium)
+  "RUSTSEC-2026-0096",   # Miscompiled guest heap access sandbox escape on aarch64 (critical)
+  "RUSTSEC-2026-0090",   # Use-after-free bug after cloning wasmtime::Linker (low)
+  "RUSTSEC-2026-0094",   # Improperly masked return value from table.grow with Winch (medium)
+  "RUSTSEC-2026-0021",   # Panic adding excessive fields to wasi:http (medium 6.9)
+  "RUSTSEC-2026-0020",   # Guest-controlled resource exhaustion in WASI (medium)
+  "RUSTSEC-2026-0022",   # Panic when dropping [Typed]Func::call_async future (medium)
+  "RUSTSEC-2026-0006",   # Segfault f64.copysign on x86-64 (medium)
+
+  # 2025 advisories
+  "RUSTSEC-2025-0118",   # Unsound API access to shared linear memory (low)
+  "RUSTSEC-2025-0112",   # Possible host crash with host-to-wasm component intrinsics
+  "RUSTSEC-2025-0046",   # Host panic with fd_renumber WASIp1 function (low)
+
+  # 2024 advisories
+  "RUSTSEC-2024-0440",   # Runtime crash combining tail calls with stack traces (medium)
+  "RUSTSEC-2024-0439",   # Race condition CF integrity violations (low)
+  "RUSTSEC-2024-0441",   # Panic when using dropped extenref-typed element segment (low)
+  "RUSTSEC-2024-0438",   # Doesn't fully sandbox Windows device filenames
+
+  # 2023 advisories
+  "RUSTSEC-2023-0093",   # Miscompilation of i8x16.select on x86_64 (low)
+  "RUSTSEC-2023-0090",   # Guest-controlled OOB read/write on x86_64 (critical)
+  "RUSTSEC-2023-0092",   # Undefined Behavior in Rust runtime functions (low)
+  "RUSTSEC-2023-0091",   # Miscompilation of i64x2.shr_s on x86_64 (low)
+
+  # 2022 advisories
+  "RUSTSEC-2022-0097",   # OOB write in wasmtime_trap_code C API
+  "RUSTSEC-2022-0099",   # Use after free with externrefs and epoch interruption
+  "RUSTSEC-2022-0100",   # Use After Free with externrefs in Wasmtime
+  "RUSTSEC-2022-0096",   # Invalid drop of VMExternRef from partially-initialized instances
+  "RUSTSEC-2022-0098",   # Data leakage between instances in pooling allocator (high)
+  "RUSTSEC-2022-0095",   # Miscompilation of i8x16.swizzle and select with v128 inputs
+  "RUSTSEC-2022-0101",   # Miscompilation of constant values in division on AArch64
+  "RUSTSEC-2022-0102",   # OOB read/write with zero-memory-pages (medium)
+  "RUSTSEC-2022-0076",   # Bug in pooling instance allocator (high)
+  "RUSTSEC-2022-0075",   # Bug in pooling instance allocator
+  "RUSTSEC-2022-0016",   # Use after free with externrefs and epoch interruption
+
+  # 2021 advisories
+  "RUSTSEC-2021-0110",   # Multiple Vulnerabilities in Wasmtime (medium)
+]
