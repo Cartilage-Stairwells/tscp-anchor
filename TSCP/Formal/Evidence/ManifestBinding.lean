@@ -45,15 +45,6 @@ namespace TSCP.Formal.Evidence
     The manifest layer consumes this artifact. It does NOT consume the
     proof term directly — this preserves the authority boundary:
     the manifest records WHAT was proven, not WHETHER it is true. -/
-structure ProofArtifact where
-  /-- Name of the theorem this proof establishes. -/
-  theorem_name : String
-  /-- SHA256 digest of the proof term's canonical serialization. -/
-  digest : String
-  /-- Version of the verifier (kernel) that checked this proof. -/
-  verifier_version : String
-  /-- The proof object (serialized for cross-system verification). -/
-  proof_serialization : String
 
 /- ===================================================================
    ARTIFACT IDENTITY INVARIANT
