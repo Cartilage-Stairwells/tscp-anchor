@@ -49,7 +49,7 @@ structure ProofArtifact where
   /-- Name of the theorem this proof establishes. -/
   theorem_name : String
   /-- SHA256 digest of the proof term's canonical serialization. -/
-  proof_digest : String
+  digest : String
   /-- Version of the verifier (kernel) that checked this proof. -/
   verifier_version : String
   /-- The proof object (serialized for cross-system verification). -/
@@ -95,7 +95,7 @@ def mk_proof_artifact
     (serialized : String) :
     ProofArtifact :=
   { theorem_name := theorem_name
-  , proof_digest := serialized  -- In production: SHA256(serialized)
+  , digest := serialized  -- In production: SHA256(serialized)
   , verifier_version := verifier_version
   , proof_serialization := serialized
   }
@@ -107,7 +107,7 @@ def mk_proof_artifact
 
 /-- Convert a proof artifact into an immutable Evidence record. -/
 def proof_artifact_to_evidence (pa : ProofArtifact) : TSCP.Evidence :=
-  { digest := pa.proof_digest
+  { digest := pa.digest
   , kind := TSCP.EvidenceKind.required
   , issuer := pa.verifier_version
   , timestamp := "2026-07-20T00:00:00Z"
