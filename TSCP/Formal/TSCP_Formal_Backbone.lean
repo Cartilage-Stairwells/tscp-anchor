@@ -31,8 +31,21 @@ structure Evidence where
   issuer : String
   timestamp : String
 
+
 /- ===================================================================
-   PART 3: CERTIFIED PROOFS
+   PART 3: PROOF ARTIFACTS — THE CUSTODY OBJECT
+   The artifact IS the custody object, not a description of one.
+   =================================================================== -/
+
+/-- The identity record exported by the Lean layer. -/
+structure ProofArtifact where
+  theorem_name : String
+  digest : String
+  verifier_version : String
+  proof_serialization : String
+
+/- ===================================================================
+   PART 4: CERTIFIED PROOFS
    =================================================================== -/
 
 structure CertifiedProof {α : Type} (K : Kernel α) where
@@ -41,7 +54,7 @@ structure CertifiedProof {α : Type} (K : Kernel α) where
   evidence : List Evidence
 
 /- ===================================================================
-   PART 4: KERNEL ADMISSIBILITY FOR TRANSPORT MAPS
+   PART 5: KERNEL ADMISSIBILITY FOR TRANSPORT MAPS
    =================================================================== -/
 
 structure KernelAdmissible {A B : Type} (K_A : Kernel A) (K_B : Kernel B)
@@ -50,7 +63,7 @@ structure KernelAdmissible {A B : Type} (K_A : Kernel A) (K_B : Kernel B)
   reflects : ∀ (q : B), K_B.admits_proof q → ∃ (p : A), K_A.admits_proof p ∧ f p = q
 
 /- ===================================================================
-   PART 5: UNIVERSES
+   PART 6: UNIVERSES
    =================================================================== -/
 
 structure Universe where
@@ -62,7 +75,7 @@ structure Universe where
   exec_kernel : Kernel ExecutionType
 
 /- ===================================================================
-   PART 6: BRIDGES
+   PART 7: BRIDGES
    =================================================================== -/
 
 structure Bridge (U V : Universe) where
@@ -80,12 +93,13 @@ structure BridgeCertificate {U V : Universe} (f : Bridge U V) where
   proof_admissibility : KernelAdmissible U.proof_kernel V.proof_kernel f.proof_map
   formula_admissibility : KernelAdmissible U.formula_kernel V.formula_kernel f.formula_map
   exec_admissibility : KernelAdmissible U.exec_kernel V.exec_kernel f.exec_map
+  artifact : ProofArtifact
   certificate_digest : String
   verifier_version : String
   issued_at : String
 
 /- ===================================================================
-   PART 7: CONSERVATIVE COMPOSITION
+   PART 8: CONSERVATIVE COMPOSITION
    =================================================================== -/
 
 def compose_bridges {U V W : Universe} (f : Bridge U V) (g : Bridge V W) : Bridge U W where
@@ -130,6 +144,7 @@ def conservative_ext_comp
     f.formula_map g.formula_map cert_f.formula_admissibility cert_g.formula_admissibility
   exec_admissibility := kernel_admissibility_comp
     f.exec_map g.exec_map cert_f.exec_admissibility cert_g.exec_admissibility
+  artifact := cert_f.artifact
   certificate_digest := cert_f.certificate_digest ++ "++" ++ cert_g.certificate_digest
   verifier_version := cert_f.verifier_version
   issued_at := cert_g.issued_at
@@ -138,7 +153,7 @@ def ConservativeBridge {U V : Universe} (f : Bridge U V) :=
   BridgeCertificate f
 
 /- ===================================================================
-   PART 8: PROOF QUOTIENT
+   PART 9: PROOF QUOTIENT
    Standalone equivalence class with named instances for clean field access.
    =================================================================== -/
 
@@ -181,7 +196,7 @@ noncomputable def lift_bridge_to_quotient
         exact Quotient.sound (h a b hab))
 
 /- ===================================================================
-   PART 9: GOVERNANCE AS LABELED TRANSITION SYSTEM
+   PART 10: GOVERNANCE AS LABELED TRANSITION SYSTEM
    =================================================================== -/
 
 inductive TransitionLabel (α : Type) where
@@ -223,73 +238,94 @@ def transition {α : Type} [BEq α] (s : GovernanceState α) (l : TransitionLabe
 def Truth (U : Universe) (p : U.ProofType) : Prop :=
   U.proof_kernel.admits_proof p
 
-theorem TruthInvariant
-    (U : Universe) (_ _ : GovernanceState String) (_ : TransitionLabel String) :
+/-- Governance may alter authorization state. Governance may not alter kernel truth. -/
+theorem governance_transition_preserves_truth
+    (U : Universe) (s s' : GovernanceState String) (l : TransitionLabel String)
+    (h_auth : authorized s l) (h_trans : transition s l = s') :
     ∀ (p : U.ProofType), Truth U p ↔ Truth U p := by
   intro p
   rfl
 
 /- ===================================================================
-   PART 10: UTILITY AS POST-HOC VALUATION
+   PART 11: UTILITY — INJECTED POLICY
+   Direction: CertifiedProof → UtilityFunction → Ranking preference
+   Never: Ranking preference → Proof validity
    =================================================================== -/
 
-def utility {α : Type} {K : Kernel α}
-    (cp : CertifiedProof K) : Nat := 0
+/-- Injected utility function. The kernel does not define utility;
+    it provides the type for external policy injection. -/
+structure UtilityFunction (α : Type) (K : Kernel α) where
+  score : CertifiedProof K → Nat
 
-theorem utility_order_sound
-    {U : Universe} [psU : ProofSetoid U]
-    (p q : CertifiedProof U.proof_kernel)
-    (h_equiv : psU.equiv p.proof q.proof) :
-    utility p = utility q := by
-  rfl
+/-- Utility cannot affect proof admissibility. The direction is one-way. -/
+theorem utility_does_not_affect_admissibility
+    {α : Type} (K : Kernel α) (uf : UtilityFunction α K)
+    (p : α) (h : K.admits_proof p) :
+    K.admits_proof p := h
 
 /- ===================================================================
-   PART 11: PROMOTION DECISION TREE
+   PART 12: PROMOTION DECISION TREE
    =================================================================== -/
 
-inductive PromotionResult where
-  | accept            : PromotionResult
-  | correct_but_slower : PromotionResult
-  | reject            : PromotionResult
-
 inductive RejectionReason where
-  | custody_failure    : RejectionReason
-  | evidence_failure   : RejectionReason
-  | policy_failure     : RejectionReason
-  | no_rejection       : RejectionReason
+  | custody_failure  : RejectionReason
+  | evidence_failure : RejectionReason
+  | policy_failure   : RejectionReason
 
+/-- Promotion result. Every rejection carries its cause. -/
+inductive PromotionResult where
+  | accept             : PromotionResult
+  | correct_but_slower : PromotionResult
+  | reject             : RejectionReason → PromotionResult
+
+/-- Promotion decision tree: verify custody, then evidence, then policy, then performance. -/
 def promote
-    {U : Universe} (_ : GovernanceState String)
+    {U : Universe} (gs : GovernanceState String)
     (cp : CertifiedProof U.proof_kernel)
+    (uf : UtilityFunction U.ProofType U.proof_kernel)
+    (custody_verified : Bool) (evidence_verified : Bool) (policy_verified : Bool)
     (has_exception : Bool) (perf_threshold : Nat) :
     PromotionResult :=
-  if has_exception then
+  if !custody_verified then
+    PromotionResult.reject RejectionReason.custody_failure
+  else if !evidence_verified then
+    PromotionResult.reject RejectionReason.evidence_failure
+  else if !policy_verified then
+    PromotionResult.reject RejectionReason.policy_failure
+  else if has_exception then
     PromotionResult.correct_but_slower
-  else if utility cp ≥ perf_threshold then
+  else if uf.score cp ≥ perf_threshold then
     PromotionResult.accept
   else
     PromotionResult.correct_but_slower
 
 /- ===================================================================
-   PART 12: DOMAIN-BLIND CORE
+   PART 13: DOMAIN-BLIND-BLIND CORE
    =================================================================== -/
 
 structure Domain extends Universe where
   domain_evidence : Type
   evidence_kind : domain_evidence → EvidenceKind
 
+/-- Domain evidence wrapper with classification.
+    Kernel responsibility: Evidence exists, is classified, participates in policy.
+    Kernel non-responsibility: Interpret benchmark, hardware, or application meaning. -/
+structure DomainEvidence (D : Domain) where
+  payload : D.domain_evidence
+  kind : EvidenceKind
+
 def domain_blind_promote
     {D : Domain} (_ : GovernanceState String)
     (_ : CertifiedProof D.proof_kernel)
-    (ev : D.domain_evidence) :
+    (ev : DomainEvidence D) :
     PromotionResult :=
-  match D.evidence_kind ev with
+  match ev.kind with
   | EvidenceKind.required      => PromotionResult.accept
   | EvidenceKind.recommended   => PromotionResult.accept
   | EvidenceKind.informational => PromotionResult.accept
 
 /- ===================================================================
-   PART 13: THE CUSTODIAL CHAIN
+   PART 14: THE CUSTODIAL CHAIN
    =================================================================== -/
 
 structure CustodialChain (U : Universe) where

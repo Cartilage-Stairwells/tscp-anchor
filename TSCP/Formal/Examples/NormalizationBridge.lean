@@ -176,6 +176,12 @@ def normalization_certificate (f : String → String) :
     preserves := fun x h => h
     reflects := fun x h => ⟨x, h, rfl⟩
   }
+  artifact := {
+    theorem_name := "TSCP.Formal.Examples.type_of_rename"
+    digest := "norm-bridge-v1"
+    verifier_version := "TSCP-PL v1.0"
+    proof_serialization := "rename_preserves_typing"
+  }
   certificate_digest := "norm-bridge-v1"
   verifier_version := "TSCP-PL v1.0"
   issued_at := "2026-07-20T00:00:00Z"

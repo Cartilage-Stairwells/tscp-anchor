@@ -110,7 +110,7 @@ noncomputable axiom babybear_ntt_end_to_end (n : Nat)
 
 def babybear_binding_artifact : ProofArtifact where
   theorem_name := "TSCP.Formal.Core.BabyBear.v2"
-  proof_digest := "core-lean-v2-babybear-instantiation"
+  digest := "core-lean-v2-babybear-instantiation"
   verifier_version := "lean4-tscp-formal-backbone-v1.0"
   proof_serialization := "proof_valid:Kernel.admits_proof|encoding_valid:KernelAdmissible|execution_valid:BridgeCertificate"
 
