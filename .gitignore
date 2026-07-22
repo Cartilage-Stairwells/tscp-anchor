@@ -24,3 +24,9 @@ tscp-core-seal-*.tar.gz
 build-*.log
 CORE_COMMIT
 CORE_HASHES
+
+# Rust generated files
+**/target/
+
+# Rust build artifacts
+**/target/
