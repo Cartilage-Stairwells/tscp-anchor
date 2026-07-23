@@ -1,10 +1,16 @@
-# REPRODUCTION RECORD
+# REPRODUCTION RECORD — ENVIRONMENT BASELINE
 
 ===================
 
+Status:
+        Environment captured.
+        Execution results pending.
+        This record does not constitute a completed reproduction.
+
 Date:           2026-07-23
 
-Verifier:       Sean Christopher Southwick / Cartilage-Stairwells
+Verifier:
+                Sean Christopher Southwick / Cartilage-Stairwells
 
 Environment:
                 OS: Android Linux 4.19.191-ab1rck61v164bspP43
@@ -15,7 +21,8 @@ Environment:
                 Rust: not installed
                 Cargo: not installed
 
-AVX-512:        no
+AVX-512:
+                no
 
 Results:
 
@@ -38,4 +45,4 @@ Deviations:
                 Rust toolchain unavailable.
 
 Signature:
-                Pending verifier attestation.
+                Pending completed verifier attestation.
