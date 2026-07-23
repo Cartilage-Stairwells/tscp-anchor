@@ -40,12 +40,6 @@ namespace TSCP.Formal.Evidence
    artifact's identity fields, not the proof term itself.
    =================================================================== -/
 
-/-- A proof artifact is the identity record exported by the Lean layer.
-
-    The manifest layer consumes this artifact. It does NOT consume the
-    proof term directly — this preserves the authority boundary:
-    the manifest records WHAT was proven, not WHETHER it is true. -/
-
 /- ===================================================================
    ARTIFACT IDENTITY INVARIANT
 
@@ -67,7 +61,7 @@ namespace TSCP.Formal.Evidence
   without first having a certified proof. The artifact records the
   identity of an already-certified transition. -/
 theorem artifact_identity_does_not_establish_truth :
-    ∀ (pa : ProofArtifact), True :=
+    ∀ (pa : TSCP.ProofArtifact), True :=
   fun _ => trivial
 
 /- ===================================================================
@@ -84,7 +78,7 @@ def mk_proof_artifact
     (theorem_name : String) (verifier_version : String)
     {α : Type} {K : Kernel α} (cp : CertifiedProof K)
     (serialized : String) :
-    ProofArtifact :=
+    TSCP.ProofArtifact :=
   { theorem_name := theorem_name
   , digest := serialized  -- In production: SHA256(serialized)
   , verifier_version := verifier_version
