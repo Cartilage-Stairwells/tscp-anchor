@@ -1,0 +1,56 @@
+canonical-clean-v1 Canonical repository cleanup: removed generated artifacts, preserved custody history
+canonical-clean-v1-before-resign Backup before full signature rewrite
+custody-migration-2026-07-17 Custody migration complete: signed master verified on Cartilage-Stairwells
+formal-core-v2.2 Core.lean v2.2: axiom audit complete, proof_valid discharged, trust ledger added
+golden-corpus-0.6.1 chore: hash golden corpus artifacts
+golden-vector-v1 TSCP-PL Gate 5: Orion Boundary Artifact v1
+m8-cli-stable   Stable CLI after PolyIR removal
+m8-polyir-green-snapshot m8 polyir lowering: full test suite green (excl. wasm-smoke), pre-rebase checkpoint
+oracle-Layer-stable oracle-layer stable v0.3.23
+plonky3-v0.6.1-validated chore: upgrade Plonky3 to 0.6.1 - validated (4.59ms/16.2ms/61.2ms)
+pre-history-cleanup-2026-07-14 Migration checkpoint: pre-history-cleanup 2026-07-14. Rollback anchor.
+pre-history-cleanup-20260714-1955 Add verified dossier component: README.md
+pre-stage2-custody-merge Pre Stage2 custody merge checkpoint
+prover-server-v1-baseline Known-good baseline after tracing integration
+tscp-anchor-custody-v1 TSCP Anchor canonical custody freeze
+tscp-anchor-v0.6.1-edia-validated EDIA gRPC validated, zero warnings, settlement <2000ms
+tscp-anchor-v0.6.1-freeze TSCP Anchor v0.6.1 cryptographic baseline freeze
+tscp-anchor-v0.6.2-validated V0.6.2 envelope boundary validated
+tscp-anchor-v0.6.2-validated-current V0.6.2 negotiated-version boundary validated: rlib+cdylib fix, negotiated open(verifier_version), sumcheck_verify self-check wired into prove_handler, 21/21 tests passing. Supersedes tscp-anchor-v0.6.2-validated (fcf8476d on tscp-v0.6.1-dogfood, stale pre-tscp-protocol-extraction layout).
+tscp-custody-boundary-v1.0 TSCP custody boundary established
+tscp-freeze-0.6.1 TSCP frozen baseline before WHIR 0.6.2 migration
+tscp-mini-ntt-parity-v1 tscp-mini-ntt-parity-v1: first NTT evidence object
+tscp-phase-2a-proof-boundary ProofEnvelope ownership transfer complete
+tscp-phase-2b-replay-boundary Phase 2B replay and reproducibility boundary
+tscp-phase-3a-wasm-artifact Phase 3A WASM verifier artifact
+tscp-phase-3a-wasm-baseline WASM verifier compatibility baseline
+tscp-phase3-admission-v1 EDiA admission controller with snapshot gating
+tscp-protocol-v1 TSCP migration protocol v1:
+tscp-release-test-v1 Release workflow validation
+tscp-release-test-v2 Release workflow validation after key import fix
+tscp-release-test-v3 Release workflow validation after key import fix
+tscp-serialization-v0.1-dossier-2026-07-14 Dossier verification and frozen contract for tscp-serialization-v0.1
+tscp-serialization-v0.1.0-rc1 TSCP Serialization v0.1.0-rc1: verification candidate
+tscp-serialization-v0.1.0-rc1-signed TSCP Serialization v0.1.0-rc1 signed release candidate
+tscp-test       Release workflow test
+tscp-v2.3-sealed Deterministic replay verified; oracle-layer workspace
+v0.1-anchor     Anchor v0.1: receipt hashing and proof verification working
+v0.1-artifact   TSCP artifact lifecycle verified
+v0.1-cbor-verifier-gate Canonical CBOR artifact verifier gate
+v0.1-core-verified M8 proofs verified on Termux, Contract v1 seal 20260702-090410
+v0.1-event-algebra TSCP event algebra frozen
+v0.1-kernel     Deterministic kernel with receipts and CLI — 4/4 tests green
+v0.1-proof-layer TSCP proof layer baseline
+v0.1-verifier-contract-freeze TSCP verifier contract freeze v1
+v0.1.0          TSCP canonical artifact verifier release
+v0.1.0-alpha-hardening TSCP v0.1 alpha hardening checkpoint
+v0.1.0-anchor-verified TSCP v0.1.0 anchor verifier wired to proof backend. Gate PASS.
+v0.1.1-deepali-061-fixed TSCP prover-server DeepAli Plonky3 0.6.1 compatibility fix
+v0.2.0          TSCP anchor pipeline: 9 receipts verified offline
+v0.3-reproduction Add PLONKY3_COMPARISON.md + REPRODUCTION_PROTOCOL.md (evidence chain artifacts) [PR #18]
+v0.3-reproduction-environment-record v0.3 reproduction environment verification record
+v0.3-reproduction-signed v0.3 reproduction evidence
+v0.3.0          TSCP audit layer sealed (clean, reproducible)
+v0.3.23         oracle-layer stable release
+v1.0-rc1        TSCP v1.0-rc1 — Release Candidate 1
+verifier-contract-v1 Verifier Contract V1 freeze
