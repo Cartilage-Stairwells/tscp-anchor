@@ -3,8 +3,13 @@
   BabyBear instantiation of the TSCP Formal Backbone.
 
   Note: Uses True as the NTT kernel admissibility predicate (the actual
-  field element checking is done by the proof_valid axiom). The rest
+  field element checking is done by the proof_valid theorem). The rest
   of the formal layer (Backbone through ManifestBinding) is axiom-free.
+
+  v2.1: proof_valid discharged from axiom to theorem (rfl). The predicate
+  babybear_kernel.admits_proof is defined as babybear_valid, which is
+  x.val < P — so the statement holds by definitional equality. This
+  corresponds to canonicalRule_babybear in BabyBear/Element.lean.
 -/
 
 import TSCP.Formal.TSCP_Formal_Backbone
@@ -34,11 +39,30 @@ def babybear_kernel : Kernel BabyBearElem where
   nonempty := ⟨⟨0, by decide⟩, by decide⟩
 
 /- ===================================================================
-   PART 2: AXIOM — proof_valid
+   PART 2: THEOREM — proof_valid (discharged from axiom)
+
+   Previous:
+     axiom proof_valid : ∀ (x : BabyBearElem),
+         babybear_kernel.admits_proof x ↔ x.val < P
+
+   Now:
+     theorem proof_valid — same statement, proved by rfl.
+
+   babybear_kernel.admits_proof is defined as babybear_valid, which is
+   x.val < P. The statement "admits_proof x ↔ x.val < P" is therefore
+   true by definitional unfolding. No new proof burden — the proof
+   already existed; the axiom was a placeholder for a trivial theorem.
+
+   Cross-reference: BabyBear/Element.lean defines canonicalRule as
+   x.val < BABYBEAR_P and proves canonicalRule_babybear by rfl with
+   the same structure. Both express the same invariant: an encoded
+   field element is canonical iff its raw representative is < P.
    =================================================================== -/
 
-axiom proof_valid : ∀ (x : BabyBearElem),
-    babybear_kernel.admits_proof x ↔ x.val < P
+theorem proof_valid : ∀ (x : BabyBearElem),
+    babybear_kernel.admits_proof x ↔ x.val < P := by
+  intro x
+  rfl
 
 /- ===================================================================
    PART 3: NTT ENCODING MAP
@@ -109,9 +133,9 @@ noncomputable axiom babybear_ntt_end_to_end (n : Nat)
    =================================================================== -/
 
 def babybear_binding_artifact : ProofArtifact where
-  theorem_name := "TSCP.Formal.Core.BabyBear.v2"
-  digest := "core-lean-v2-babybear-instantiation"
+  theorem_name := "TSCP.Formal.Core.BabyBear.v2.1"
+  digest := "core-lean-v2.1-babybear-instantiation"
   verifier_version := "lean4-tscp-formal-backbone-v1.0"
-  proof_serialization := "proof_valid:Kernel.admits_proof|encoding_valid:KernelAdmissible|execution_valid:BridgeCertificate"
+  proof_serialization := "proof_valid:THEOREM(rfl)|encoding_valid:KernelAdmissible|execution_valid:BridgeCertificate|babybear_ntt_end_to_end:axiom"
 
 end TSCP.Formal.Core
