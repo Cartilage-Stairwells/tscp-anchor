@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "commit": "64df9acc773e1564ce8ddbcc836673012ec8e659",
+  "total_axioms": 2,
+  "axioms": [
+    {
+      "name": "execution_valid",
+      "file": "TSCP/Formal/Core.lean",
+      "line": 116,
+      "statement": "noncomputable axiom execution_valid (n : Nat) : BridgeCertificate (ntt_bridge n)",
+      "classification": "hardware_execution_boundary",
+      "trust_boundary": "AVX-512 NTT execution correctness",
+      "justification": "Asserts that the NTT bridge from BabyBear proof space to execution space has a valid BridgeCertificate. This bridges Lean's formal layer to hardware execution — the point where mathematical proof meets physical computation. Cannot be proven within Lean without modeling the AVX-512 instruction set.",
+      "custody_path": "no — enters the formal layer from outside",
+      "replacement_plan": "Either (a) model AVX-512 semantics in Lean, or (b) provide runtime evidence (execution traces, hardware attestation) and treat as a verified assumption with external evidence."
+    },
+    {
+      "name": "babybear_ntt_end_to_end",
+      "file": "TSCP/Formal/Core.lean",
+      "line": 142,
+      "statement": "noncomputable axiom babybear_ntt_end_to_end (n : Nat) (v : BabyBearVec n) (h : (ntt_universe n).proof_kernel.admits_proof v) : (ntt_universe n).exec_kernel.admits_proof (ntt_map n v)",
+      "classification": "runtime_bridge_boundary",
+      "trust_boundary": "NTT pipeline end-to-end correctness",
+      "justification": "Asserts that if a proof is admissible in the NTT universe's proof kernel, then the NTT-transformed proof is admissible in the execution kernel. This is the runtime correctness property for the Number Theoretic Transform pipeline. Requires hardware-level verification of the NTT implementation.",
+      "custody_path": "no — enters the formal layer from outside",
+      "replacement_plan": "Either (a) formally verify the NTT implementation in Lean, or (b) provide benchmark/test evidence and treat as a verified assumption with external evidence."
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0",
+  "project": "TSCP Formal Backbone",
+  "repository": "https://github.com/Cartilage-Stairwells/tscp-anchor",
+  "commit": "64df9acc773e1564ce8ddbcc836673012ec8e659",
+  "branch": "master",
+  "verification_date": "2026-07-25",
+  "lean_version": "4.32.1",
+  "lean_commit": "f054605aea4b840552cca2e725580bffd1e1b704",
+  "lake_version": "5.0.0-src+f054605",
+  "platform": "x86_64-unknown-linux-gnu",
+  "modules": [
+    {
+      "name": "TSCP.Formal.TSCP_Formal_Backbone",
+      "status": "PASS",
+      "errors": 0,
+      "sorry_count": 0,
+      "axiom_count": 0,
+      "classical_usage": false
+    },
+    {
+      "name": "TSCP.Formal.BridgePreservation",
+      "status": "PASS",
+      "errors": 0,
+      "sorry_count": 0,
+      "axiom_count": 0,
+      "classical_usage": false
+    },
+    {
+      "name": "TSCP.Formal.Examples.PropositionalKernel",
+      "status": "PASS",
+      "errors": 0,
+      "sorry_count": 0,
+      "axiom_count": 0,
+      "classical_usage": false
+    },
+    {
+      "name": "TSCP.Formal.Examples.NormalizationBridge",
+      "status": "PASS",
+      "errors": 0,
+      "sorry_count": 3,
+      "axiom_count": 0,
+      "classical_usage": false,
+      "sorry_classification": "reflection_preimage_existence"
+    },
+    {
+      "name": "TSCP.Formal.Evidence.ManifestBinding",
+      "status": "PASS",
+      "errors": 0,
+      "sorry_count": 0,
+      "axiom_count": 0,
+      "classical_usage": false
+    },
+    {
+      "name": "TSCP.Formal.Core",
+      "status": "PASS",
+      "errors": 0,
+      "sorry_count": 0,
+      "axiom_count": 2,
+      "classical_usage": false
+    }
+  ],
+  "totals": {
+    "modules_compiled": 6,
+    "modules_total": 6,
+    "errors": 0,
+    "sorry_count": 3,
+    "axiom_count": 2,
+    "classical_usage": false
+  },
+  "custody_invariants": {
+    "proof_artifact": { "present": true, "location": "Backbone:41" },
+    "bridge_certificate_artifact": { "present": true, "location": "Backbone:96" },
+    "governance_transition_preserves_truth": { "present": true, "location": "Backbone:242" },
+    "utility_function": { "present": true, "location": "Backbone:257" },
+    "utility_does_not_affect_admissibility": { "present": true, "location": "Backbone:263" },
+    "promotion_result_reject_carries_reason": { "present": true, "location": "Backbone:279" },
+    "domain_evidence": { "present": true, "location": "Backbone:313" },
+    "no_rejection_removed": { "present": false, "location": null }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "commit": "64df9acc773e1564ce8ddbcc836673012ec8e659",
+  "total_sorry": 3,
+  "all_in_module": "TSCP.Formal.Examples.NormalizationBridge",
+  "classification": "reflection_preimage_existence",
+  "root_cause": "All three require surjectivity of rename_formula f, which requires surjectivity of f : String → String. Not provable for arbitrary f.",
+  "sorry_entries": [
+    {
+      "line": 162,
+      "obligation": "proof_reflection",
+      "statement": "For all q in target kernel, if target admits q, then exists p in source kernel such that rename_proof f p = q and source admits p.",
+      "direction": "reverse (target → source)",
+      "custody_path": "no — custody uses forward (source → target) direction only",
+      "requires": "surjectivity of rename_proof f",
+      "resolvable": "conditional — if f is restricted to bijections on the variable set, yes. If left as arbitrary String → String, no.",
+      "resolution_options": [
+        {
+          "option": "restrict_to_bijections",
+          "approach": "Constrain normalization_bridge to only accept bijective rename functions. Add a Bijective type class or hypothesis, then the reflection proofs follow from surjectivity.",
+          "effort": "moderate — requires API change to normalization_bridge"
+        },
+        {
+          "option": "quarantine_as_trusted_assumption",
+          "approach": "Document as an explicit trusted assumption with justification: reflection is not needed for custody (preservation direction suffices). Move to docs/trusted-assumptions.md.",
+          "effort": "low — documentation only"
+        },
+        {
+          "option": "postpone",
+          "approach": "Leave sorry with comment. Acceptable because NormalizationBridge is an example, not the core custody path.",
+          "effort": "none"
+        }
+      ],
+      "recommendation": "quarantine_as_trusted_assumption — reflection is not on the custody path and NormalizationBridge is an illustrative example, not core infrastructure."
+    },
+    {
+      "line": 167,
+      "obligation": "proof_admissibility.reflects",
+      "statement": "For all q in target kernel, if target admits q, then exists p in source kernel such that rename_proof f p = q and source admits p.",
+      "direction": "reverse (target → source)",
+      "custody_path": "no",
+      "requires": "same as proof_reflection — surjectivity of rename_proof f",
+      "resolvable": "conditional — same as proof_reflection",
+      "resolution_options": "same as proof_reflection",
+      "recommendation": "quarantine_as_trusted_assumption"
+    },
+    {
+      "line": 173,
+      "obligation": "formula_admissibility.reflects",
+      "statement": "For all q in target formula kernel, if target admits q, then exists p in source formula kernel such that rename_formula f p = q and source admits p. Since both kernels are trivial (admits_proof = True), this reduces to: ∀ q, ∃ p, rename_formula f p = q — surjectivity of rename_formula f.",
+      "direction": "reverse (target → source)",
+      "custody_path": "no",
+      "requires": "surjectivity of rename_formula f (equivalently, surjectivity of f : String → String)",
+      "resolvable": "conditional — NOT eliminable by proof restructuring alone. The trivial kernel makes preserves trivial but does NOT help reflects, because reflects still needs an existential preimage witness. Verified by analysis: the proof obligation reduces to ∀ q, ∃ p, rename_formula f p = q, which is surjectivity and is false for non-surjective f.",
+      "resolution_options": [
+        {
+          "option": "restrict_to_bijections",
+          "approach": "Same as proof_reflection — constrain f to bijections.",
+          "effort": "moderate"
+        },
+        {
+          "option": "quarantine_as_trusted_assumption",
+          "approach": "Document alongside the other two. The trivial kernel does not make this sorry eliminable — it only simplifies the admissibility condition, not the preimage existence.",
+          "effort": "low"
+        }
+      ],
+      "recommendation": "quarantine_as_trusted_assumption — earlier analysis suggesting this could be eliminated by restructuring was incorrect. The trivial kernel simplifies admissibility but not preimage existence."
+    }
+  ],
+  "unified_recommendation": "All three sorry share the same root cause (surjectivity) and should be quarantined together as trusted assumptions. The reflection direction is not on the custody path — preservation (forward direction) is fully proven and suffices for custody. If future work restricts normalization_bridge to bijective renamings, all three can be simultaneously eliminated."
+}
