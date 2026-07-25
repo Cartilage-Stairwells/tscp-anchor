@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "run_id": 30159889545,
+  "run_number": 2,
+  "workflow_name": "TSCP Verification Attestation",
+  "commit_sha": "f280f35dcbef1d58564dee61a4080bcc028dd3d3",
+  "branch": "master",
+  "event": "push",
+  "status": "completed",
+  "conclusion": "success",
+  "runner_os": "ubuntu-24.04",
+  "runner_image": "ubuntu-24.04",
+  "steps": [
+    {"name": "Set up job", "conclusion": "success"},
+    {"name": "Checkout", "conclusion": "success"},
+    {"name": "Install Lean toolchain", "conclusion": "success"},
+    {"name": "Verify toolchain", "conclusion": "success"},
+    {"name": "Build formal backbone", "conclusion": "success"},
+    {"name": "Generate SHA256 evidence", "conclusion": "success"},
+    {"name": "Attest verification evidence", "conclusion": "success"},
+    {"name": "Upload verification receipt", "conclusion": "success"},
+    {"name": "Summary", "conclusion": "success"}
+  ],
+  "artifact": {
+    "name": "tscp-verification-receipt-f280f35dcbef1d58564dee61a4080bcc028dd3d3",
+    "id": 8619945861,
+    "size_bytes": 2030,
+    "retention_days": 90
+  }
+}

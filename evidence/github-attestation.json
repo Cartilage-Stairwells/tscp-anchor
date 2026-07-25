@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "description": "GitHub Build Provenance attestation for TSCP formal verification",
+  "workflow_name": "TSCP Verification Attestation",
+  "workflow_file": ".github/workflows/tscp-attestation.yml",
+  "run_id": 30159889545,
+  "run_number": 2,
+  "run_url": "https://github.com/Cartilage-Stairwells/tscp-anchor/actions/runs/30159889545",
+  "commit_sha": "f280f35dcbef1d58564dee61a4080bcc028dd3d3",
+  "commit_sha_short": "f280f35d",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-07-25T13:31:19Z",
+  "updated_at": "2026-07-25T13:31:54Z",
+  "attestation_type": "build_provenance",
+  "attestation_action": "actions/attest-build-provenance@v2",
+  "attestation_step": "Attest verification evidence",
+  "attestation_step_result": "success",
+  "subject_files": ["formal-sha256sums.txt", "receipt.md"],
+  "verification_command": "gh attestation verify formal-sha256sums.txt --repo Cartilage-Stairwells/tscp-anchor",
+  "note": "The attestation was successfully created by the workflow. Verify with gh CLI or the GitHub API. The attestation proves that the formal backbone compiled successfully at commit f280f35d in GitHub's hosted CI environment."
+}
