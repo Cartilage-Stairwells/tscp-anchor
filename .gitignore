@@ -24,3 +24,5 @@ tscp-core-seal-*.tar.gz
 build-*.log
 CORE_COMMIT
 CORE_HASHES
+.lake/
+lake-manifest.json
