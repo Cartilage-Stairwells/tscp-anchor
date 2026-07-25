@@ -88,6 +88,7 @@ This dossier
 | `assumptions.json` | Trust contracts for all 2 axioms and 3 sorry |
 | `hashes.txt` | SHA256 of all 6 formal .lean source files at the sealed tag |
 | `README.md` | This dossier |
+| `reproducibility-audit.md` | First external audit rehearsal — clean clone, build, hash comparison |
 
 ---
 
@@ -206,6 +207,28 @@ find TSCP/Formal -type f -name "*.lean" -exec sha256sum {} + | sort
 ```
 
 Compare with `release/hashes.txt`. They must match exactly.
+
+---
+
+## Reproducibility Drill — First Audit Rehearsal
+
+A clean-room reproduction was performed from a fresh clone (no shared state with the development environment).
+
+**Verdict: PASS**
+
+| Check | Expected | Result |
+|-------|----------|--------|
+| Tag signature | Good signature from Sean Christopher Southwick | ✅ Verified (key 8469 2E62 9412 8CC1 C4AC CD15 E747 C3AF 2257 3539) |
+| Lean version | 4.32.1 | ✅ Lean 4.32.1, commit f054605 |
+| Lake version | 5.0.0 | ✅ Lake 5.0.0 |
+| Modules compiled | 6/6 | ✅ 6/6 (2.575s total) |
+| Compile errors | 0 | ✅ 0 |
+| Classical usage | 0 | ✅ 0 (fully constructive) |
+| Axioms | 2 | ✅ 2 (execution_valid, babybear_ntt_end_to_end) |
+| Sorry | 3 | ✅ 3 (all in NormalizationBridge reflection) |
+| SHA256 match | 6/6 files identical | ✅ 6/6 MATCH |
+
+Full audit report: `release/reproducibility-audit.md`
 
 ---
 
