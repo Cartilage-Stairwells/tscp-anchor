@@ -1,0 +1,116 @@
+{
+  "$schema": "tscp-assumptions-trust-contracts",
+  "tag": "TSCP-v2.4.0-formal-sealed",
+  "philosophy": "Ambiguous trust is the enemy. Every accepted gap is explicitly classified with: what is assumed, why it is necessary, what would invalidate it, and what would remove it.",
+
+  "axioms": [
+    {
+      "id": "AXIOM-1",
+      "name": "execution_valid",
+      "location": "TSCP/Formal/Core.lean",
+      "statement": "Hardware execution produces correct results for the operations in the formal model.",
+      "classification": "hardware_trust_boundary",
+      "on_custody_path": false,
+      "what_is_assumed": "That the physical hardware (CPU, memory, storage) executes the compiled program faithfully — no bit flips, no silent corruption, no hardware bugs affecting the operations the formal model reasons about.",
+      "why_necessary": "Lean operates at the abstraction level of mathematical objects. It cannot verify the behavior of physical hardware. This axiom is the explicit boundary where formal verification ends and hardware trust begins.",
+      "what_would_invalidate_it": [
+        "Hardware bug affecting arithmetic or control flow",
+        "Compiler (Lean compiler or system compiler) bug introducing incorrect behavior",
+        "Cosmic ray or bit-flip during execution",
+        "Adversarial hardware (malicious CPU)"
+      ],
+      "what_would_remove_it": [
+        "Formal verification of the hardware (out of scope — this is the boundary by design)",
+        "Reduction to a smaller axiom (e.g., assuming only addition is correct, deriving multiplication)",
+        "Runtime proof-carrying execution (the program carries proofs that are checked at each step)"
+      ],
+      "replacement_plan": "Long-term: replace with a verified runtime that carries proof objects and checks them during execution. The axiom would then be reduced to 'proof checking is correct' — a much smaller trust surface."
+    },
+    {
+      "id": "AXIOM-2",
+      "name": "babybear_ntt_end_to_end",
+      "location": "TSCP/Formal/Core.lean",
+      "statement": "The Number Theoretic Transform (NTT) implementation produces correct results end-to-end for the BabyBear field.",
+      "classification": "runtime_trust_boundary",
+      "on_custody_path": false,
+      "what_is_assumed": "That the NTT algorithm, as implemented, correctly transforms polynomials between coefficient and evaluation representations for the BabyBear prime field. This includes correctness of the twiddle factors, butterfly operations, and bit-reversal permutation.",
+      "why_necessary": "The formal model reasons about proof objects at a higher abstraction level. NTT correctness depends on arithmetic properties of a specific finite field implementation that Lean cannot verify without modeling the entire field arithmetic and algorithm implementation.",
+      "what_would_invalidate_it": [
+        "Incorrect twiddle factor computation",
+        "Overflow or underflow in field arithmetic not modeled in the formal layer",
+        "Bit-reversal permutation error",
+        "Mismatch between the formal model's field operations and the actual implementation"
+      ],
+      "what_would_remove_it": [
+        "Formal verification of the NTT algorithm in Lean (modeling the butterfly network, twiddle factors, and proving equivalence to polynomial evaluation — significant effort, likely requires Mathlib)",
+        "Test-vector parity proofs (demonstrating equivalence between scalar and NTT implementations on a sufficient sample — probabilistic, not formal)",
+        "External verification (e.g., a verified NTT implementation in another proof assistant)"
+      ],
+      "replacement_plan": "Medium-term: add test-vector parity as a semi-formal check (scalar vs NTT on random inputs). Long-term: formal verification of the NTT algorithm itself, potentially as a separate Lean project with Mathlib's field theory support."
+    }
+  ],
+
+  "sorry": [
+    {
+      "id": "SORRY-1",
+      "name": "proof_reflection",
+      "location": "TSCP/Formal/Examples/NormalizationBridge.lean",
+      "line": 162,
+      "obligation": "For all q in target kernel, if target admits q, then exists p in source kernel such that rename_proof f p = q and source admits p.",
+      "classification": "reflection_preimage_existence",
+      "direction": "reverse (target → source)",
+      "on_custody_path": false,
+      "what_is_assumed": "That the rename function f has a preimage for every target proof — i.e., f is surjective on the proof domain.",
+      "why_necessary": "The reflection direction (target → source) requires finding a source proof that maps to a given target proof. Without surjectivity, some target proofs have no source preimage.",
+      "what_would_invalidate_it": [
+        "Discovery that the rename function is NOT surjective (e.g., f maps all variables to the same name — then only trivial target proofs have preimages)"
+      ],
+      "what_would_remove_it": [
+        "Restricting normalization_bridge to bijective rename functions — then surjectivity follows from bijectivity and all three sorry become theorems",
+        "Proving that the specific rename functions used in practice are surjective (requires domain-specific knowledge about the rename functions)"
+      ],
+      "custody_relevance": "None. Custody uses the forward (preservation) direction only: if a source proof is valid, the target proof is valid. The reflection direction answers 'does every target proof come from a source proof?' — this is a structural question, not a custody question."
+    },
+    {
+      "id": "SORRY-2",
+      "name": "proof_admissibility.reflects",
+      "location": "TSCP/Formal/Examples/NormalizationBridge.lean",
+      "line": 167,
+      "obligation": "KernelAdmissible reflects field — same surjectivity requirement as SORRY-1 but for the kernel admissibility structure.",
+      "classification": "reflection_preimage_existence",
+      "direction": "reverse (target → source)",
+      "on_custody_path": false,
+      "what_is_assumed": "Same as SORRY-1 — surjectivity of rename_proof f.",
+      "why_necessary": "Same as SORRY-1 — the reflects field of KernelAdmissible requires preimage existence.",
+      "what_would_invalidate_it": "Same as SORRY-1.",
+      "what_would_remove_it": "Same as SORRY-1 — restrict to bijections.",
+      "custody_relevance": "None — same as SORRY-1."
+    },
+    {
+      "id": "SORRY-3",
+      "name": "formula_admissibility.reflects",
+      "location": "TSCP/Formal/Examples/NormalizationBridge.lean",
+      "line": 173,
+      "obligation": "For all q in target formula kernel, if target admits q, then exists p in source formula kernel such that rename_formula f p = q and source admits p. Since both kernels are trivial (admits_proof = True), this reduces to: ∀ q, ∃ p, rename_formula f p = q — surjectivity of rename_formula f.",
+      "classification": "reflection_preimage_existence",
+      "direction": "reverse (target → source)",
+      "on_custody_path": false,
+      "what_is_assumed": "Surjectivity of rename_formula f. Note: the trivial kernel (admits_proof = True for all inputs) simplifies the admissibility condition but does NOT help with preimage existence — the existential witness is still required.",
+      "why_necessary": "Same as SORRY-1 but for formulas instead of proofs. The trivial kernel makes preserves trivial, but reflects still requires finding a preimage formula.",
+      "what_would_invalidate_it": [
+        "Any non-surjective rename function f — e.g., f := fun _ => 'a' means only Formula.atom 'a' is in the range. This was verified by analysis: the obligation reduces to ∀ q, ∃ p, rename_formula f p = q, which is surjectivity and is false for non-surjective f."
+      ],
+      "what_would_remove_it": [
+        "Restricting normalization_bridge to bijective renamings — then surjectivity follows and all three sorry become theorems simultaneously",
+        "Note: earlier analysis suggesting this could be eliminated by proof restructuring alone was INCORRECT. The trivial kernel does not eliminate the need for a preimage witness."
+      ],
+      "custody_relevance": "None — same as SORRY-1 and SORRY-2."
+    }
+  ],
+
+  "unified_resolution": {
+    "axioms": "Two tracks: (1) reduce to smaller axioms via verified runtime, (2) external verification of specific implementations. Both are long-term.",
+    "sorry": "All three share the same root cause (surjectivity) and can be simultaneously eliminated by restricting normalization_bridge to bijective renamings. This is the recommended resolution. If bijectivity is too restrictive for practical use, they should be formally classified as accepted structural assumptions with the trust contracts above.",
+    "principle": "No ambiguous trust. Every gap is classified, justified, and has a removal path."
+  }
+}

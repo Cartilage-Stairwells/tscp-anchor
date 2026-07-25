@@ -1,0 +1,15 @@
+# TSCP v2.4.0 Formal Sealed — Source File Hashes
+# Tag: TSCP-v2.4.0-formal-sealed
+# Commit: e41096f9464d7d418db57e26c9b0ae8a21ffb744
+# Computed: 2026-07-25
+#
+# These are the SHA256 hashes of the formal Lean source files
+# at the sealed tag. A reproducer should compute the same hashes
+# after checking out the tag.
+
+199db359223896cc66d21fbf15b3ffa73850eedef9580e7d0b5d63187c0bba0f  TSCP/Formal/BridgePreservation.lean
+360b9d0eed1b6002ef0c09336d270114a0724c834a22c8527b4b29258f328a80  TSCP/Formal/Examples/PropositionalKernel.lean
+d45888679e36c11c7549d367e9e32c455d2261a27be2b55481e2653db92af1dd  TSCP/Formal/Examples/NormalizationBridge.lean
+dc2a3f556668d373a679ee3faba53977fc387c830901e29b513ee4dd597fd7dd  TSCP/Formal/TSCP_Formal_Backbone.lean
+e30adcc1b3c2bf5b5adba09a945691679eaaf5f73a67dc63780d6b3a9660f52d  TSCP/Formal/Core.lean
+fd0ea170f9cb8e186e03a1d065801132c29f6e25c674254ac17ec9f426b40fe7  TSCP/Formal/Evidence/ManifestBinding.lean
