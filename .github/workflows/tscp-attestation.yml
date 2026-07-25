@@ -24,12 +24,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Lean toolchain
-        uses: leanprover/elan-action@v1
-
-      - name: Install Lean 4.32.1
+      - name: Install Lean toolchain
         run: |
-          elan default leanprover/lean4:v4.32.1
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.32.1
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+          source ~/.elan/env
+
+      - name: Verify toolchain
+        run: |
           lean --version
           lake --version
 
@@ -47,6 +49,7 @@ jobs:
           echo "" >> receipt.md
           echo "| Module | Status |" >> receipt.md
           echo "|--------|--------|" >> receipt.md
+          BUILD_FAILED=0
           for mod in \
             TSCP.Formal.TSCP_Formal_Backbone \
             TSCP.Formal.BridgePreservation \
@@ -61,7 +64,7 @@ jobs:
               BUILD_FAILED=1
             fi
           done
-          if [ "${BUILD_FAILED:-0}" = "1" ]; then
+          if [ "$BUILD_FAILED" = "1" ]; then
             echo ""
             echo "Build failed — see build.log"
             exit 1
@@ -81,12 +84,9 @@ jobs:
 
       - name: Generate SHA256 evidence
         run: |
-          # SHA256 of all formal Lean source files
           find TSCP/Formal -type f -name "*.lean" -exec sha256sum {} + | sort > formal-sha256sums.txt
           cat formal-sha256sums.txt
-          # SHA256 of the build log
           sha256sum build.log >> formal-sha256sums.txt
-          # SHA256 of the receipt
           sha256sum receipt.md >> formal-sha256sums.txt
 
       - name: Attest verification evidence
