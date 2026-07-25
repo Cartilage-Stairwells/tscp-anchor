@@ -1,0 +1,96 @@
+{
+  "$schema": "tscp-formal-verification-receipt",
+  "tag": "TSCP-v2.4.0-formal-sealed",
+  "commit": "e41096f9464d7d418db57e26c9b0ae8a21ffb744",
+  "toolchain": {
+    "lean": "4.32.1",
+    "lake": "5.0.0",
+    "dependencies": "none (no Mathlib)"
+  },
+
+  "modules": [
+    {
+      "name": "TSCP.Formal.TSCP_Formal_Backbone",
+      "file": "TSCP/Formal/TSCP_Formal_Backbone.lean",
+      "status": "PASS",
+      "axioms": 0,
+      "sorry": 0,
+      "classical": 0,
+      "sha256": "dc2a3f556668d373a679ee3faba53977fc387c830901e29b513ee4dd597fd7dd"
+    },
+    {
+      "name": "TSCP.Formal.BridgePreservation",
+      "file": "TSCP/Formal/BridgePreservation.lean",
+      "status": "PASS",
+      "axioms": 0,
+      "sorry": 0,
+      "classical": 0,
+      "sha256": "199db359223896cc66d21fbf15b3ffa73850eedef9580e7d0b5d63187c0bba0f"
+    },
+    {
+      "name": "TSCP.Formal.Examples.PropositionalKernel",
+      "file": "TSCP/Formal/Examples/PropositionalKernel.lean",
+      "status": "PASS",
+      "axioms": 0,
+      "sorry": 0,
+      "classical": 0,
+      "sha256": "360b9d0eed1b6002ef0c09336d270114a0724c834a22c8527b4b29258f328a80"
+    },
+    {
+      "name": "TSCP.Formal.Examples.NormalizationBridge",
+      "file": "TSCP/Formal/Examples/NormalizationBridge.lean",
+      "status": "PASS",
+      "axioms": 0,
+      "sorry": 3,
+      "classical": 0,
+      "sorry_details": [
+        "proof_reflection (line ~162): surjectivity of rename_proof f",
+        "proof_admissibility.reflects (line ~167): surjectivity of rename_proof f",
+        "formula_admissibility.reflects (line ~173): surjectivity of rename_formula f"
+      ],
+      "sha256": "d45888679e36c11c7549d367e9e32c455d2261a27be2b55481e2653db92af1dd"
+    },
+    {
+      "name": "TSCP.Formal.Evidence.ManifestBinding",
+      "file": "TSCP/Formal/Evidence/ManifestBinding.lean",
+      "status": "PASS",
+      "axioms": 0,
+      "sorry": 0,
+      "classical": 0,
+      "sha256": "fd0ea170f9cb8e186e03a1d065801132c29f6e25c674254ac17ec9f426b40fe7"
+    },
+    {
+      "name": "TSCP.Formal.Core",
+      "file": "TSCP/Formal/Core.lean",
+      "status": "PASS",
+      "axioms": 2,
+      "sorry": 0,
+      "classical": 0,
+      "axiom_details": [
+        "execution_valid: hardware execution produces correct results (hardware boundary)",
+        "babybear_ntt_end_to_end: NTT implementation correctness (runtime boundary)"
+      ],
+      "sha256": "e30adcc1b3c2bf5b5adba09a945691679eaaf5f73a67dc63780d6b3a9660f52d"
+    }
+  ],
+
+  "summary": {
+    "total_modules": 6,
+    "compiled": 6,
+    "failed": 0,
+    "total_axioms": 2,
+    "total_sorry": 3,
+    "total_classical": 0
+  },
+
+  "custody_invariants": [
+    {"id": 1, "name": "ProofArtifact", "description": "Evidence carrier structure with digest, kind, provenance", "status": "verified", "location": "TSCP_Formal_Backbone.lean:41"},
+    {"id": 2, "name": "BridgeCertificate.artifact", "description": "Certificate carries a ProofArtifact — custody object", "status": "verified", "location": "TSCP_Formal_Backbone.lean:96"},
+    {"id": 3, "name": "governance_transition_preserves_truth", "description": "Governance transitions cannot create truth — governance ≠ truth", "status": "verified", "location": "TSCP_Formal_Backbone.lean:242"},
+    {"id": 4, "name": "UtilityFunction", "description": "Injected policy structure — ranking is external to the kernel", "status": "verified", "location": "TSCP_Formal_Backbone.lean:257"},
+    {"id": 5, "name": "utility_does_not_affect_admissibility", "description": "Utility ranking does not affect proof admissibility", "status": "verified", "location": "TSCP_Formal_Backbone.lean:268"},
+    {"id": 6, "name": "PromotionResult.reject", "description": "Rejection carries RejectionReason — no rejection without reason", "status": "verified", "location": "TSCP_Formal_Backbone.lean:279"},
+    {"id": 7, "name": "DomainEvidence", "description": "Evidence classified by kind — kernel responsibility documented", "status": "verified", "location": "TSCP_Formal_Backbone.lean:313"},
+    {"id": 8, "name": "no_rejection_removed", "description": "The no_rejection constructor was removed — every rejection must have a reason", "status": "verified", "location": "absent (confirmed)"}
+  ]
+}

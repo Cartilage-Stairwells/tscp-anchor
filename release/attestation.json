@@ -1,0 +1,49 @@
+{
+  "$schema": "tscp-attestation-reference",
+  "tag": "TSCP-v2.4.0-formal-sealed",
+  "attested_commit": "f280f35dcbef1d58564dee61a4080bcc028dd3d3",
+  "sealed_commit": "e41096f9464d7d418db57e26c9b0ae8a21ffb744",
+  "note": "The attestation was produced at f280f35d (the commit that introduced the attestation workflow). The seal tag points at e41096f (which includes evidence capture from the attestation run). Both commits are on master.",
+
+  "workflow": {
+    "name": "TSCP Verification Attestation",
+    "file": ".github/workflows/tscp-attestation.yml",
+    "run_id": 30159889545,
+    "run_number": 2,
+    "url": "https://github.com/Cartilage-Stairwells/tscp-anchor/actions/runs/30159889545",
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-07-25T13:31:19Z",
+    "updated_at": "2026-07-25T13:31:54Z",
+    "runner": "ubuntu-24.04",
+    "toolchain_verified": "Lean 4.32.1"
+  },
+
+  "attestation": {
+    "type": "build_provenance",
+    "action": "actions/attest-build-provenance@v2",
+    "step": "Attest verification evidence",
+    "step_conclusion": "success",
+    "subject_files": ["formal-sha256sums.txt", "receipt.md"],
+    "artifact_name": "tscp-verification-receipt-f280f35d",
+    "artifact_id": 8619945861,
+    "artifact_size_bytes": 2030,
+    "artifact_retention_days": 90
+  },
+
+  "steps": [
+    {"name": "Set up job", "conclusion": "success"},
+    {"name": "Checkout", "conclusion": "success"},
+    {"name": "Install Lean toolchain", "conclusion": "success"},
+    {"name": "Verify toolchain", "conclusion": "success"},
+    {"name": "Build formal backbone", "conclusion": "success"},
+    {"name": "Generate SHA256 evidence", "conclusion": "success"},
+    {"name": "Attest verification evidence", "conclusion": "success"},
+    {"name": "Upload verification receipt", "conclusion": "success"},
+    {"name": "Summary", "conclusion": "success"}
+  ],
+
+  "verification_command": "gh attestation verify formal-sha256sums.txt --repo Cartilage-Stairwells/tscp-anchor",
+  "artifact_download_command": "gh run download 30159889545 --repo Cartilage-Stairwells/tscp-anchor"
+}

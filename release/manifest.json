@@ -1,0 +1,47 @@
+{
+  "$schema": "tscp-v2.4.0-release-manifest",
+  "version": "2.4.0",
+  "tag": "TSCP-v2.4.0-formal-sealed",
+  "commit": "e41096f9464d7d418db57e26c9b0ae8a21ffb744",
+  "date": "2026-07-25",
+  "status": "sealed",
+  "description": "TSCP formal verification seal — 6/6 Lean modules compile, 0 Classical, bounded axioms, bounded sorry, externally auditable",
+
+  "layers": {
+    "custody": {
+      "authority": "GitHub rulesets (TSCP-CANONICAL-CUSTODY, TSCP-RELEASE-CUSTODY)",
+      "what_it_proves": "Source structure and release immutability — the tag cannot be moved or deleted, commits must be signed",
+      "evidence_file": "manifest.json"
+    },
+    "attestation": {
+      "authority": "GitHub Actions CI (actions/attest-build-provenance@v2)",
+      "what_it_proves": "The formal backbone compiles in a trusted CI environment — build provenance is cryptographically attested",
+      "evidence_file": "attestation.json"
+    },
+    "identity": {
+      "authority": "GPG key 84692E6294128CC1C4ACCD15E747C3AF22573539",
+      "what_it_proves": "A specific human (Sean Christopher Southwick) sealed this release with a personal cryptographic signature",
+      "evidence_file": "README.md"
+    }
+  },
+
+  "bundle_contents": {
+    "manifest.json": "This file — entry point listing all bundle contents and layer structure",
+    "formal-verification.json": "Compilation receipt — module results, Classical check, custody invariants",
+    "attestation.json": "GitHub Build Provenance attestation reference — workflow run, artifact, verification command",
+    "assumptions.json": "Trust contracts for all accepted gaps — axioms (hardware boundary) and sorry (reflection)",
+    "hashes.txt": "SHA256 hashes of all formal .lean source files at the sealed tag",
+    "README.md": "Verification Dossier — the single document an auditor reads to understand the acceptance decision"
+  },
+
+  "acceptance_summary": {
+    "modules_compiled": "6/6",
+    "compile_errors": 0,
+    "classical_logic_usage": 0,
+    "axioms": 2,
+    "sorry": 3,
+    "custody_invariants_verified": 8,
+    "formal_seal_tag": "TSCP-v2.4.0-formal-sealed",
+    "attestation_run_id": 30159889545
+  }
+}
