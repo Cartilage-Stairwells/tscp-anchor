@@ -1,17 +1,38 @@
 # TSCP v2.4.0 — Formal Sealed Release
 
-**Date:** (to be filled after merge)
-**Commit:** (to be filled after merge — will be the merge commit)
+**Date:** 2026-07-25
+**Commit:** bf5f9dff80b3140c97a7608ec0e6de8cf2d64427
+**Attested commit:** f280f35dcbef1d58564dee61a4080bcc028dd3d3
 **Tag:** TSCP-v2.4.0-formal-sealed (to be created with GPG signature)
 
 ## What This Release Seals
 
-The TSCP formal backbone has been independently verified:
+The TSCP formal backbone has been independently verified by GitHub Actions CI:
 - 6/6 Lean modules compile on Lean 4.32.1
 - 0 compilation errors
 - 0 Classical logic usage
 - 2 axioms (hardware/runtime boundary — explicitly classified)
 - 3 sorry (NormalizationBridge reflection — explicitly quarantined)
+
+## GitHub Attestation
+
+**Workflow:** TSCP Verification Attestation
+**Run ID:** 30159889545
+**Run number:** 2
+**Commit:** f280f35dcbef1d58564dee61a4080bcc028dd3d3
+**Conclusion:** success (all 9 steps passed)
+**Attestation type:** Build Provenance (actions/attest-build-provenance@v2)
+**Artifact:** tscp-verification-receipt-f280f35d (2030 bytes, 90-day retention)
+
+### Verify the attestation
+
+```bash
+# Download the artifact from GitHub Actions
+gh run download 30159889545 --repo Cartilage-Stairwells/tscp-anchor
+
+# Verify the build provenance attestation
+gh attestation verify formal-sha256sums.txt --repo Cartilage-Stairwells/tscp-anchor
+```
 
 ## Custody Invariants (8)
 
@@ -26,15 +47,9 @@ The TSCP formal backbone has been independently verified:
 | 7 | DomainEvidence (kind classification) | ✅ Present |
 | 8 | no_rejection removed | ✅ Confirmed absent |
 
-## Verification Manifest
-
-See `formal/verification-manifest.json` for the machine-readable compilation receipt.
-
 ## Trust Boundary
 
-See `docs/trust-boundary.md` for the complete analysis of what must be trusted outside Lean.
-
-### Summary
+See `docs/trust-boundary.md` for the complete analysis.
 
 | Gap | Type | Count | On custody path? |
 |-----|------|-------|-------------------|
@@ -42,28 +57,29 @@ See `docs/trust-boundary.md` for the complete analysis of what must be trusted o
 | Runtime NTT correctness | Axiom | 1 | No |
 | Reflection preimage | Sorry | 3 | No |
 
-## GitHub Attestation
+All 3 sorry share the same root cause (surjectivity of rename function) and are in the reflection (reverse) direction — not on the custody path. If `normalization_bridge` is later restricted to bijective renamings, all 3 can be simultaneously eliminated.
 
-After merging the attestation workflow, GitHub Actions produces a Build Provenance attestation:
-- Workflow run ID: (to be filled)
-- Attestation digest: (to be filled)
-- Artifact: `tscp-verification-receipt-<sha>`
+## Machine-Readable Manifests
 
-Verify with:
-```bash
-gh attestation verify formal-sha256sums.txt --repo Cartilage-Stairwells/tscp-anchor
-```
+| File | Contents |
+|------|----------|
+| `formal/verification-manifest.json` | 6/6 modules, 0 errors, 0 Classical, 8 custody invariants |
+| `formal/axioms.json` | 2 axioms with classification, justification, replacement plans |
+| `formal/sorry-inventory.json` | 3 sorry with resolution options (all require surjectivity) |
+| `formal/build-environment.json` | Lean 4.32.1, Lake 5.0.0, toolchain details |
+| `evidence/github-attestation.json` | Workflow run metadata + attestation reference |
+| `evidence/workflow-run.json` | Step-by-step CI results |
+| `evidence/artifact-digests.txt` | Artifact + attestation digests |
 
 ## Reproduction
 
 ```bash
 git clone https://github.com/Cartilage-Stairwells/tscp-anchor.git
 cd tscp-anchor
-git checkout <commit>
-elan default leanprover/lean4:v4.32.1
+git checkout bf5f9df
+curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.32.1
+source ~/.elan/env
 lake build
-# Compare SHA256 with attested evidence
-find TSCP/Formal -type f -name "*.lean" -exec sha256sum {} + | sort
 ```
 
 ## Layer Separation
@@ -71,23 +87,23 @@ find TSCP/Formal -type f -name "*.lean" -exec sha256sum {} + | sort
 | Layer | Authority | Status |
 |-------|-----------|--------|
 | TSCP custody | Protocol rules (rulesets, evidence manifest) | ✅ Enforced |
-| GitHub attestation | External execution provenance | ✅ (after workflow merge) |
-| GPG signature | Personal signer identity | ⏳ (to be added with signed tag) |
+| GitHub attestation | External execution provenance | ✅ Active (Run #2) |
+| GPG signature | Personal signer identity | ⏳ (this tag) |
 
-## Contents
+## Provenance Chain
 
 ```
-formal/
-├── verification-manifest.json    (machine-readable compilation receipt)
-├── axioms.json                   (axiom inventory with trust classification)
-├── sorry-inventory.json          (sorry inventory with resolution options)
-└── build-environment.json        (toolchain details)
-docs/
-├── trust-boundary.md             (what must be trusted outside Lean)
-└── releases/
-    └── TSCP-v2.4.0-formal-sealed.md  (this file)
-evidence/
-├── github-attestation.json       (filled after attestation runs)
-├── workflow-run.json             (filled after attestation runs)
-└── artifact-digests.txt           (filled after attestation runs)
+Source commit (f280f35d)
+  ↓
+GitHub Actions (Run #2, 30159889545)
+  ↓
+Lean 4.32.1 build (6/6 modules PASS)
+  ↓
+SHA256 evidence (formal-sha256sums.txt)
+  ↓
+GitHub Build Provenance attestation
+  ↓
+Evidence captured on master (bf5f9df)
+  ↓
+GPG-signed tag (TSCP-v2.4.0-formal-sealed) ← personal seal
 ```
