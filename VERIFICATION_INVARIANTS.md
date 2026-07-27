@@ -1,7 +1,7 @@
 # Verification Custody Invariants
 
 **Document type:** Formal invariant definitions
-**Status:** v0.2 (review commit)
+**Status:** v2.0 (post-merge canonical)
 **Motivating case:** Issue #27 — Verification Surface Drift
 **Date:** 2026-07-26
 

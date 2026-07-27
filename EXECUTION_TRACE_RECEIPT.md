@@ -1,7 +1,7 @@
 # Execution Trace Receipt
 
 **Artifact type:** Verification custody artifact
-**Status:** Template v0.2 (review commit)
+**Status:** Template v2.0 (post-merge canonical)
 **Motivating case:** Issue #27 — Verification Surface Drift in AVX-512 equivalence gate
 **Date:** 2026-07-26
 
@@ -54,7 +54,7 @@ receipt cannot claim "entire AVX512 NTT backend correctness." See
 # ============================================================
 
 artifact_type: EXECUTION_TRACE_RECEIPT
-schema_version: "0.3"
+schema_version: "2.0"
 target_binding_ref: <file>         # Reference to IMPLEMENTATION_TARGET_BINDING.md
 
 # --- Claim scope ---
@@ -185,7 +185,7 @@ lifecycle:
 
 ```yaml
 artifact_type: EXECUTION_TRACE_RECEIPT
-schema_version: "0.3"
+schema_version: "2.0"
 target_binding_ref: "IMPLEMENTATION_TARGET_BINDING.md"
 
 claim_scope:
