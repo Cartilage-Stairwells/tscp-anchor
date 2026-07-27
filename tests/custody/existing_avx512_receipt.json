@@ -1,0 +1,118 @@
+{
+  "fixture_id": "existing_avx512_refinement_receipt",
+  "description": "The actual AVX-512 refinement receipt from commit 9473af6 in avx512-butterfly, mapped to the custody schema. This is the real evidence of AVX-512 execution. The question is whether it satisfies the custody framework's nine invariants.",
+  "source": "avx512-butterfly/docs/AVX512_REFINEMENT_RECEIPT.md (commit 9473af6)",
+  "source_commit": "9473af6812f4b62e1526746fa1a0976f2df55d99",
+  "expected_result": "REJECT",
+  "expected_reason": "Invariant 3 (Build Artifact Identity): no compiler version, no artifact hash, no dependency lock hash in the original receipt",
+  "invariant_violated": 3,
+
+  "artifact_type": "EXECUTION_TRACE_RECEIPT",
+  "schema_version": "1.0_legacy_markdown",
+  "target_binding_ref": null,
+
+  "_mapping_notes": "This fixture maps the markdown receipt (AVX512_REFINEMENT_RECEIPT.md) to the custody JSON schema. The receipt has strong execution evidence (hardware canary, staged parity, 135 comparisons) but lacks build artifact identity fields required by Invariant 3.",
+
+  "claim_scope": {
+    "claimed_scope": "AVX-512 NTT computes the same mathematical object as reference (DIF NTT = DFT), with backend equivalence at every stage",
+    "verified_scope": "135 staged comparisons across 6 sizes (n=32..1024), 45 stages × 3 backends. 14/14 backend parity tests pass. Hardware canary: 16 lanes × 1 butterfly, 0 mismatches. Spot-check: n=256, 4096, 65536 all match.",
+    "scope_valid": true,
+    "_note": "Scope is bounded: NTT butterfly equivalence, not 'complete AVX512 correctness'. The receipt explicitly states what it does NOT claim (no SIMD instruction correctness, no Lean theorem about SIMD internals)."
+  },
+
+  "execution": {
+    "invoked": true,
+    "backend_selected": "avx512",
+    "fallback_used": false,
+    "fallback_symbol": null,
+    "_evidence": "EVIDENCE_CONTRACT_V1: run_id 'backend_parity_1544BEEFCAFE4242', avx512 butterfly coverage: 16, parity passed: true, mismatches: 0. The canary explicitly proves AVX-512 path executed, not scalar fallback."
+  },
+
+  "fallback_policy": {
+    "forbidden": true,
+    "_evidence": "Receipt states: 'The canary proves the AVX-512 path actually executed (not a scalar fallback masquerading as SIMD).'"
+  },
+
+  "hardware": {
+    "cpu_feature_required": "avx512f+avx512dq",
+    "cpu_feature_verified": true,
+    "cpu_model": "x86_64, linux (specific model not recorded in receipt)",
+    "feature_probe_method": "EVIDENCE_CONTRACT_V1 backend_identity: cpu_features includes avx512f and avx512dq",
+    "feature_probe_hash": null,
+    "_evidence": "EVIDENCE_CONTRACT_V1 records cpu_features: ['x86_64', 'avx512f', 'avx512dq']. 16 lanes executed with 0 mismatches — hardware was present and the SIMD path ran."
+  },
+
+  "test": {
+    "name": "staged_cross_backend_equivalence + avx512_execution_canary + backend_parity_evidence",
+    "test_file": "tests/babybear_domain.rs + tests/ntt_equivalence.rs",
+    "test_result": "PASS",
+    "cases_run": 135,
+    "cases_passed": 135,
+    "oracle": "reference NTT (u128 oracle, no shared code with implementation)",
+    "oracle_independence": "Reference oracle uses u128 arithmetic with no p3 BabyBear dependency. Composed from babybear_mul_reference + babybear_add/sub_reference. shared_code_with_implementation: false."
+  },
+
+  "observation": {
+    "method": "staged_comparison + hardware canary + architecture audit",
+    "observer": "test harness (tests/babybear_domain.rs, tests/ntt_equivalence.rs)",
+    "observation_hash": null,
+    "independence_note": "The reference oracle is independent (u128, no shared code). The test harness is separate from the implementation module. The canary verifies 16 lanes executed. However, no disassembly verification or feature probe log is recorded. The observation method is 'staged comparison' which meets the minimum requirement of independent comparison.",
+    "_assessment": "The observation is partially independent — the oracle is independent, the test harness is separate, but no disassembly or CPUID probe is recorded. The EVIDENCE_CONTRACT_V1 provides hardware identity but not through an independent probe mechanism."
+  },
+
+  "domain": {
+    "input_type": "MontgomeryBabyBear",
+    "output_type": "MontgomeryBabyBear",
+    "representation": "xR mod p, R = 2^32, p = 2^31 - 2^25 + 1",
+    "domain_verified": true,
+    "_evidence": "DIF NTT = DFT verified for n=16,32,64,128,256 against naive O(n^2) DFT. Round-trip verified."
+  },
+
+  "authority": {
+    "granted": false,
+    "jurisdiction_crossed": false,
+    "_evidence": "Receipt does not claim authority. Custody classification: EXECUTE → CLOSED. Correctness layer: SEALED."
+  },
+
+  "provenance": {
+    "commit_sha": "9473af6812f4b62e1526746fa1a0976f2df55d99",
+    "timestamp": "2026-07-26T16:31:16Z",
+    "ci_run_id": "backend_parity_1544BEEFCAFE4242",
+    "environment": "x86_64-unknown-linux-gnu, AVX-512 hardware"
+  },
+
+  "lifecycle": {
+    "status": "GENERATED",
+    "generated_at": "2026-07-26T16:31:16Z",
+    "audited_at": null,
+    "superseded_at": null,
+    "revoked_at": null,
+    "supersedes": null,
+    "_evidence": "Receipt status: COMPLETE. Custody classification: EXECUTE → CLOSED."
+  },
+
+  "build_identity": {
+    "source_commit": "9473af6812f4b62e1526746fa1a0976f2df55d99",
+    "compiler": "not recorded in receipt",
+    "target_triple": "x86_64-unknown-linux-gnu (inferred from platform)",
+    "cpu_features": "avx512f+avx512dq",
+    "cargo_features": "avx512 (inferred from --features avx512 flag)",
+    "dependency_lock": "not recorded in receipt",
+    "flags": "cargo run --release (no RUSTFLAGS specified)",
+    "artifact_hash": "not recorded in receipt",
+    "_gap": "The receipt records the commit SHA and platform but does not record the compiler version, artifact hash, or dependency lock hash. This is a gap that can be filled by re-running cargo build with --verbose and capturing the toolchain version + artifact hash, without re-running the hardware tests."
+  },
+
+  "inheritance_chain": {
+    "chain": "Montgomery.lean (formal proof) → ScalarBackend (PR #28, sealed) → ReferenceBackend (u128 oracle) → AVX-512Backend (this receipt, staged parity)",
+    "boundary": "No SIMD-specific Lean proof required — AVX-512 inherits correctness through parity with reference oracle"
+  },
+
+  "performance": {
+    "speedup_range": "3.3x-4.4x",
+    "geometric_mean": "3.96x",
+    "sizes_tested": [256, 1024, 4096, 16384, 65536, 262144, 1048576],
+    "methodology": "1000 iterations per size, release mode, 10 warm-up iterations, deterministic LCG seed, full NTT (all stages)",
+    "_note": "Performance is supporting evidence only. Timing ≠ Identity. The speedup confirms the SIMD path is being used but does not by itself prove correctness."
+  }
+}
