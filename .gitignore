@@ -26,3 +26,4 @@ CORE_COMMIT
 CORE_HASHES
 .lake/
 lake-manifest.json
+tests/custody/__pycache__/
