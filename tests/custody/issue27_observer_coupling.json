@@ -1,0 +1,83 @@
+{
+  "fixture_id": "issue27_observer_coupling",
+  "description": "Test 5: The binary being tested produces its own execution trace. No independent observation exists. Self-attestation through the execution trace.",
+  "expected_result": "REJECT",
+  "expected_reason": "Invariant 7 (Observation Independence): Observer shares code with target",
+  "invariant_violated": 7,
+
+  "artifact_type": "EXECUTION_TRACE_RECEIPT",
+  "schema_version": "2.0",
+  "target_binding_ref": "IMPLEMENTATION_TARGET_BINDING.md",
+
+  "claim_scope": {
+    "claimed_scope": "avx512_radix2_butterfly_32 equivalence to butterfly_reference oracle",
+    "verified_scope": "avx512_radix2_butterfly_32 output matches butterfly_reference for 10010 cases",
+    "scope_valid": true
+  },
+
+  "execution": {
+    "invoked": true,
+    "backend_selected": "avx512",
+    "fallback_used": false,
+    "fallback_symbol": null
+  },
+
+  "fallback_policy": {
+    "forbidden": true
+  },
+
+  "hardware": {
+    "cpu_feature_required": "avx512f+avx512dq",
+    "cpu_feature_verified": true,
+    "cpu_model": "Intel Xeon Platinum 8480+",
+    "feature_probe_method": "is_x86_feature_detected!('avx512f')",
+    "feature_probe_hash": "<sha256>"
+  },
+
+  "test": {
+    "name": "avx512_self_reporting_equivalence",
+    "test_file": "src/avx512_butterfly_32bit.rs",
+    "test_result": "PASS",
+    "cases_run": 10010,
+    "cases_passed": 10010,
+    "oracle": "scalar_butterfly_32",
+    "oracle_independence": "Oracle is scalar_butterfly_32 from the same module as the target.",
+    "_trap": "The test is in the same file as the implementation (src/avx512_butterfly_32bit.rs). The oracle (scalar_butterfly_32) is from the same module. The binary reports its own execution."
+  },
+
+  "observation": {
+    "method": "self_reported",
+    "observer": "avx512_butterfly_32bit.rs (the code under test)",
+    "observation_hash": "<sha256>",
+    "independence_note": "The execution trace was produced by the binary being tested. The observer IS the target. Observer is not structurally separate from the code under test.",
+    "_trap": "If the binary being tested produces its own execution trace, you have reintroduced Self-Attestation through the execution trace. The trace becomes a self-claim: 'I executed myself.'"
+  },
+
+  "domain": {
+    "input_type": "MontgomeryBabyBear",
+    "output_type": "MontgomeryBabyBear",
+    "representation": "xR mod p, R = 2^32",
+    "domain_verified": true
+  },
+
+  "authority": {
+    "granted": false,
+    "jurisdiction_crossed": false
+  },
+
+  "provenance": {
+    "commit_sha": "5e24faa5caea444f5b8db078dee8a1d7ba1c3909",
+    "timestamp": "2026-07-26T00:00:00Z",
+    "ci_run_id": null,
+    "environment": "Ubuntu 22.04, kernel 5.15.0, AVX-512 hardware"
+  },
+
+  "lifecycle": {
+    "status": "GENERATED",
+    "generated_at": "2026-07-26T00:00:00Z",
+    "audited_at": null,
+    "superseded_at": null,
+    "revoked_at": null,
+    "supersedes": null
+  }
+}

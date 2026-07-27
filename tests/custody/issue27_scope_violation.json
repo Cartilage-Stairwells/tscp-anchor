@@ -1,0 +1,82 @@
+{
+  "fixture_id": "issue27_scope_violation",
+  "description": "Test 4: Evidence proves butterfly function equivalence but receipt claims entire NTT backend correctness. Claim scope exceeds verified scope.",
+  "expected_result": "REJECT",
+  "expected_reason": "Invariant 6 (Claim Scope Integrity): ClaimScope not subset of VerifiedScope",
+  "invariant_violated": 6,
+
+  "artifact_type": "EXECUTION_TRACE_RECEIPT",
+  "schema_version": "2.0",
+  "target_binding_ref": "IMPLEMENTATION_TARGET_BINDING.md",
+
+  "claim_scope": {
+    "claimed_scope": "complete AVX512 NTT backend correctness",
+    "verified_scope": "avx512_radix2_butterfly_32 element-wise output matches butterfly_reference for 10010 cases. Butterfly function only — does not cover avx512_butterfly_pass_32 tail loop or NTT stage orchestration.",
+    "scope_valid": false,
+    "_trap": "The evidence proves butterfly function equivalence. The claim says NTT backend correctness. NTT correctness requires staged equivalence covering the full pipeline, not just the butterfly. The claim scope is strictly larger than the verified scope."
+  },
+
+  "execution": {
+    "invoked": true,
+    "backend_selected": "avx512",
+    "fallback_used": false,
+    "fallback_symbol": null
+  },
+
+  "fallback_policy": {
+    "forbidden": true
+  },
+
+  "hardware": {
+    "cpu_feature_required": "avx512f+avx512dq",
+    "cpu_feature_verified": true,
+    "cpu_model": "Intel Xeon Platinum 8480+",
+    "feature_probe_method": "is_x86_feature_detected!('avx512f')",
+    "feature_probe_hash": "<sha256>"
+  },
+
+  "test": {
+    "name": "avx512_equivalence_real_path",
+    "test_file": "tests/avx512_real_path_equivalence.rs",
+    "test_result": "PASS",
+    "cases_run": 10010,
+    "cases_passed": 10010,
+    "oracle": "butterfly_reference",
+    "oracle_independence": "Reference oracle in field::babybear::reference, separate from implementation."
+  },
+
+  "observation": {
+    "method": "cargo_asm_verification + runtime_feature_probe + test_harness_isolation",
+    "observer": "cargo asm --symbol avx512_radix2_butterfly_32 | grep vpmullq; feature_probe_log.json",
+    "observation_hash": "<sha256>",
+    "independence_note": "Disassembly by compiler toolchain, feature probe by CPUID, test harness in separate module."
+  },
+
+  "domain": {
+    "input_type": "MontgomeryBabyBear",
+    "output_type": "MontgomeryBabyBear",
+    "representation": "xR mod p, R = 2^32",
+    "domain_verified": true
+  },
+
+  "authority": {
+    "granted": false,
+    "jurisdiction_crossed": false
+  },
+
+  "provenance": {
+    "commit_sha": "5e24faa5caea444f5b8db078dee8a1d7ba1c3909",
+    "timestamp": "2026-07-26T00:00:00Z",
+    "ci_run_id": null,
+    "environment": "Ubuntu 22.04, kernel 5.15.0, AVX-512 hardware"
+  },
+
+  "lifecycle": {
+    "status": "GENERATED",
+    "generated_at": "2026-07-26T00:00:00Z",
+    "audited_at": null,
+    "superseded_at": null,
+    "revoked_at": null,
+    "supersedes": null
+  }
+}

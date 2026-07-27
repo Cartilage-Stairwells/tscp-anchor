@@ -1,0 +1,85 @@
+{
+  "fixture_id": "issue27_fallback_injection",
+  "description": "Test 2: AVX-512 was requested but a fallback to scalar was used. The receipt still claims avx512 backend.",
+  "expected_result": "REJECT",
+  "expected_reason": "Invariant 5 (Fallback Prohibition): FallbackUsed = true => Status != VERIFIED",
+  "invariant_violated": 5,
+
+  "artifact_type": "EXECUTION_TRACE_RECEIPT",
+  "schema_version": "2.0",
+  "target_binding_ref": "IMPLEMENTATION_TARGET_BINDING.md",
+
+  "claim_scope": {
+    "claimed_scope": "avx512_radix2_butterfly_32 equivalence to butterfly_reference oracle",
+    "verified_scope": "avx512_radix2_butterfly_32 output matches butterfly_reference for 10010 cases",
+    "scope_valid": true
+  },
+
+  "execution": {
+    "invoked": true,
+    "backend_selected": "avx512",
+    "fallback_used": true,
+    "fallback_symbol": "scalar_butterfly_32",
+    "_trap": "The runtime selected avx512 as the requested backend, but is_avx512_supported() returned false at execution time and the code fell back to scalar_butterfly_32. The receipt still claims avx512."
+  },
+
+  "fallback_policy": {
+    "forbidden": true,
+    "_violation": "fallback_used is true but fallback_policy.forbidden is true. This receipt is invalid regardless of test results."
+  },
+
+  "hardware": {
+    "cpu_feature_required": "avx512f+avx512dq",
+    "cpu_feature_verified": false,
+    "cpu_model": "AMD EPYC 7763 (no AVX-512)",
+    "feature_probe_method": "is_x86_feature_detected!('avx512f')",
+    "feature_probe_hash": "<sha256>",
+    "_trap": "CPU feature probe returned false. The SIMD path was skipped. But the receipt was still generated claiming avx512 backend."
+  },
+
+  "test": {
+    "name": "staged_cross_backend_equivalence",
+    "test_file": "tests/babybear_domain.rs",
+    "test_result": "PASS",
+    "cases_run": 0,
+    "cases_passed": 0,
+    "oracle": "scalar_butterfly_32",
+    "oracle_independence": "Test was skipped on non-AVX-512 hardware. Passes vacuously.",
+    "_trap": "cases_run is 0 — the test was skipped, not executed. But test_result is PASS."
+  },
+
+  "observation": {
+    "method": "test_harness_isolation",
+    "observer": "test runner",
+    "observation_hash": "<sha256>",
+    "independence_note": "No disassembly or feature probe was performed because the test was skipped."
+  },
+
+  "domain": {
+    "input_type": "MontgomeryBabyBear",
+    "output_type": "MontgomeryBabyBear",
+    "representation": "xR mod p, R = 2^32",
+    "domain_verified": false
+  },
+
+  "authority": {
+    "granted": false,
+    "jurisdiction_crossed": false
+  },
+
+  "provenance": {
+    "commit_sha": "0205722cbee5f7043459afddbdeaab0d6732c044",
+    "timestamp": "2026-07-24T08:28:00Z",
+    "ci_run_id": "github-actions-12345",
+    "environment": "Ubuntu 22.04, kernel 5.15.0, non-AVX-512 CI runner"
+  },
+
+  "lifecycle": {
+    "status": "GENERATED",
+    "generated_at": "2026-07-24T08:28:00Z",
+    "audited_at": null,
+    "superseded_at": null,
+    "revoked_at": null,
+    "supersedes": null
+  }
+}

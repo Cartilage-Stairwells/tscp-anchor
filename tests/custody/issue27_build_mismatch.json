@@ -1,0 +1,94 @@
+{
+  "fixture_id": "issue27_build_mismatch",
+  "description": "Test 3: Source commit matches but compiled artifact hash differs. The placeholder and real SIMD function share the same commit but produce different codegen.",
+  "expected_result": "REJECT",
+  "expected_reason": "Invariant 3 (Build Artifact Identity): BuildArtifactHash(receipt) != BuildArtifactHash(observed)",
+  "invariant_violated": 3,
+
+  "artifact_type": "EXECUTION_TRACE_RECEIPT",
+  "schema_version": "2.0",
+  "target_binding_ref": "IMPLEMENTATION_TARGET_BINDING.md",
+
+  "claim_scope": {
+    "claimed_scope": "avx512_radix2_butterfly_32 equivalence to butterfly_reference oracle",
+    "verified_scope": "avx512_radix2_butterfly_32 output matches butterfly_reference for 10010 cases",
+    "scope_valid": true
+  },
+
+  "execution": {
+    "invoked": true,
+    "backend_selected": "avx512",
+    "fallback_used": false,
+    "fallback_symbol": null
+  },
+
+  "fallback_policy": {
+    "forbidden": true
+  },
+
+  "hardware": {
+    "cpu_feature_required": "avx512f+avx512dq",
+    "cpu_feature_verified": true,
+    "cpu_model": "Intel Xeon Platinum 8480+",
+    "feature_probe_method": "is_x86_feature_detected!('avx512f')",
+    "feature_probe_hash": "<sha256>"
+  },
+
+  "test": {
+    "name": "avx512_equivalence_real_path",
+    "test_file": "tests/avx512_real_path_equivalence.rs",
+    "test_result": "PASS",
+    "cases_run": 10010,
+    "cases_passed": 10010,
+    "oracle": "butterfly_reference",
+    "oracle_independence": "Reference oracle in field::babybear::reference, separate from implementation."
+  },
+
+  "observation": {
+    "method": "cargo_asm_verification + runtime_feature_probe + test_harness_isolation",
+    "observer": "cargo asm --symbol avx512_radix2_butterfly_32 | grep vpmullq; feature_probe_log.json",
+    "observation_hash": "<sha256>",
+    "independence_note": "Disassembly by compiler toolchain, feature probe by CPUID, test harness in separate module."
+  },
+
+  "domain": {
+    "input_type": "MontgomeryBabyBear",
+    "output_type": "MontgomeryBabyBear",
+    "representation": "xR mod p, R = 2^32",
+    "domain_verified": true
+  },
+
+  "authority": {
+    "granted": false,
+    "jurisdiction_crossed": false
+  },
+
+  "provenance": {
+    "commit_sha": "5e24faa5caea444f5b8db078dee8a1d7ba1c3909",
+    "timestamp": "2026-07-26T00:00:00Z",
+    "ci_run_id": null,
+    "environment": "Ubuntu 22.04, kernel 5.15.0, AVX-512 hardware"
+  },
+
+  "lifecycle": {
+    "status": "GENERATED",
+    "generated_at": "2026-07-26T00:00:00Z",
+    "audited_at": null,
+    "superseded_at": null,
+    "revoked_at": null,
+    "supersedes": null
+  },
+
+  "build_identity": {
+    "source_commit": "5e24faa5caea444f5b8db078dee8a1d7ba1c3909",
+    "compiler": "rustc 1.78.0 (stable)",
+    "target_triple": "x86_64-unknown-linux-gnu",
+    "cpu_features": "avx512f+avx512dq",
+    "cargo_features": "std",
+    "dependency_lock": "<sha256 of Cargo.lock>",
+    "flags": "-C target-feature=+avx512f,+avx512dq -O2",
+    "artifact_hash": "ABC123def456",
+    "_trap": "This hash is from the placeholder build (lib.rs::avx512_impl::avx512_radix2_butterfly which delegates to scalar). The observed binary was compiled with the same commit and flags but contains the real SIMD path (avx512_butterfly_32bit.rs::avx512_radix2_butterfly_32 with mont_mul_16). The codegen is different. The artifact hash should be DEF456abc789."
+  },
+  "observed_artifact_hash": "DEF456abc789"
+}
