@@ -43,6 +43,39 @@ BLUE = "\033[94m"
 BOLD = "\033[1m"
 NC = "\033[0m"
 
+# Required build identity fields
+BUILD_IDENTITY_REQUIRED = [
+    "source_commit", "compiler", "target_triple", "cpu_features",
+    "cargo_features", "dependency_lock", "flags", "artifact_hash",
+]
+
+INVALID_VALUES = {"", "not recorded", "none", "null", None}
+
+# Broad-scope keywords that indicate scope inflation
+BROAD_SCOPE_KEYWORDS = {"complete", "entire", "full", "backend correctness", "ntt backend", "all avx512", "whole"}
+SPECIFIC_SCOPE_KEYWORDS = {"equivalence", "element-wise", "butterfly", "function", "radix"}
+
+
+def _is_invalid(value):
+    """Check if a value is missing/invalid."""
+    return value is None or value in INVALID_VALUES or (isinstance(value, str) and value.strip().lower() in INVALID_VALUES)
+
+
+def _looks_like_placeholder(value):
+    """Check if a string looks like a placeholder rather than a real hash."""
+    if not isinstance(value, str):
+        return True
+    v = value.strip()
+    if v.startswith("<") and v.endswith(">"):
+        return True
+    if v.lower() in INVALID_VALUES:
+        return True
+    # Real SHA-256 hashes are 64 hex chars; real SHA-256 of objects are hex
+    # Placeholders often contain spaces or descriptions
+    if " " in v and not all(c in "0123456789abcdef " for c in v.lower()):
+        return True
+    return False
+
 
 def check_invariant_1_authority(receipt):
     """Invariant 1: Authority Neutrality — ∀r: Authority(r) = ⊥"""
@@ -68,12 +101,17 @@ def check_invariant_2_target_binding(receipt):
     claim_scope = receipt.get("claim_scope", {})
     claimed_scope = claim_scope.get("claimed_scope", "").lower()
     
-    # If claim mentions avx512 but execution shows scalar
     execution = receipt.get("execution", {})
+    backend_selected = execution.get("backend_selected", "")
+    
+    # If claim mentions avx512, execution must show avx512
     if "avx512" in claimed_scope or "avx" in claimed_scope:
-        backend_selected = execution.get("backend_selected", "")
-        if backend_selected and "avx512" not in backend_selected and "scalar" in backend_selected:
+        if _is_invalid(backend_selected):
+            return False, f"ExecutedBackend is missing/empty but ClaimedBackend = avx512. No execution backend recorded."
+        if "avx512" not in backend_selected and "scalar" in backend_selected:
             return False, f"ExecutedBackend != ClaimedBackend: claimed avx512, executed {backend_selected}"
+        if "avx512" not in backend_selected:
+            return False, f"ExecutedBackend != ClaimedBackend: claimed avx512, executed '{backend_selected}'"
     
     return True, None
 
@@ -84,9 +122,18 @@ def check_invariant_3_build_artifact(receipt):
     if not build:
         return True, None  # No build identity to check (skip for fixtures without it)
     
-    artifact_hash = build.get("artifact_hash")
-    observed_hash = receipt.get("observed_artifact_hash")
+    # Check for missing/incomplete build identity fields
+    missing = [f for f in BUILD_IDENTITY_REQUIRED if _is_invalid(build.get(f))]
+    if missing:
+        return False, f"Build identity incomplete — missing/invalid: {', '.join(missing)}"
     
+    # Check for placeholder artifact hash
+    artifact_hash = build.get("artifact_hash", "")
+    if _looks_like_placeholder(artifact_hash):
+        return False, f"Build artifact hash is a placeholder, not a real hash: '{artifact_hash}'"
+    
+    # Check hash mismatch against observed hash
+    observed_hash = receipt.get("observed_artifact_hash")
     if observed_hash and artifact_hash and artifact_hash != observed_hash:
         return False, f"BuildArtifactHash(receipt) != BuildArtifactHash(observed): receipt has '{artifact_hash}', observed has '{observed_hash}'"
     
@@ -95,7 +142,6 @@ def check_invariant_3_build_artifact(receipt):
 
 def check_invariant_4_hardware(receipt):
     """Invariant 4: Hardware Presence — ClaimedBackend = avx512 ⇒ CpuFeaturePresent"""
-    execution = receipt.get("execution", {})
     hardware = receipt.get("hardware", {})
     claim_scope = receipt.get("claim_scope", {})
     
@@ -133,6 +179,24 @@ def check_invariant_6_claim_scope(receipt):
     if test.get("cases_run", 1) == 0:
         return False, "VerifiedScope is empty (cases_run = 0). Cannot claim any scope."
     
+    # Heuristic scope inflation check: if scope_valid is true but the claimed
+    # scope contains broad keywords while the verified scope is specific,
+    # flag it. This catches the case where scope_valid is left true despite
+    # the claim being broader than the evidence.
+    claimed = claim_scope.get("claimed_scope", "").lower()
+    verified = claim_scope.get("verified_scope", "").lower()
+    
+    if claimed and verified:
+        claimed_broad = any(kw in claimed for kw in BROAD_SCOPE_KEYWORDS)
+        verified_specific = any(kw in verified for kw in SPECIFIC_SCOPE_KEYWORDS)
+        # If the claimed scope uses broad language AND the verified scope is
+        # specific (mentions specific functions/equivalence), the scope_valid
+        # field is probably wrong
+        if claimed_broad and verified_specific:
+            # Additional check: the broad claim should NOT appear in the verified scope
+            if not any(kw in verified for kw in BROAD_SCOPE_KEYWORDS):
+                return False, f"ClaimScope ⊄ VerifiedScope (heuristic): claimed scope uses broad language ('{claimed}') but verified scope is specific ('{verified[:80]}...'). scope_valid field is inconsistent."
+    
     return True, None
 
 
@@ -144,7 +208,7 @@ def check_invariant_7_observation(receipt):
     independence_note = observation.get("independence_note", "").lower()
     
     # Check for self-observation
-    if method == "self_reported" or "self" in method:
+    if method == "self_reported" or "self" in method.lower():
         return False, "Observer ⊥ Target violated — observer IS the target (self-reported)"
     
     if "same module" in independence_note or "same file" in independence_note:
@@ -153,23 +217,31 @@ def check_invariant_7_observation(receipt):
     if "the code under test" in observer.lower():
         return False, "Observer ⊥ Target violated — observer is the code under test"
     
-    if method == "none" or observer == "none":
-        return False, "Observer ⊥ Target violated — no observation was performed"
+    # Check for "none" in method (handles "none — not recorded" etc.)
+    if not method or method.strip().lower() == "none" or method.strip().lower().startswith("none"):
+        return False, "Observer ⊥ Target violated — no observation method recorded"
+    
+    if not observer or observer.strip().lower() == "none" or observer.strip().lower().startswith("none"):
+        return False, "Observer ⊥ Target violated — no observer recorded"
+    
+    # Check for missing independence verification
+    if "not independently verified" in observer.lower():
+        return False, "Observer ⊥ Target violated — observer is not independently verified"
+    
+    if "no independent observation" in independence_note:
+        return False, "Observer ⊥ Target violated — no independent observation was recorded"
     
     # Check for minimum required observation methods
-    if method and method != "none":
-        required = ["disassembly", "feature_probe", "harness_isolation"]
-        # At least one must be present in the method string
-        if not any(r in method.lower() for r in required):
-            return False, f"Observation method '{method}' does not meet required minimum (disassembly + feature probe + harness isolation)"
+    required = ["disassembly", "feature_probe", "harness_isolation"]
+    method_lower = method.lower()
+    if not any(r in method_lower for r in required):
+        return False, f"Observation method '{method}' does not meet required minimum (disassembly + feature probe + harness isolation)"
     
     return True, None
 
 
 def check_invariant_8_gate_ordering(receipt):
     """Invariant 8: Gate Ordering — each gate must pass before the next"""
-    # For test fixtures, we check that the lifecycle status is in a valid state
-    # and that required fields exist
     lifecycle = receipt.get("lifecycle", {})
     status = lifecycle.get("status", "")
     
@@ -184,13 +256,28 @@ def check_invariant_9_lifecycle(receipt):
     lifecycle = receipt.get("lifecycle", {})
     status = lifecycle.get("status", "")
     
-    # For new receipts, status should be GENERATED
     # REVOKED and SUPERSEDED are terminal states
-    # This check is more relevant for re-validation scenarios
+    # This check catches attempts to re-activate a revoked receipt
     if status in ("REVOKED", "SUPERSEDED"):
-        # Check if someone is trying to re-activate
-        if lifecycle.get("audited_at") and status == "REVOKED":
-            return False, "REVOKED receipt cannot be re-activated"
+        revoked_at = lifecycle.get("revoked_at")
+        superseded_at = lifecycle.get("superseded_at")
+        audited_at = lifecycle.get("audited_at")
+        
+        terminal_time = revoked_at or superseded_at
+        
+        # If the terminal state time is set and audited_at is later,
+        # someone is trying to re-audit a revoked/superseded receipt
+        if terminal_time and audited_at:
+            if audited_at > terminal_time:
+                return False, f"{status} receipt cannot be re-activated (audited_at ({audited_at}) > {status.lower()}_at ({terminal_time}))"
+        
+        # Also: a REVOKED/SUPERSEDED receipt should not have status = ACTIVE
+        # (handled by the status field itself)
+    
+    # A receipt in REVOKED or SUPERSEDED state is still a valid historical
+    # artifact — the lifecycle is about preventing re-activation, not about
+    # the receipt's existence. The verifier should accept a REVOKED receipt
+    # as a valid historical record but reject attempts to re-verify it.
     
     return True, None
 
@@ -272,7 +359,10 @@ def run_test_suite():
         print(f"{status_color}{status_icon}{NC} {BOLD}{fixture_id}{NC}")
         print(f"  Expected: {expected}", end="")
         if expected_inv:
-            print(f" (Invariant {expected_inv}: {INVARIANTS.get(expected_inv, '?')})")
+            if expected_inv == "multiple":
+                print(" (multiple invariants)")
+            else:
+                print(f" (Invariant {expected_inv}: {INVARIANTS.get(expected_inv, '?')})")
         else:
             print()
         print(f"  Actual:   {actual}")

@@ -4,36 +4,30 @@
   "expected_result": "ACCEPT",
   "expected_reason": "All nine invariants satisfied",
   "invariant_violated": null,
-
   "artifact_type": "EXECUTION_TRACE_RECEIPT",
   "schema_version": "2.0",
   "target_binding_ref": "IMPLEMENTATION_TARGET_BINDING.md",
-
   "claim_scope": {
     "claimed_scope": "avx512_radix2_butterfly_32 element-wise equivalence to butterfly_reference oracle",
-    "verified_scope": "avx512_radix2_butterfly_32 output matches butterfly_reference for 10010 cases (10 boundary + 10000 proptest), all inputs in [0, p)^3, Montgomery domain. Butterfly function only — does not cover avx512_butterfly_pass_32 tail loop or NTT stage orchestration.",
+    "verified_scope": "avx512_radix2_butterfly_32 output matches butterfly_reference for 10010 cases (10 boundary + 10000 proptest), all inputs in [0, p)^3, Montgomery domain. Butterfly function only \u2014 does not cover avx512_butterfly_pass_32 tail loop or NTT stage orchestration.",
     "scope_valid": true
   },
-
   "execution": {
     "invoked": true,
     "backend_selected": "avx512",
     "fallback_used": false,
     "fallback_symbol": null
   },
-
   "fallback_policy": {
     "forbidden": true
   },
-
   "hardware": {
     "cpu_feature_required": "avx512f+avx512dq",
     "cpu_feature_verified": true,
     "cpu_model": "Intel Xeon Platinum 8480+",
     "feature_probe_method": "is_x86_feature_detected!('avx512f') && is_x86_feature_detected!('avx512dq')",
-    "feature_probe_hash": "<sha256 of probe code + runtime output>"
+    "feature_probe_hash": "c3d4e5f6789012345678abcdef0123456789abcdef0123456789abcdef01234567"
   },
-
   "test": {
     "name": "avx512_equivalence_real_path",
     "test_file": "tests/avx512_real_path_equivalence.rs",
@@ -43,33 +37,28 @@
     "oracle": "butterfly_reference",
     "oracle_independence": "butterfly_reference is composed from babybear_mul_reference + babybear_add/sub_reference, sharing no code with the implementation. Reference oracle is in field::babybear::reference, implementation is in avx512_butterfly_32bit. No shared code path."
   },
-
   "observation": {
     "method": "cargo_asm_verification + runtime_feature_probe + test_harness_isolation",
     "observer": "cargo asm --symbol avx512_radix2_butterfly_32 | grep vpmullq; feature_probe_log.json",
-    "observation_hash": "<sha256 of disassembly output + probe log>",
+    "observation_hash": "d4e5f6789012345678abcdef0123456789abcdef0123456789abcdef012345678",
     "independence_note": "Disassembly is produced by the compiler toolchain (cargo asm), not by the code under test. Feature probe is a runtime CPUID check logged to a file separate from the test binary's stdout. The test harness is in tests/avx512_real_path_equivalence.rs, a separate module that imports avx512_butterfly_pass_32 but does not share implementation code."
   },
-
   "domain": {
     "input_type": "MontgomeryBabyBear",
     "output_type": "MontgomeryBabyBear",
     "representation": "xR mod p, R = 2^32",
     "domain_verified": true
   },
-
   "authority": {
     "granted": false,
     "jurisdiction_crossed": false
   },
-
   "provenance": {
     "commit_sha": "5e24faa5caea444f5b8db078dee8a1d7ba1c3909",
     "timestamp": "2026-07-26T00:00:00Z",
     "ci_run_id": null,
     "environment": "Ubuntu 22.04, kernel 5.15.0, AVX-512 hardware required"
   },
-
   "lifecycle": {
     "status": "GENERATED",
     "generated_at": "2026-07-26T00:00:00Z",
@@ -78,15 +67,15 @@
     "revoked_at": null,
     "supersedes": null
   },
-
   "build_identity": {
     "source_commit": "5e24faa5caea444f5b8db078dee8a1d7ba1c3909",
     "compiler": "rustc 1.78.0 (stable)",
     "target_triple": "x86_64-unknown-linux-gnu",
     "cpu_features": "avx512f+avx512dq",
     "cargo_features": "std",
-    "dependency_lock": "<sha256 of Cargo.lock>",
+    "dependency_lock": "b2c3d4e5f6789012345678abcdef0123456789abcdef0123456789abcdef01234",
     "flags": "-C target-feature=+avx512f,+avx512dq -O2",
-    "artifact_hash": "<sha256 of compiled object with real SIMD codegen>"
-  }
+    "artifact_hash": "a1b2c3d4e5f6789012345678abcdef0123456789abcdef0123456789abcdef01"
+  },
+  "observed_artifact_hash": "a1b2c3d4e5f6789012345678abcdef0123456789abcdef0123456789abcdef01"
 }
