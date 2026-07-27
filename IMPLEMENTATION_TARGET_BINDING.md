@@ -1,7 +1,7 @@
 # Implementation Target Binding
 
 **Artifact type:** Verification custody artifact
-**Status:** Template v0.2 (review commit)
+**Status:** Template v2.0 (post-merge canonical)
 **Motivating case:** Issue #27 — Verification Surface Drift in AVX-512 equivalence gate
 **Date:** 2026-07-26
 
@@ -42,7 +42,7 @@ Invariant 6 (Claim Scope Integrity).
 # ============================================================
 
 artifact_type: IMPLEMENTATION_TARGET_BINDING
-schema_version: "0.3"
+schema_version: "2.0"
 
 # --- Claim being bound ---
 claim:
@@ -132,7 +132,7 @@ supersedes:
 
 ```yaml
 artifact_type: IMPLEMENTATION_TARGET_BINDING
-schema_version: "0.3"
+schema_version: "2.0"
 
 claim:
   id: "butterfly.oracle_equivalence.avx512"
