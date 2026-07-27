@@ -1,0 +1,84 @@
+{
+  "fixture_id": "issue27_missing_hardware",
+  "description": "Test 6: Receipt claims avx512 backend but cpu_feature_verified is false. The test was skipped on non-AVX-512 hardware but passed vacuously.",
+  "expected_result": "REJECT",
+  "expected_reason": "Invariant 4 (Hardware Presence): CpuFeaturePresent = false but ClaimedBackend = avx512",
+  "invariant_violated": 4,
+
+  "artifact_type": "EXECUTION_TRACE_RECEIPT",
+  "schema_version": "2.0",
+  "target_binding_ref": "IMPLEMENTATION_TARGET_BINDING.md",
+
+  "claim_scope": {
+    "claimed_scope": "avx512_radix2_butterfly_32 equivalence to butterfly_reference oracle",
+    "verified_scope": "Test skipped — no evidence produced",
+    "scope_valid": false
+  },
+
+  "execution": {
+    "invoked": false,
+    "backend_selected": "scalar",
+    "fallback_used": true,
+    "fallback_symbol": "scalar_butterfly_32",
+    "_trap": "is_avx512_supported() returned false. The test was skipped. The receipt was still generated."
+  },
+
+  "fallback_policy": {
+    "forbidden": true
+  },
+
+  "hardware": {
+    "cpu_feature_required": "avx512f+avx512dq",
+    "cpu_feature_verified": false,
+    "cpu_model": "GitHub Actions runner (no AVX-512)",
+    "feature_probe_method": "is_x86_feature_detected!('avx512f')",
+    "feature_probe_hash": "<sha256>",
+    "_trap": "CPU feature probe returned false. No AVX-512 hardware present. The receipt should not have been generated."
+  },
+
+  "test": {
+    "name": "staged_cross_backend_equivalence",
+    "test_file": "tests/babybear_domain.rs",
+    "test_result": "PASS",
+    "cases_run": 0,
+    "cases_passed": 0,
+    "oracle": "scalar_butterfly_32",
+    "oracle_independence": "Test was skipped — no oracle was invoked.",
+    "_trap": "The test printed 'skipping AVX-512 (not supported)' and passed vacuously. cases_run is 0."
+  },
+
+  "observation": {
+    "method": "none",
+    "observer": "none",
+    "observation_hash": null,
+    "independence_note": "No observation was performed because the test was skipped."
+  },
+
+  "domain": {
+    "input_type": "MontgomeryBabyBear",
+    "output_type": "MontgomeryBabyBear",
+    "representation": "xR mod p, R = 2^32",
+    "domain_verified": false
+  },
+
+  "authority": {
+    "granted": false,
+    "jurisdiction_crossed": false
+  },
+
+  "provenance": {
+    "commit_sha": "0205722cbee5f7043459afddbdeaab0d6732c044",
+    "timestamp": "2026-07-24T08:28:00Z",
+    "ci_run_id": "github-actions-67890",
+    "environment": "Ubuntu 22.04, GitHub Actions runner, no AVX-512"
+  },
+
+  "lifecycle": {
+    "status": "GENERATED",
+    "generated_at": "2026-07-24T08:28:00Z",
+    "audited_at": null,
+    "superseded_at": null,
+    "revoked_at": null,
+    "supersedes": null
+  }
+}

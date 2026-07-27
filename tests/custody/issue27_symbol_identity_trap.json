@@ -1,0 +1,94 @@
+{
+  "fixture_id": "issue27_symbol_identity_trap",
+  "description": "Test 1: Symbol name matches but execution backend does not. The function is named avx512_radix2_butterfly_32 but actually runs scalar arithmetic.",
+  "expected_result": "REJECT",
+  "expected_reason": "Invariant 2 (Target Binding): ExecutedBackend != ClaimedBackend",
+  "invariant_violated": 2,
+
+  "artifact_type": "EXECUTION_TRACE_RECEIPT",
+  "schema_version": "2.0",
+  "target_binding_ref": "IMPLEMENTATION_TARGET_BINDING.md",
+
+  "claim_scope": {
+    "claimed_scope": "avx512_radix2_butterfly_32 equivalence to butterfly_reference oracle",
+    "verified_scope": "avx512_radix2_butterfly_32 output matches butterfly_reference for 10010 cases",
+    "scope_valid": true
+  },
+
+  "execution": {
+    "invoked": true,
+    "backend_selected": "scalar",
+    "fallback_used": false,
+    "fallback_symbol": null,
+    "_trap": "The symbol avx512_radix2_butterfly_32 was invoked, but butterfly() delegates to scalar_butterfly_32(). The name says avx512; the execution says scalar."
+  },
+
+  "fallback_policy": {
+    "forbidden": true
+  },
+
+  "hardware": {
+    "cpu_feature_required": "avx512f+avx512dq",
+    "cpu_feature_verified": true,
+    "cpu_model": "Intel Xeon Platinum 8480+",
+    "feature_probe_method": "is_x86_feature_detected!('avx512f')",
+    "feature_probe_hash": "<sha256>"
+  },
+
+  "test": {
+    "name": "butterfly_reference_agreement",
+    "test_file": "tests/babybear_domain.rs",
+    "test_result": "PASS",
+    "cases_run": 10010,
+    "cases_passed": 10010,
+    "oracle": "butterfly_reference",
+    "oracle_independence": "Reference oracle in field::babybear::reference, separate from implementation."
+  },
+
+  "observation": {
+    "method": "cargo_asm_verification + runtime_feature_probe + test_harness_isolation",
+    "observer": "cargo asm --symbol avx512_radix2_butterfly_32 | grep vpmullq; feature_probe_log.json",
+    "observation_hash": "<sha256>",
+    "independence_note": "Disassembly by compiler toolchain, feature probe by CPUID, test harness in separate module."
+  },
+
+  "domain": {
+    "input_type": "MontgomeryBabyBear",
+    "output_type": "MontgomeryBabyBear",
+    "representation": "xR mod p, R = 2^32",
+    "domain_verified": true
+  },
+
+  "authority": {
+    "granted": false,
+    "jurisdiction_crossed": false
+  },
+
+  "provenance": {
+    "commit_sha": "0205722cbee5f7043459afddbdeaab0d6732c044",
+    "timestamp": "2026-07-24T08:28:00Z",
+    "ci_run_id": null,
+    "environment": "Ubuntu 22.04, kernel 5.15.0"
+  },
+
+  "lifecycle": {
+    "status": "GENERATED",
+    "generated_at": "2026-07-24T08:28:00Z",
+    "audited_at": null,
+    "superseded_at": null,
+    "revoked_at": null,
+    "supersedes": null
+  },
+
+  "target_binding": {
+    "claim": {
+      "backend": "avx512",
+      "symbol": "avx512_radix2_butterfly_32"
+    },
+    "execution": {
+      "symbol": "avx512_radix2_butterfly_32",
+      "backend": "scalar"
+    },
+    "_comment": "Symbol matches. Backend does not. This is the Issue #27 core failure: butterfly() -> scalar_butterfly_32(), but receipt claims avx512."
+  }
+}
