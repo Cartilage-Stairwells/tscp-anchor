@@ -7,9 +7,42 @@ open Core
 def R : Nat := 2 ^ 32
 def R_inv : Nat := 0x38400000
 def NEG_INV : Nat := 0x77FFFFFF
-theorem R_inv_correct : (R * R_inv) % P = 1 := by decide
+
+/-- Bézout identity: R * R_inv = P * NEG_INV + 1.
+
+    This single identity connects the two Montgomery constants and
+    reveals their duality:
+
+    - Taking mod P:  (R * R_inv) % P = (P * NEG_INV + 1) % P = 1
+      → R_inv_correct: R * R_inv ≡ 1 (mod P)  [semantic inverse]
+
+    - Taking mod R:  (P * NEG_INV + 1) % R = 0
+      → neg_inv_correct: P * NEG_INV ≡ -1 (mod R)  [REDC inverse]
+
+    The Bézout coefficient K = -NEG_INV = -(P - 2), which means the
+    two constants are not independent — they are dual inverses in
+    complementary rings.
+
+    Derivation via Extended Euclidean Algorithm:
+      R = 2·P + 268435454
+      P = 7·268435454 + 134217743
+      268435454 = 1·134217743 + 134217711
+      ... (full EEA back-substitution yields R_inv = 943718400) -/
+theorem bezout_identity : R * R_inv = P * NEG_INV + 1 := by decide
+
+/-- Semantic inverse: R * R_inv ≡ 1 (mod P).
+    Derived from the Bézout identity by reduction mod P. -/
+theorem R_inv_correct : (R * R_inv) % P = 1 := by
+  rw [bezout_identity]
+  decide
+
 theorem montgomery_radix_coprime : Nat.gcd R P = 1 := by decide
-theorem neg_inv_correct : (P * NEG_INV + 1) % R = 0 := by decide
+
+/-- REDC inverse: P * NEG_INV ≡ -1 (mod R).
+    Derived from the Bézout identity by reduction mod R. -/
+theorem neg_inv_correct : (P * NEG_INV + 1) % R = 0 := by
+  rw [← bezout_identity]
+  decide
 
 structure MontgomeryElem where
   val : Nat
