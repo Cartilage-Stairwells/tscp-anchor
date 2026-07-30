@@ -1,0 +1,11 @@
+Reviewer path discoverability check
+
+Observation: The verification framework documents (VERIFICATION_INVARIANTS.md,
+IMPLEMENTATION_TARGET_BINDING.md, EXECUTION_TRACE_RECEIPT.md) are present on master
+but not directly linked from the reviewer entry point (REVIEW_RECONCILIATION_v1.md).
+
+Current state: REVIEW_RECONCILIATION_v1.md section 9 was added to address this gap.
+Status: RESOLVED in test scope.
+
+Checked: 2026-07-30
+Checker: test-reviewer
