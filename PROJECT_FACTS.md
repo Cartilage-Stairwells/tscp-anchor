@@ -19,6 +19,19 @@ All statements reference one or more of:
 - Released tags and associated documentation
 - Linked external repositories with reproducible contents
 
+## Document Authority Order
+
+Multiple supporting documents may exist for this project. Public claims in this document take precedence over unpublished or internal materials.
+
+The public claim boundary is:
+
+1. **PROJECT_FACTS.md** — Canonical public claims
+2. **Reviewer packet** — External review scope and guidance
+3. **Engineering documentation** — Implementation details and technical context
+4. **Supporting records** — Additional research and development materials
+
+Documents describing implementation details or development history do not expand the public claims beyond what is established here.
+
 ## Repository Contents
 
 ### Core Artifacts
@@ -48,7 +61,7 @@ Verification artifacts in this repository are organized around:
 - Historical validation artifacts
 - Reviewable source materials
 
-Evidence should be evaluated against the committed repository state and associated release artifacts.
+Evidence should be evaluated against committed repository state and associated release artifacts.
 
 ## Performance Claims Boundary
 
@@ -57,6 +70,29 @@ This repository does not make production-performance guarantees.
 Performance measurements, benchmarks, or hardware-specific results must be evaluated only through their associated reproducible benchmark artifacts and execution conditions.
 
 No performance claim should be inferred from the existence of formal verification artifacts alone.
+
+### Benchmark Interpretation
+
+Historical Criterion benchmark measurements describe isolated computational kernels.
+
+They should not be interpreted as proving equivalent acceleration of complete proving workloads without system-level profiling.
+
+Kernel speedup does not linearly compose into end-to-end pipeline speedup. Cache hierarchy, memory bandwidth, workload scheduling, and system architecture may affect overall performance.
+
+## Frozen Claims Table
+
+| Claim | Status | Evidence |
+|---|---|---|
+| BabyBear field implementation exists | Verified | Source and tests in referenced artifacts |
+| AVX-512 backend exists | Verified | Related implementation repository (access restricted) |
+| SIMD output matches reference paths | Verified | Equivalence testing artifacts (access restricted) |
+| Montgomery arithmetic formalized | Verified | Lean 4 formal modules |
+| Entire NTT formally verified | Not claimed | — |
+| Kernel benchmark measurements exist | Historical benchmark result | Referenced benchmark artifacts |
+| End-to-end zk prover acceleration | Not claimed | — |
+| External cryptographic audit performed | Not claimed | — |
+
+A reviewer should be able to identify claim boundaries from this table alone.
 
 ## Reviewer Entry Points
 
@@ -81,6 +117,17 @@ Recommended review order:
 5. **Related Artifacts**
    - Linked repositories and benchmark materials where applicable
 
+### Reviewer Scope Guidance
+
+A productive review should target a specific boundary rather than attempting to validate the entire project.
+
+Examples:
+
+- One implementation surface
+- One methodology question
+- One architectural comparison
+- One formal boundary
+
 ## Explicit Non-Claims
 
 - **No security audit**: No independent security audit claim is made by this repository.
@@ -97,10 +144,3 @@ git status
 git log --all --oneline --decorate
 git tag -n
 git diff
-```
-
-## Document Metadata
-
-**Document**: PROJECT_FACTS.md  
-**Scope**: Repository-level verified facts  
-**Generated from**: Direct repository inspection  
