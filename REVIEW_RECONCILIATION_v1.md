@@ -144,5 +144,26 @@ The review boundary is:
     Independent verification
 
 Review conclusions should be based on the observable artifact state and documented evidence.
+---
 
+## 9. Verification Framework References
+
+The review boundary is supported by the following canonical documentation:
+
+- `VERIFICATION_INVARIANTS.md`
+  - canonical invariant definitions
+  - gate ordering model
+  - receipt lifecycle states
+  - failure classification rules
+
+- `IMPLEMENTATION_TARGET_BINDING.md`
+  - target identity and binding schema
+
+- `EXECUTION_TRACE_RECEIPT.md`
+  - execution evidence schema
+
+- `VERIFICATION_SURFACE_DRIFT_TEST_PLAN.md`
+  - review surface consistency checks
+
+These documents define verification structure. They do not grant authority, certification, or approval.
 
