@@ -234,4 +234,7 @@ This repository is suitable for research evaluation, technical due diligence, an
 
 - [TSCP Specification](tscp-docs/) — protocol governance documents
 - [Lean 4 kernel](TraceCoreProver.lean) — formal semantics
+- [tscp-pl-phase1](https://github.com/Cartilage-Stairwells/tscp-pl-phase1) — frozen Phase 1 AVX-512 research artifact (public)
+- avx512-butterfly — active AVX-512 implementation & evidence repository (access restricted; contains unreleased evidence, contact for access)
 - [Triune-Oracle](https://github.com/Triune-Oracle) — parent organization
+- [PROJECT_FACTS.md](PROJECT_FACTS.md) — consolidated source-of-truth for external reviewers
