@@ -6,6 +6,9 @@ It implements a zero-knowledge proving stack built on [Plonky3](https://github.c
 
 The system is designed around a principle of *sovereign verifiability*: every claim the protocol makes about its own state can be independently verified by any party with access to the proof and the public parameters, without trusting the prover.
 
+TSCP Anchor is the public verification and documentation layer for the zkSHA-Rx Fly validation effort. Implementation artifacts supporting technical review are maintained in a separate access-controlled repository.
+
+
 ---
 
 ## What This Is
@@ -238,3 +241,37 @@ This repository is suitable for research evaluation, technical due diligence, an
 - [tscp-pl-phase1](https://github.com/Cartilage-Stairwells/tscp-pl-phase1) — frozen Phase 1 AVX-512 research artifact
 - `avx512-butterfly` — AVX-512 BabyBear NTT kernel benchmark artifact (access restricted; contact for access)
 - [PROJECT_FACTS.md](PROJECT_FACTS.md) — verified project facts, evidence boundaries, and reviewer reference
+
+---
+
+## Reviewer Access
+
+The `avx512-butterfly` repository (implementation, benchmarks, evidence) is access-restricted. To request review access:
+
+1. **Email** `adamantinespine@gmail.com` with subject line:
+   - `Review Access Request — zkSHA-Rx Fly` (for technical review)
+   - `Grant Review — zkSHA-Rx Fly` (for grant/funding evaluation)
+   - `Interop Inquiry — zkSHA-Rx Fly` (for interoperability assessment)
+
+   Include:
+   - Your name and affiliation (or "independent")
+   - Your area of expertise
+   - Purpose of the review
+
+2. **You will receive:**
+   - Read access to the restricted repository at a specified commit/tag
+   - Reviewer packet describing artifact scope and boundaries
+   - PROJECT_FACTS.md as the canonical claim reference
+
+3. **Review target:**
+   - `tscp-anchor`: current `master`
+   - `tscp-pl-phase1`: `phase1-freeze`
+   - `avx512-butterfly`: specific commit/tag provided upon access approval
+
+4. **Review scope does not require validation of:**
+   - The entire project
+   - End-to-end prover performance
+   - Production deployment readiness
+
+See PROJECT_FACTS.md — Frozen Claims Table for full claim boundaries.
+
