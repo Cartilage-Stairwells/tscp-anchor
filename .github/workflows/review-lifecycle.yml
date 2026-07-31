@@ -1,0 +1,44 @@
+name: Review Lifecycle Validation
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  review-lifecycle:
+    name: Review Lifecycle Invariants
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run review lifecycle invariant tests
+        run: python3 scripts/run_review_lifecycle_tests.py
+
+  custody-receipts:
+    name: Custody Receipt Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run custody receipt invariant tests
+        run: python3 tests/custody/verify_custody_receipts.py
+
+      - name: Run custody mutation tests
+        run: python3 tests/custody/mutation_tests.py

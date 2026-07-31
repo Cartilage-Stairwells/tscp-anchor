@@ -27,3 +27,6 @@ CORE_HASHES
 .lake/
 lake-manifest.json
 tests/custody/__pycache__/
+node_modules/
+__pycache__/
+*.pyc

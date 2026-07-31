@@ -6,6 +6,9 @@ It implements a zero-knowledge proving stack built on [Plonky3](https://github.c
 
 The system is designed around a principle of *sovereign verifiability*: every claim the protocol makes about its own state can be independently verified by any party with access to the proof and the public parameters, without trusting the prover.
 
+TSCP Anchor is the public verification and documentation layer for the zkSHA-Rx Fly validation effort. Implementation artifacts supporting technical review are maintained in a separate access-controlled repository.
+
+
 ---
 
 ## What This Is
