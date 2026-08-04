@@ -1,6 +1,6 @@
 # PROOF_LIBRARY.md — zkSHA-Rx Lean Formalization Corpus
 
-**State:** B3 frozen (2026-08-03) · 0 axioms · 0 sorries · 75 proven theorems across 9 files
+**State:** B3 frozen (2026-08-03) · 0 axioms · 0 sorries · 83 proven theorems across 10 files
 
 ## Architecture
 
@@ -97,6 +97,20 @@ Examples/*.lean           Reference examples (10 theorems)
 | `dif_invertible` | Butterfly | DIF butterfly is invertible given twiddle inverse | NTT inverse correctness — B5 |
 | `dif_additive` | Butterfly | DIF butterfly is additive (distributes over input addition) | NTT linearity — B4 stage composition |
 
+
+### 10. Stage Composition (B4)
+
+| Lemma | File | Purpose | Expected Reuse |
+|-------|------|---------|----------------|
+| `applyButterfly_untouched` | NTTStage | Identity outside butterfly indices — `k ≠ i ∧ k ≠ j → applyButterfly op v k = v k` | Every stage proof — isolates butterfly effects |
+| `applyButterfly_at_i` | NTTStage | Output at index i — `applyButterfly op v op.i = (dif_butterfly ...).1` | Butterfly output extraction |
+| `applyButterfly_at_j` | NTTStage | Output at index j — `applyButterfly op v op.j = (dif_butterfly ...).2` | Butterfly output extraction |
+| `butterfly_preserves_validity` | NTTStage | Single butterfly preserves field validity (uses B3 `dif_closure`) | Foundation for stage validity |
+| `stage_preserves_validity` | NTTStage | Stage (any number of butterflies) preserves field validity — by induction | **B5**: NTT validity, **B6**: conformance |
+| `stage_deterministic` | NTTStage | Stage application is deterministic (rfl) | **B5**: NTT determinism |
+| `disjoint_butterflies_commute` | NTTStage | Butterflies on disjoint index pairs commute (funext + 4-case split) | **B5**: schedule independence |
+| `stage_concat` | NTTStage | Stage concatenation: `apply (s₁ ++ s₂) = apply s₂ ∘ apply s₁` (via `List.foldl_append`) | **B5**: NTT = list of stages, multi-stage composition |
+
 ### 9. Custody Framework (Layer 0)
 
 | Lemma | File | Purpose | Expected Reuse |
@@ -118,8 +132,8 @@ Examples/*.lean           Reference examples (10 theorems)
 | B1: Layer 0 types | ✅ Frozen | 15 | 0 | 0 |
 | B2: Montgomery arithmetic | ✅ Frozen | 12 | 0 | 0 |
 | B3: Butterfly algebra | ✅ Frozen | 27 | 0 | 0 |
-| B4: DIF/DIT stage composition | Next | — | — | — |
-| B5: Full NTT correctness | Pending | — | — | — |
+| B4: Stage composition | ✅ Frozen | 8 | 0 | 0 |
+| B5: Full NTT correctness | Next | — | — | — |
 | B6: Conformance vectors | Pending | — | — | — |
 
 ## B4 Design Principle
@@ -137,6 +151,7 @@ If B4 requires new modular arithmetic, that lemma belongs in B3, not B4.
 | File | Theorems | Role |
 |------|----------|------|
 | Butterfly.lean | 27 | Butterfly algebra + reusable arithmetic |
+| NTTStage.lean | 8 | Stage composition (B4) |
 | ReviewerSemantics.lean | 15 | Layer 0 semantic types |
 | Montgomery.lean | 12 | Montgomery representation |
 | Examples/NormalizationBridge.lean | 6 | Reference: normalization bridge |
@@ -145,4 +160,4 @@ If B4 requires new modular arithmetic, that lemma belongs in B3, not B4.
 | Evidence/ManifestBinding.lean | 3 | Manifest binding |
 | Core.lean | 2 | NTT admissibility |
 | BridgePreservation.lean | 2 | Semantic bridge |
-| **Total** | **75** | |
+| **Total** | **83** | |

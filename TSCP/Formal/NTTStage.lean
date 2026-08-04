@@ -156,4 +156,14 @@ theorem disjoint_butterflies_commute (op1 op2 : ButterflyOp)
           rw [applyButterfly_untouched op2 _ k hk2i hk2j]
           rw [applyButterfly_untouched op1 _ k hk1i hk1j]
 
+
+/- PART 7: STAGE CONCATENATION — COMPOSITION WORKHORSE FOR B5 -/
+
+/-- Stage concatenation: applying s₁ then s₂ equals applying (s₁ ++ s₂).
+    This is the workhorse for B5: an NTT is a list of stages. -/
+theorem stage_concat (s₁ s₂ : Stage) (v : Nat → Nat) :
+    Stage.apply (s₁ ++ s₂) v = Stage.apply s₂ (Stage.apply s₁ v) := by
+  unfold Stage.apply
+  exact List.foldl_append
+
 end TSCP.Formal.NTTStage
