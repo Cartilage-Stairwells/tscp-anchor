@@ -32,13 +32,17 @@ def BabyBearElem : Type := { n : Nat // n < P }
 def babybear_valid (x : BabyBearElem) : Prop := x.val < P
 
 instance babybear_valid_decidable (x : BabyBearElem) :
-    Decidable (babybear_valid x) :=
-  inferInstanceAs (Decidable (x.val < P))
+    Decidable (babybear_valid x) := by
+  show Decidable (x.val < P)
+  infer_instance
 
 def babybear_kernel : Kernel BabyBearElem where
   admits_proof := babybear_valid
   admits_decidable := babybear_valid_decidable
-  nonempty := ⟨⟨0, by decide⟩, by decide⟩
+  nonempty := by
+    refine ⟨⟨0, ?_⟩, ?_⟩
+    · decide
+    · unfold babybear_valid; decide
 
 /- ===================================================================
    PART 2: THEOREM — proof_valid (discharged from axiom)
