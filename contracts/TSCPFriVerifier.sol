@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
-                                          contract TSCPFriVerifier {                    uint256 public constant FRI_BLOWUP = 2;
+
+// ============================================================================
+// DEVELOPMENT SCAFFOLD ONLY — NOT A CRYPTOGRAPHIC FRI VERIFIER
+// ============================================================================
+// All verification functions (verifyProofOfWork, verifyFriFoldings,
+// verifyQueryResponses, verifyDegreeBound) are placeholders that return
+// true unconditionally. This contract accepts any proof from an authorized
+// caller. It is NOT deployed and NOT part of the zkSHA-Rx verification claim.
+// Do not use this contract in production. A real FRI verifier implementation
+// is future work.
+// ============================================================================
+
+contract TSCPFriVerifier {
+    uint256 public constant FRI_BLOWUP = 2;
     uint256 public constant NUM_FRI_QUERIES = 80;
     uint256 public constant PROOF_OF_WORK_BITS = 16;
     uint256 public constant BABYBEAR_PRIME = 0x78000001;
@@ -49,10 +62,12 @@ pragma solidity ^0.8.19;
         return true;
     }
 
+    // --- PLACEHOLDER VERIFICATION FUNCTIONS (return true unconditionally) ---
     function verifyProofOfWork(uint256 nonce, bytes32 traceCommitment) internal pure returns (bool) { return true; }
     function verifyFriFoldings(uint256[][] calldata foldings) internal pure returns (bool) { return true; }
     function verifyQueryResponses(bytes32 traceCommitment, bytes32 quotientCommitment, FriQueryResponse[] calldata responses) internal pure returns (bool) { return true; }
     function verifyDegreeBound(uint256[] calldata finalPolynomial) internal pure returns (bool) { return true; }
+
     function isTraceVerified(bytes32 traceCommitment) external view returns (bool) { return verifiedTraces[traceCommitment]; }
     function getOWSLSummary() external view returns (string memory status, string memory action, uint256 bitsRemaining, bool permits) {
         status = latestOWSLStatus.status; action = latestOWSLStatus.action; bitsRemaining = latestOWSLStatus.bitsRemaining;
