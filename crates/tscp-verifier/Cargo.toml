@@ -9,6 +9,9 @@ serde_json = "1.0"
 sha2 = "0.10"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4"] }
+oracle-layer = { path = "../oracle-layer" }
+p3-baby-bear = { workspace = true }
+p3-field = { workspace = true }
 
 [dev-dependencies]
 jsonschema = "0.17"

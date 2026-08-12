@@ -2890,6 +2890,9 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "jsonschema",
+ "oracle-layer",
+ "p3-baby-bear",
+ "p3-field",
  "serde",
  "serde_json",
  "sha2",

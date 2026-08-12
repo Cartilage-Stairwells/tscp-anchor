@@ -6,31 +6,26 @@ use std::time::Instant;
 /// not inferred from total pipeline time.
 pub struct PhaseTimer {
     phases: HashMap<String, f64>,  // phase name → elapsed ms
-    active: Option<(String, Instant)>,
+    active: Vec<(String, Instant)>,
 }
 
 impl PhaseTimer {
     pub fn new() -> Self {
         Self {
             phases: HashMap::new(),
-            active: None,
+            active: Vec::new(),
         }
     }
 
-    /// Start timing a named phase. Panics if a phase is already active.
+    /// Start timing a named phase. Supports nested phases.
     pub fn start(&mut self, phase: &str) {
-        if let Some((ref active_phase, _)) = self.active {
-            panic!("Cannot start phase '{}': phase '{}' is already active", phase, active_phase);
-        }
-        self.active = Some((phase.to_string(), Instant::now()));
+        self.active.push((phase.to_string(), Instant::now()));
     }
 
-    /// Stop the currently active phase and record its elapsed time.
+    /// Stop the most recently started phase and record its elapsed time.
     pub fn stop(&mut self) {
-        if let Some((phase, start)) = self.active.take() {
+        if let Some((phase, start)) = self.active.pop() {
             let elapsed_ms = start.elapsed().as_secs_f64() * 1000.0;
-            // Support multiple recordings of same phase by summing or overwriting?
-            // The instructions don't specify, but overwriting or summing is standard. Overwriting is simple.
             self.phases.insert(phase, elapsed_ms);
         } else {
             panic!("Cannot stop phase: no phase is currently active");
