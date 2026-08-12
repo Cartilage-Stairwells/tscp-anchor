@@ -2889,6 +2889,7 @@ name = "tscp-verifier"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "criterion",
  "jsonschema",
  "oracle-layer",
  "p3-baby-bear",
