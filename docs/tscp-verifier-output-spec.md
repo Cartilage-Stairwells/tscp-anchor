@@ -491,3 +491,87 @@ Next execution boundary:
 The next engineering work is the verifier emitter and its contract tests — not more UI changes.
 Additional dashboard refinement at this point would polish the consumer side while the producer
 seam is still empty. The leverage is in making artifact generation impossible to misuse.
+
+---
+
+## Canonical Encoding Rule
+
+**This section defines what the `artifact_digest` covers and how cross-language verifiers must replicate it.**
+
+### The digest covers the exact emitted byte stream
+
+The `artifact_digest` in `EmitResult` is the SHA-256 of the serialized JSON bytes, not a
+hash of the Rust struct's in-memory representation. This is the serialization-before-digest
+invariant.
+
+```
+artifact_digest = SHA-256(emitted_json_bytes)
+```
+
+A verifier receiving the artifact file recomputes this as:
+
+```python
+import hashlib
+digest = hashlib.sha256(open("artifact.json", "rb").read()).hexdigest()
+assert digest == artifact["provenance"]["artifact_digest"]
+```
+
+### Canonical encoding is the emitter's byte stream
+
+The reference emitter uses `serde_json::to_string()` which produces:
+
+- **No spaces** around `:` or `,` separators
+- **Field order:** struct definition order (serde preserves this in Rust)
+- **Float encoding:** Grisu3 algorithm (serde_json default)
+- **Null:** `null` for `Option::None`
+- **Unicode:** unescaped (UTF-8 passthrough for printable chars)
+
+A cross-language verifier that needs to reproduce the digest must replicate this exactly.
+The practical rule: **do not re-serialize to verify; re-read the emitted bytes.**
+
+The safe verification path is:
+
+```
+Read artifact.json bytes as-is
+    │
+    ▼
+SHA-256(those bytes) == provenance.artifact_digest?
+    │
+    ▼
+If yes: byte stream is authentic
+Parse JSON to check field values
+```
+
+The unsafe path (do not do this):
+
+```
+Parse artifact.json into object
+    │
+    ▼
+Re-serialize to string           ← different encoder = different bytes
+    │
+    ▼
+SHA-256(re-serialized)          ← will not match
+```
+
+### Float precision across language boundaries
+
+`serde_json` (Rust) and standard JSON encoders in Go, Python, and JavaScript use different
+floating-point rendering algorithms (Grisu3, Ryu, dtoa). For most values they produce
+identical output; for edge cases they diverge.
+
+**v1 mitigation:** Since the digest covers the emitted byte stream rather than re-encoded
+content, float divergence only matters if a future system re-emits artifacts rather than
+forwarding the original bytes. As long as verifiers read-then-hash (not parse-then-reserialize),
+this is not a problem.
+
+**Future note:** If artifacts ever cross organizational boundaries where re-serialization is
+unavoidable, adopt a fixed-precision encoding rule (e.g. all floats as 6 decimal places,
+or switch timing values to integer microseconds). That would be a v2 schema change.
+
+### Producer requirement (added)
+
+Emitter MUST use `serde_json::to_string()` (compact, no pretty-print) for the canonical
+artifact bytes before computing the digest. `serde_json::to_string_pretty()` produces
+different bytes and a different digest — it must not be used for digest computation even if
+used for display.
