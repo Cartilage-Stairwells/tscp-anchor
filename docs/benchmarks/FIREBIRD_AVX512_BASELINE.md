@@ -39,26 +39,26 @@ It establishes **one** reproducible CPU AVX-512 reference environment.
 ## Provenance Chain
 
 ```
-f8c617c1  docs: add verifier output specification v1 (Phase 3 contract)
+16c55a24  docs: add verifier output specification v1 (Phase 3 contract)
     │
-    ├─ b4a92734  docs(verifier-spec): canonical encoding rule
+    ├─ cc31d21f  docs(verifier-spec): canonical encoding rule
     │
-    ├─ 1caa8ac9  feat(verifier): emitter core (artifact, provenance, timing, serialize-before-digest)
+    ├─ 3f435d89  feat(verifier): emitter core (artifact, provenance, timing, serialize-before-digest)
     │
-    ├─ 4d4064db  feat(verifier): oracle bridge + PhaseTimer instrumentation
+    ├─ a04b73f9  feat(verifier): oracle bridge + PhaseTimer instrumentation
     │
-    ├─ 4f984929  feat(verifier): prove_and_emit pipeline + PhaseTimer merge
+    ├─ 97f12bc0  feat(verifier): prove_and_emit pipeline + PhaseTimer merge
     │             └─ code under benchmark
     │
-    └─ baae493f  bench(verifier): Criterion evidence harness (bench file only; no verifier code changes)
+    └─ ae51e194  bench(verifier): Criterion evidence harness (bench file only; no verifier code changes)
                   └─ Criterion benchmark executed
                          │
                          ▼
                   firebird_74c6e5f  (evidence capture)
                          │
-                         └─ 13715fdc  clean repository state
+                         └─ 6b5839dd  clean repository state
                                 │
-                                └─ e9b39702  attestation documentation (Git tag target)
+                                └─ e81efb78  attestation documentation (this commit, Git tag target)
 ```
 
 ### Commit Hash Mapping
@@ -68,19 +68,18 @@ commit hashes. The commits were subsequently re-signed with GPG signatures to
 satisfy the repository's commit-signing rules. The content is identical; only the
 hashes changed.
 
-| Role | Hash in evidence record | Hash in repository (signed) |
+| Role | Hash in evidence record | Hash in repository (signed, GitHub-verified) |
 |---|---|---|
-| Phase 3 contract | `da57bdd9` | `f8c617c1` |
-| Canonical encoding | `8c766108` | `b4a92734` |
-| Emitter core | `bb121851` | `1caa8ac9` |
-| Oracle bridge | `a3ae814c` | `4d4064db` |
-| Code under test | `57b695c0` | `4f984929` |
-| Benchmark infrastructure | `d4c63c38` | `baae493f` |
-| Clean repository state | `52f4ef3c` | `13715fdc` |
-| Attestation docs | `8edb636a` | `e9b39702` |
+| Phase 3 contract | `da57bdd9` | `16c55a24` |
+| Canonical encoding | `8c766108` | `cc31d21f` |
+| Emitter core | `bb121851` | `3f435d89` |
+| Oracle bridge | `a3ae814c` | `a04b73f9` |
+| Code under test | `57b695c0` | `97f12bc0` |
+| Benchmark infrastructure | `d4c63c38` | `ae51e194` |
+| Clean repository state | `52f4ef3c` | `6b5839dd` |
 
-**Reproduction note:** Checkout `baae493f` for the benchmark harness. The oracle-layer
-and verifier code at `baae493f` is identical to `4f984929` — the bench commit only adds
+**Reproduction note:** Checkout `ae51e194` for the benchmark harness. The oracle-layer
+and verifier code at `ae51e194` is identical to `97f12bc0` — the bench commit only adds
 the bench file and criterion dependency. Build with
 `RUSTFLAGS="-C target-cpu=icelake-server"` and run:
 `cargo bench -p tscp-verifier --bench evidence_baseline -- --save-baseline evidence_baseline`
@@ -184,13 +183,13 @@ LAYER 3 — INTERPRETATION    future analysis           (evolves freely)
 
 The evidence baseline was sealed after an 8-point audit:
 
-1. Benchmark infrastructure committed (`baae493f`, originally `d4c63c38`)
+1. Benchmark infrastructure committed (`ae51e194`, originally `d4c63c38`)
 2. Diff contains only intended benchmark/evidence infrastructure
-3. Evidence bundle records the exact repository commit under test (`4f984929`, originally `57b695c0`)
+3. Evidence bundle records the exact repository commit under test (`97f12bc0`, originally `57b695c0`)
 4. Criterion `estimates.json` is canonical; PhaseTimer is instrumentation
 5. Bundle hash verified after all final edits
 6. Freeze script revalidated in evidence mode
-7. Working tree clean at HEAD (`13715fdc`, originally `52f4ef3c`)
+7. Working tree clean at HEAD (`6b5839dd`, originally `52f4ef3c`)
 8. Final commit hash recorded alongside `firebird_74c6e5f`
 
 All 8 checks: **PASSED**.
