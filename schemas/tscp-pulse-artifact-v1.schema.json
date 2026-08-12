@@ -1,0 +1,183 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tscp.dev/schemas/pulse-artifact/v1.0",
+  "title": "TscpPulseArtifact",
+  "description": "Verifier output artifact. Produced by the TSCP reference emitter. Consumed by TscpAdapter. This schema is the trust boundary — both producer and consumer are bound to it. Do not modify without a version bump.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "created_at",
+    "provenance",
+    "verification",
+    "benchmark",
+    "telemetry"
+  ],
+  "properties": {
+
+    "schema_version": {
+      "type": "string",
+      "const": "tscp-pulse-artifact-v1",
+      "description": "Artifact schema identifier. Bumped only on breaking changes. Adapter must reject unknown versions."
+    },
+
+    "artifact_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUIDv4. Unique per artifact emission. Not a commit SHA — identifies this specific output file."
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO 8601 timestamp. Real artifact creation time from the emitter. Must not be hardcoded, deterministic, or faked. A frozen timestamp creates 'reproducible but false' artifacts."
+    },
+
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest_sha256", "repo_commit", "binary_digest", "proof_digest", "transcript_digest"],
+      "description": "Full backward provenance chain. Given these five fields, an independent verifier can checkout the commit, rebuild, verify the binary matches, and recheck the proof.",
+      "properties": {
+        "manifest_sha256": {
+          "type": "string",
+          "description": "SHA-256 of the frozen benchmark_manifest.json. The immutable anchor. References the environment under which this artifact was produced."
+        },
+        "repo_commit": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 40,
+          "description": "Full 40-char git SHA of tscp-anchor at artifact generation time. Must match manifest.commits.tscp_anchor.sha."
+        },
+        "binary_digest": {
+          "type": "string",
+          "description": "SHA-256 of the verifier/prover binary. A different binary digest means a different build environment — results are not directly comparable."
+        },
+        "proof_digest": {
+          "type": "string",
+          "description": "SHA-256 of the proof bytes. Must be stable across reruns for the same (commit, inputs). A changed proof_digest signals non-determinism or a prover change."
+        },
+        "transcript_digest": {
+          "type": "string",
+          "description": "SHA-256 of the Fiat-Shamir transcript bytes. Transcript stability is a separate invariant from proof stability."
+        }
+      }
+    },
+
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "verifier_unchanged", "correctness_gate_passed", "fiat_shamir_rounds", "public_inputs_hash"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pass", "fail", "error"],
+          "description": "Outcome of verify(). 'pass' = valid proof. 'fail' = invalid proof (constraint violation). 'error' = emitter-side exception."
+        },
+        "verifier_unchanged": {
+          "type": "boolean",
+          "description": "True iff the verification key and circuit are identical to the reference. A GPU speedup claim is only valid when this is true — the verifier must be the same on both sides of the comparison."
+        },
+        "correctness_gate_passed": {
+          "type": "boolean",
+          "description": "True iff status=pass AND proof_digest is stable AND transcript_digest is stable. If false, any performance numbers in this artifact are invalid and must not be cited."
+        },
+        "fiat_shamir_rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of Fiat-Shamir challenge rounds. Must be stable for the same circuit. Drift here indicates a protocol change."
+        },
+        "public_inputs_hash": {
+          "type": "string",
+          "description": "SHA-256 of the public inputs. Ensures the verified statement is what was intended."
+        }
+      }
+    },
+
+    "benchmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layer", "trace_size", "integrity", "performance"],
+      "description": "Benchmark measurements. Two distinct sub-objects: integrity (prove+verify, not for speedup claims) and performance (prove only, use for speedup claims).",
+      "properties": {
+
+        "layer": {
+          "type": "string",
+          "enum": ["kernel", "primitive_integration", "end_to_end"],
+          "description": "Which benchmark layer this artifact covers. One artifact = one layer. Do not conflate. kernel=AVX-512 butterfly etc; primitive_integration=sumcheck/FRI/transcript; end_to_end=full pipeline."
+        },
+
+        "trace_size": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "NTT trace size. Should be a power of two. E.g. 256, 1024, 4096, 16384, 65536."
+        },
+
+        "integrity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["proving_ms", "verification_ms", "total_pipeline_ms"],
+          "description": "Integrity benchmark: prove() + verify() + digest check, all timed. Answers: is the prover correct and what does the full pipeline cost? Do NOT use for speedup claims — verification cost is included.",
+          "properties": {
+            "proving_ms":      { "type": "number", "description": "prove() wall time within the integrity run." },
+            "verification_ms": { "type": "number", "description": "verify() wall time. Counted inside integrity." },
+            "total_pipeline_ms": { "type": "number", "description": "prove + verify + gate. The end-to-end correctness-verified cost." }
+          }
+        },
+
+        "performance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "proving_ms",
+            "transcript_generation_ms",
+            "sumcheck_ms",
+            "verification_outside_timed_region"
+          ],
+          "description": "Performance benchmark: prove() ONLY in the timed region. verify() runs outside the timed region but must pass before results are accepted. USE THIS for CPU→GPU speedup claims, not integrity numbers.",
+          "properties": {
+            "proving_ms": {
+              "type": "number",
+              "description": "Timed region: prove() only. This is the number for speedup ratio calculations."
+            },
+            "transcript_generation_ms": { "type": "number" },
+            "sumcheck_ms":              { "type": "number" },
+            "fri_ms":                   { "type": ["number", "null"], "description": "null if FRI is not applicable for this layer." },
+            "verification_outside_timed_region": {
+              "type": "boolean",
+              "const": true,
+              "description": "Must be true. Verification ran outside the timed region and passed. A performance artifact without this being true is invalid and must be rejected by the adapter."
+            }
+          }
+        },
+
+        "statistics": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Aggregate statistics across repetitions. Populated when repetitions > 1.",
+          "properties": {
+            "repetitions":  { "type": "integer", "minimum": 1 },
+            "median_ms":    { "type": "number" },
+            "min_ms":       { "type": "number" },
+            "max_ms":       { "type": "number" },
+            "stddev_ms":    { "type": "number" }
+          }
+        }
+      }
+    },
+
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["peak_rss_kb", "proof_size_bytes", "transcript_size_bytes"],
+      "properties": {
+        "peak_rss_kb":           { "type": "integer", "minimum": 0 },
+        "proof_size_bytes":      { "type": "integer", "minimum": 0 },
+        "transcript_size_bytes": { "type": "integer", "minimum": 0 },
+        "binary_size_bytes":     { "type": "integer", "minimum": 0 }
+      }
+    }
+
+  }
+}
