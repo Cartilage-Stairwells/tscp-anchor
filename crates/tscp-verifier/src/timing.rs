@@ -4,6 +4,8 @@ use std::time::Instant;
 /// Records wall-clock time for named benchmark phases.
 /// Phase boundaries must be measured where the work occurs,
 /// not inferred from total pipeline time.
+///
+/// Supports nested phases (stack-based) and timer merging (set/merge).
 pub struct PhaseTimer {
     phases: HashMap<String, f64>,  // phase name → elapsed ms
     active: Vec<(String, Instant)>,
@@ -29,6 +31,21 @@ impl PhaseTimer {
             self.phases.insert(phase, elapsed_ms);
         } else {
             panic!("Cannot stop phase: no phase is currently active");
+        }
+    }
+
+    /// Set a phase's elapsed time directly (for merging timers).
+    /// This does NOT use wall-clock measurement — it sets an arbitrary value.
+    /// Use when combining results from separate timer instances.
+    pub fn set(&mut self, phase: &str, ms: f64) {
+        self.phases.insert(phase.to_string(), ms);
+    }
+
+    /// Merge another timer's phases into this one.
+    /// Values from `other` overwrite existing values for the same phase.
+    pub fn merge(&mut self, other: &PhaseTimer) {
+        for (phase, ms) in &other.phases {
+            self.phases.insert(phase.clone(), *ms);
         }
     }
 

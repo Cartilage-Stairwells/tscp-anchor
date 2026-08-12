@@ -176,6 +176,65 @@ pub fn emit(
     })
 }
 
+
+/// Convenience: run the full prove → verify → emit pipeline.
+///
+/// This function:
+/// 1. Calls oracle_bridge::prove_instrumented_internal to get proof bytes, timings, and typed proof
+/// 2. Calls oracle_bridge::verify_instrumented_with_proof to verify the proof
+/// 3. Merges the prove and verify timers (using PhaseTimer::merge)
+/// 4. Calls emit() with the merged timer
+///
+/// The caller provides the EmitterConfig (manifest hash, repo path, layer, trace size)
+/// and the proving inputs (evals, domain, num_queries).
+///
+/// Returns an EmitResult with the artifact JSON and digest, or an error.
+pub fn prove_and_emit(
+    config: &EmitterConfig,
+    evals: Vec<p3_baby_bear::BabyBear>,
+    domain: Vec<p3_baby_bear::BabyBear>,
+    num_queries: usize,
+) -> Result<EmitResult, EmitError> {
+    use crate::oracle_bridge;
+
+    // 1. Prove with instrumentation
+    let prove_result = oracle_bridge::prove_instrumented_internal(evals, domain.clone(), num_queries)
+        .map_err(|e| EmitError::ProvenanceError(format!("Bridge error: {}", e)))?;
+
+    // 2. Verify with instrumentation
+    let verify_result = oracle_bridge::verify_instrumented_with_proof(
+        &domain,
+        &prove_result.proof,
+        num_queries,
+    ).map_err(|e| EmitError::ProvenanceError(format!("Bridge error: {}", e)))?;
+
+    // 3. Merge timers: combine prove phases + verification phase
+    let mut merged_timer = prove_result.timer;
+    merged_timer.merge(&verify_result.timer);
+
+    // 4. Build telemetry
+    let telemetry = Telemetry {
+        peak_rss_kb: crate::provenance::peak_rss_kb(),
+        proof_size_bytes: prove_result.proof_bytes.len(),
+        transcript_size_bytes: prove_result.transcript_bytes.len(),
+        binary_size_bytes: std::env::current_exe().ok()
+            .and_then(|p| std::fs::metadata(p).ok())
+            .map(|m| m.len() as usize),
+    };
+
+    // 5. Emit artifact with merged timer and verification status
+    let verification_ok = verify_result.verification_ok;
+
+    emit(
+        config,
+        &prove_result.proof_bytes,
+        &prove_result.transcript_bytes,
+        verification_ok,
+        &merged_timer,
+        telemetry,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
