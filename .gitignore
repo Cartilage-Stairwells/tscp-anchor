@@ -20,13 +20,16 @@ events.cbor
 
 # OS noise
 .DS_Store
-tscp-core-seal-*.tar.gz
-build-*.log
-CORE_COMMIT
-CORE_HASHES
+
+# Generated benchmark output (preserved in evidence bundle, not tracked)
+benchmark_results.json
+
+# Formal verification build artifacts
 .lake/
 lake-manifest.json
+
+# Python / Node
 tests/custody/__pycache__/
-node_modules/
 __pycache__/
 *.pyc
+node_modules/
