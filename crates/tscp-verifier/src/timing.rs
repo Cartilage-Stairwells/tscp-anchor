@@ -7,7 +7,7 @@ use std::time::Instant;
 ///
 /// Supports nested phases (stack-based) and timer merging (set/merge).
 pub struct PhaseTimer {
-    phases: HashMap<String, f64>,  // phase name → elapsed ms
+    phases: HashMap<String, f64>, // phase name → elapsed ms
     active: Vec<(String, Instant)>,
 }
 

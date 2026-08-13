@@ -1,9 +1,9 @@
 use crate::artifact::{
-    PulseArtifact, Provenance, Verification, VerificationStatus, Benchmark,
-    IntegrityMeasurement, PerformanceMeasurement, Telemetry, BenchmarkLayer,
+    Benchmark, BenchmarkLayer, IntegrityMeasurement, PerformanceMeasurement, Provenance,
+    PulseArtifact, Telemetry, Verification, VerificationStatus,
 };
 use crate::provenance;
-use crate::timing::{PhaseTimer, phases};
+use crate::timing::{phases, PhaseTimer};
 
 use serde_json;
 
@@ -16,7 +16,7 @@ pub struct EmitResult {
 
 pub struct EmitterConfig {
     pub manifest_sha256: String,
-    pub repo_path: String,     // path to tscp-anchor repo, for git SHA extraction
+    pub repo_path: String, // path to tscp-anchor repo, for git SHA extraction
     pub layer: BenchmarkLayer, // from artifact.rs
     pub trace_size: usize,
 }
@@ -126,7 +126,10 @@ pub fn emit(
     #[cfg(debug_assertions)]
     {
         // Enforce the constraint invariant in debug builds
-        debug_assert!(performance.verification_outside_timed_region, "verification_outside_timed_region must always be true");
+        debug_assert!(
+            performance.verification_outside_timed_region,
+            "verification_outside_timed_region must always be true"
+        );
     }
 
     let benchmark = Benchmark {
@@ -145,7 +148,8 @@ pub fn emit(
         telemetry.peak_rss_kb = provenance::peak_rss_kb();
     }
     if telemetry.binary_size_bytes.is_none() {
-        telemetry.binary_size_bytes = std::env::current_exe().ok()
+        telemetry.binary_size_bytes = std::env::current_exe()
+            .ok()
             .and_then(|p| std::fs::metadata(p).ok())
             .map(|m| m.len() as usize);
     }
@@ -176,7 +180,6 @@ pub fn emit(
     })
 }
 
-
 /// Convenience: run the full prove → verify → emit pipeline.
 ///
 /// This function:
@@ -198,15 +201,14 @@ pub fn prove_and_emit(
     use crate::oracle_bridge;
 
     // 1. Prove with instrumentation
-    let prove_result = oracle_bridge::prove_instrumented_internal(evals, domain.clone(), num_queries)
-        .map_err(|e| EmitError::ProvenanceError(format!("Bridge error: {}", e)))?;
+    let prove_result =
+        oracle_bridge::prove_instrumented_internal(evals, domain.clone(), num_queries)
+            .map_err(|e| EmitError::ProvenanceError(format!("Bridge error: {}", e)))?;
 
     // 2. Verify with instrumentation
-    let verify_result = oracle_bridge::verify_instrumented_with_proof(
-        &domain,
-        &prove_result.proof,
-        num_queries,
-    ).map_err(|e| EmitError::ProvenanceError(format!("Bridge error: {}", e)))?;
+    let verify_result =
+        oracle_bridge::verify_instrumented_with_proof(&domain, &prove_result.proof, num_queries)
+            .map_err(|e| EmitError::ProvenanceError(format!("Bridge error: {}", e)))?;
 
     // 3. Merge timers: combine prove phases + verification phase
     let mut merged_timer = prove_result.timer;
@@ -217,7 +219,8 @@ pub fn prove_and_emit(
         peak_rss_kb: crate::provenance::peak_rss_kb(),
         proof_size_bytes: prove_result.proof_bytes.len(),
         transcript_size_bytes: prove_result.transcript_bytes.len(),
-        binary_size_bytes: std::env::current_exe().ok()
+        binary_size_bytes: std::env::current_exe()
+            .ok()
             .and_then(|p| std::fs::metadata(p).ok())
             .map(|m| m.len() as usize),
     };
@@ -247,7 +250,7 @@ mod tests {
             "../../schemas/tscp-pulse-artifact-v1.schema.json",
             "schemas/tscp-pulse-artifact-v1.schema.json",
             "../schemas/tscp-pulse-artifact-v1.schema.json",
-            "/app/repos/tscp-anchor/schemas/tscp-pulse-artifact-v1.schema.json"
+            "/app/repos/tscp-anchor/schemas/tscp-pulse-artifact-v1.schema.json",
         ];
         for p in &paths {
             if Path::new(p).exists() {
@@ -262,7 +265,7 @@ mod tests {
             "../../fixtures/phase3/golden_artifact_v1.json",
             "fixtures/phase3/golden_artifact_v1.json",
             "../fixtures/phase3/golden_artifact_v1.json",
-            "/app/repos/tscp-anchor/fixtures/phase3/golden_artifact_v1.json"
+            "/app/repos/tscp-anchor/fixtures/phase3/golden_artifact_v1.json",
         ];
         for p in &paths {
             if Path::new(p).exists() {
@@ -291,10 +294,11 @@ mod tests {
     #[test]
     fn test_golden_artifact_structure() {
         let golden_str = fs::read_to_string(get_golden_path()).unwrap();
-        
+
         // 1. Verify we can deserialize the golden artifact into our PulseArtifact struct
-        let artifact: PulseArtifact = serde_json::from_str(&golden_str).expect("Failed to deserialize golden artifact");
-        
+        let artifact: PulseArtifact =
+            serde_json::from_str(&golden_str).expect("Failed to deserialize golden artifact");
+
         // Check some values in the golden artifact
         assert_eq!(artifact.schema_version, "tscp-pulse-artifact-v1");
         assert_eq!(artifact.verification.status, VerificationStatus::Pass);
@@ -310,7 +314,8 @@ mod tests {
     #[test]
     fn test_serialization_before_digest_invariant() {
         let config = EmitterConfig {
-            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2".to_string(),
+            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2"
+                .to_string(),
             repo_path: "../..".to_string(), // Adjust repo path as needed for test location
             layer: BenchmarkLayer::PrimitiveIntegration,
             trace_size: 1024,
@@ -333,7 +338,7 @@ mod tests {
         // Independent SHA-256 calculation over serialized JSON string bytes
         let expected_digest = provenance::sha256_hex(result.json.as_bytes());
         assert_eq!(result.artifact_digest, expected_digest);
-        
+
         // Verify JSON compliance
         validate_json_compliance(&result.json);
     }
@@ -341,7 +346,8 @@ mod tests {
     #[test]
     fn test_verification_outside_timed_region_always_true() {
         let config = EmitterConfig {
-            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2".to_string(),
+            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2"
+                .to_string(),
             repo_path: "../..".to_string(),
             layer: BenchmarkLayer::Kernel,
             trace_size: 256,
@@ -359,27 +365,38 @@ mod tests {
         // Case 1: verification_ok = true
         let res_ok = emit(&config, proof, transcript, true, &timer, telemetry.clone()).unwrap();
         let art_ok: PulseArtifact = serde_json::from_str(&res_ok.json).unwrap();
-        assert!(art_ok.benchmark.performance.verification_outside_timed_region);
+        assert!(
+            art_ok
+                .benchmark
+                .performance
+                .verification_outside_timed_region
+        );
         validate_json_compliance(&res_ok.json);
 
         // Case 2: verification_ok = false
         let res_fail = emit(&config, proof, transcript, false, &timer, telemetry).unwrap();
         let art_fail: PulseArtifact = serde_json::from_str(&res_fail.json).unwrap();
-        assert!(art_fail.benchmark.performance.verification_outside_timed_region);
+        assert!(
+            art_fail
+                .benchmark
+                .performance
+                .verification_outside_timed_region
+        );
         validate_json_compliance(&res_fail.json);
     }
 
     #[test]
     fn test_correctness_gate_fail_path() {
         let config = EmitterConfig {
-            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2".to_string(),
+            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2"
+                .to_string(),
             repo_path: "../..".to_string(),
             layer: BenchmarkLayer::EndToEnd,
             trace_size: 16384,
         };
         let proof = b"bad proof";
         let transcript = b"bad transcript";
-        
+
         let mut timer = PhaseTimer::new();
         timer.start(phases::PROVING_TOTAL);
         timer.stop();
@@ -398,7 +415,7 @@ mod tests {
 
         assert_eq!(art.verification.status, VerificationStatus::Fail);
         assert!(!art.verification.correctness_gate_passed);
-        
+
         // Fail path timings must be zeroed out
         assert_eq!(art.benchmark.integrity.proving_ms, 0.0);
         assert_eq!(art.benchmark.integrity.verification_ms, 0.0);
@@ -414,7 +431,8 @@ mod tests {
     #[test]
     fn test_timestamp_is_not_hardcoded() {
         let config = EmitterConfig {
-            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2".to_string(),
+            manifest_sha256: "a3f1e9b2c84d7f0e1a5b6c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2"
+                .to_string(),
             repo_path: "../..".to_string(),
             layer: BenchmarkLayer::Kernel,
             trace_size: 512,
