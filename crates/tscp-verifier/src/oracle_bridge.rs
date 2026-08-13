@@ -14,15 +14,15 @@
 //!   artifact.rs      → sees only Vec<u8> (no oracle-layer types)
 //!   emitter.rs       → consumes both, builds PulseArtifact
 
-use crate::timing::{PhaseTimer, phases};
+use crate::timing::{phases, PhaseTimer};
 
-use oracle_layer::fri_query::{fri_prove, fri_verify, FriProof};
 use oracle_layer::fri_protocol::Challenger;
-use oracle_layer::sumcheck::sumcheck_round;
+use oracle_layer::fri_query::{fri_prove, fri_verify, FriProof};
 use oracle_layer::oracle::MleOracle;
+use oracle_layer::sumcheck::sumcheck_round;
 
 use p3_baby_bear::BabyBear;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Error type for all oracle-bridge operations.
 #[derive(Debug)]
@@ -50,8 +50,8 @@ impl std::error::Error for BridgeError {}
 /// This preserves the architectural boundary: the emitter only sees Vec<u8>.
 #[derive(Serialize, Deserialize)]
 pub struct SerializableFriProof {
-    pub roots: Vec<String>,       // Merkle roots as debug strings
-    pub final_value: String,      // Final constant as debug string
+    pub roots: Vec<String>,  // Merkle roots as debug strings
+    pub final_value: String, // Final constant as debug string
     pub query_indices: Vec<usize>,
     pub num_query_rounds: usize,
     pub num_fold_rounds: usize,
@@ -60,7 +60,10 @@ pub struct SerializableFriProof {
 /// Convert a FriProof to its serializable form.
 fn proof_to_serializable(proof: &FriProof) -> SerializableFriProof {
     SerializableFriProof {
-        roots: proof.commitment.roots.iter()
+        roots: proof
+            .commitment
+            .roots
+            .iter()
             .map(|r| format!("{:?}", r))
             .collect(),
         final_value: format!("{:?}", proof.commitment.final_value),
@@ -102,9 +105,8 @@ pub struct ProveResultInternal {
     pub transcript_bytes: Vec<u8>,
     pub timer: PhaseTimer,
     pub fiat_shamir_rounds: u32,
-    pub proof: FriProof,  // kept for in-process verification
+    pub proof: FriProof, // kept for in-process verification
 }
-
 
 impl std::fmt::Debug for ProveResult {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -208,7 +210,10 @@ pub fn prove_instrumented_internal(
     let proof_bytes = serialize_proof(&proof)?;
 
     // Transcript: serialize commitment roots as proxy for Fiat-Shamir transcript
-    let transcript_data = proof.commitment.roots.iter()
+    let transcript_data = proof
+        .commitment
+        .roots
+        .iter()
         .map(|r| format!("{:?}", r))
         .collect::<Vec<_>>()
         .join("\n");
@@ -292,21 +297,38 @@ mod tests {
         let evals: Vec<F> = (1..=n).map(|i| F::new(i as u32)).collect();
         let domain: Vec<F> = (1..=n).map(|i| F::new((i * 5 + 1) as u32)).collect();
 
-        let prove_result = prove_instrumented_internal(evals, domain.clone(), 20)
-            .expect("prove should succeed");
+        let prove_result =
+            prove_instrumented_internal(evals, domain.clone(), 20).expect("prove should succeed");
 
-        assert!(!prove_result.proof_bytes.is_empty(), "proof bytes must not be empty");
-        assert!(!prove_result.transcript_bytes.is_empty(), "transcript bytes must not be empty");
+        assert!(
+            !prove_result.proof_bytes.is_empty(),
+            "proof bytes must not be empty"
+        );
+        assert!(
+            !prove_result.transcript_bytes.is_empty(),
+            "transcript bytes must not be empty"
+        );
         assert!(prove_result.timer.get_or_zero(phases::PROVING_TOTAL) >= 0.0);
         assert!(prove_result.timer.get_or_zero(phases::FRI) >= 0.0);
-        assert!(prove_result.timer.get_or_zero(phases::TRANSCRIPT_GENERATION) >= 0.0);
-        assert!(prove_result.fiat_shamir_rounds > 0, "must have at least 1 Fiat-Shamir round");
+        assert!(
+            prove_result
+                .timer
+                .get_or_zero(phases::TRANSCRIPT_GENERATION)
+                >= 0.0
+        );
+        assert!(
+            prove_result.fiat_shamir_rounds > 0,
+            "must have at least 1 Fiat-Shamir round"
+        );
 
         // Verify using the original typed proof
         let verify_result = verify_instrumented_with_proof(&domain, &prove_result.proof, 20)
             .expect("verify should succeed");
 
-        assert!(verify_result.verification_ok, "verification must pass for a valid proof");
+        assert!(
+            verify_result.verification_ok,
+            "verification must pass for a valid proof"
+        );
         assert!(verify_result.timer.get_or_zero(phases::VERIFICATION) >= 0.0);
     }
 
@@ -319,7 +341,11 @@ mod tests {
         assert!(result.is_err());
         match result.unwrap_err() {
             BridgeError::InvalidInput(msg) => {
-                assert!(msg.contains("power of two"), "error should mention power of two: {}", msg);
+                assert!(
+                    msg.contains("power of two"),
+                    "error should mention power of two: {}",
+                    msg
+                );
             }
             _ => panic!("expected InvalidInput error"),
         }
@@ -344,7 +370,11 @@ mod tests {
         assert!(result.is_err());
         match result.unwrap_err() {
             BridgeError::InvalidInput(msg) => {
-                assert!(msg.contains("domain.len()"), "error should mention length mismatch: {}", msg);
+                assert!(
+                    msg.contains("domain.len()"),
+                    "error should mention length mismatch: {}",
+                    msg
+                );
             }
             _ => panic!("expected InvalidInput error"),
         }
@@ -356,15 +386,17 @@ mod tests {
         let evals: Vec<F> = (1..=n).map(|i| F::new(i as u32)).collect();
         let domain: Vec<F> = (1..=n).map(|i| F::new((i * 5 + 1) as u32)).collect();
 
-        let result = prove_instrumented(evals, domain, 20)
-            .expect("prove should succeed");
+        let result = prove_instrumented(evals, domain, 20).expect("prove should succeed");
 
         // Proof bytes must be valid JSON
-        let parsed: serde_json::Value = serde_json::from_slice(&result.proof_bytes)
-            .expect("proof bytes must be valid JSON");
+        let parsed: serde_json::Value =
+            serde_json::from_slice(&result.proof_bytes).expect("proof bytes must be valid JSON");
         assert!(parsed.is_object(), "serialized proof must be a JSON object");
         assert!(parsed.get("roots").is_some(), "must have roots field");
-        assert!(parsed.get("final_value").is_some(), "must have final_value field");
+        assert!(
+            parsed.get("final_value").is_some(),
+            "must have final_value field"
+        );
     }
 
     #[test]
@@ -373,12 +405,20 @@ mod tests {
         let evals: Vec<F> = (1..=n).map(|i| F::new(i as u32)).collect();
         let domain: Vec<F> = (1..=n).map(|i| F::new((i * 5 + 1) as u32)).collect();
 
-        let result = prove_instrumented(evals, domain, 20)
-            .expect("prove should succeed");
+        let result = prove_instrumented(evals, domain, 20).expect("prove should succeed");
 
-        assert!(result.timer.get(phases::PROVING_TOTAL).is_some(), "proving_total must be recorded");
-        assert!(result.timer.get(phases::FRI).is_some(), "fri must be recorded");
-        assert!(result.timer.get(phases::TRANSCRIPT_GENERATION).is_some(), "transcript_generation must be recorded");
+        assert!(
+            result.timer.get(phases::PROVING_TOTAL).is_some(),
+            "proving_total must be recorded"
+        );
+        assert!(
+            result.timer.get(phases::FRI).is_some(),
+            "fri must be recorded"
+        );
+        assert!(
+            result.timer.get(phases::TRANSCRIPT_GENERATION).is_some(),
+            "transcript_generation must be recorded"
+        );
     }
 
     #[test]

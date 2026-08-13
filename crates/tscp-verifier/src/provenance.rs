@@ -1,4 +1,4 @@
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 
 /// Compute SHA-256 of arbitrary bytes, return lowercase hex.
@@ -16,7 +16,8 @@ pub fn sha256_str(s: &str) -> String {
 /// Read the current executable's path and compute its SHA-256.
 /// Returns None if the binary cannot be found or read.
 pub fn binary_digest() -> Option<String> {
-    std::env::current_exe().ok()
+    std::env::current_exe()
+        .ok()
         .and_then(|p| std::fs::read(p).ok())
         .map(|b| sha256_hex(&b))
 }
@@ -87,14 +88,14 @@ pub fn peak_rss_kb() -> usize {
 pub fn repo_commit(repo_path: &str) -> String {
     let repo_path = PathBuf::from(repo_path);
     let head_path = repo_path.join(".git").join("HEAD");
-    
+
     let head_content = match std::fs::read_to_string(&head_path) {
         Ok(content) => content.trim().to_string(),
         Err(_) => return "unknown".to_string(),
     };
 
     if head_content.starts_with("ref:") {
-        let ref_subpath = head_content["ref:".len()..].trim();
+        let ref_subpath = head_content.strip_prefix("ref:").unwrap().trim();
         let ref_path = repo_path.join(".git").join(ref_subpath);
         if let Ok(sha) = std::fs::read_to_string(&ref_path) {
             let sha = sha.trim();
@@ -107,10 +108,8 @@ pub fn repo_commit(repo_path: &str) -> String {
             if let Ok(packed_content) = std::fs::read_to_string(&packed_path) {
                 for line in packed_content.lines() {
                     let parts: Vec<&str> = line.split_whitespace().collect();
-                    if parts.len() == 2 && parts[1] == ref_subpath {
-                        if parts[0].len() == 40 {
-                            return parts[0].to_string();
-                        }
+                    if parts.len() == 2 && parts[1] == ref_subpath && parts[0].len() == 40 {
+                        return parts[0].to_string();
                     }
                 }
             }

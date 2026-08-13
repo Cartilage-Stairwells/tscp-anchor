@@ -15,8 +15,8 @@
 //!   - Results are written to canonical JSON for the evidence bundle
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
-use std::time::Instant;
 use std::fs;
+use std::time::Instant;
 
 use tscp_verifier::oracle_bridge;
 use tscp_verifier::timing::phases;
@@ -66,9 +66,7 @@ struct RunEntry {
 /// Generate test evaluations and domain for a given trace size.
 /// Uses a deterministic pattern so results are reproducible.
 fn generate_trace(trace_size: usize) -> (Vec<BabyBear>, Vec<BabyBear>) {
-    let evals: Vec<BabyBear> = (1..=trace_size)
-        .map(|i| BabyBear::new(i as u32))
-        .collect();
+    let evals: Vec<BabyBear> = (1..=trace_size).map(|i| BabyBear::new(i as u32)).collect();
     let domain: Vec<BabyBear> = (1..=trace_size)
         .map(|i| BabyBear::new((i * 5 + 1) as u32))
         .collect();
@@ -103,9 +101,17 @@ impl PhaseCollector {
         }
     }
 
-    fn record_prove(&mut self, timer: &tscp_verifier::timing::PhaseTimer, proof_bytes: usize, transcript_bytes: usize, fs_rounds: u32) {
-        self.proving_total.push(timer.get_or_zero(phases::PROVING_TOTAL));
-        self.transcript_generation.push(timer.get_or_zero(phases::TRANSCRIPT_GENERATION));
+    fn record_prove(
+        &mut self,
+        timer: &tscp_verifier::timing::PhaseTimer,
+        proof_bytes: usize,
+        transcript_bytes: usize,
+        fs_rounds: u32,
+    ) {
+        self.proving_total
+            .push(timer.get_or_zero(phases::PROVING_TOTAL));
+        self.transcript_generation
+            .push(timer.get_or_zero(phases::TRANSCRIPT_GENERATION));
         self.fri.push(timer.get_or_zero(phases::FRI));
         self.proof_sizes.push(proof_bytes);
         self.transcript_sizes.push(transcript_bytes);
@@ -113,12 +119,15 @@ impl PhaseCollector {
     }
 
     fn record_verify(&mut self, timer: &tscp_verifier::timing::PhaseTimer, passed: bool) {
-        self.verification.push(timer.get_or_zero(phases::VERIFICATION));
+        self.verification
+            .push(timer.get_or_zero(phases::VERIFICATION));
         self.verification_passed = passed;
     }
 
     fn mean(data: &[f64]) -> f64 {
-        if data.is_empty() { return 0.0; }
+        if data.is_empty() {
+            return 0.0;
+        }
         data.iter().sum::<f64>() / data.len() as f64
     }
 
@@ -162,8 +171,11 @@ fn bench_end_to_end(c: &mut Criterion) {
 
                     // Prove
                     let prove_result = oracle_bridge::prove_instrumented_internal(
-                        evals, domain.clone(), NUM_QUERIES,
-                    ).expect("prove should succeed");
+                        evals,
+                        domain.clone(),
+                        NUM_QUERIES,
+                    )
+                    .expect("prove should succeed");
 
                     collector.record_prove(
                         &prove_result.timer,
@@ -174,8 +186,11 @@ fn bench_end_to_end(c: &mut Criterion) {
 
                     // Verify
                     let verify_result = oracle_bridge::verify_instrumented_with_proof(
-                        &domain, &prove_result.proof, NUM_QUERIES,
-                    ).expect("verify should succeed");
+                        &domain,
+                        &prove_result.proof,
+                        NUM_QUERIES,
+                    )
+                    .expect("verify should succeed");
 
                     collector.record_verify(&verify_result.timer, verify_result.verification_ok);
 
@@ -228,15 +243,21 @@ fn bench_end_to_end(c: &mut Criterion) {
                         // ── TIMED REGION: prove() only ────────────────────
                         let t_start = Instant::now();
                         let prove_result = oracle_bridge::prove_instrumented_internal(
-                            evals, domain.clone(), NUM_QUERIES,
-                        ).expect("prove should succeed");
+                            evals,
+                            domain.clone(),
+                            NUM_QUERIES,
+                        )
+                        .expect("prove should succeed");
                         total += t_start.elapsed();
                         // ── END TIMED REGION ──────────────────────────────
 
                         // Verify OUTSIDE timed region — must pass
                         let verify_result = oracle_bridge::verify_instrumented_with_proof(
-                            &domain, &prove_result.proof, NUM_QUERIES,
-                        ).expect("verify should succeed");
+                            &domain,
+                            &prove_result.proof,
+                            NUM_QUERIES,
+                        )
+                        .expect("verify should succeed");
 
                         assert!(
                             verify_result.verification_ok,
@@ -250,7 +271,8 @@ fn bench_end_to_end(c: &mut Criterion) {
                             prove_result.transcript_bytes.len(),
                             prove_result.fiat_shamir_rounds,
                         );
-                        perf_collector.record_verify(&verify_result.timer, verify_result.verification_ok);
+                        perf_collector
+                            .record_verify(&verify_result.timer, verify_result.verification_ok);
                     }
                     total
                 });
@@ -268,13 +290,17 @@ fn bench_end_to_end(c: &mut Criterion) {
             stddev_ms: stddev,
             sample_count: perf_collector.proving_total.len(),
             phase_proving_total_ms: PhaseCollector::mean(&perf_collector.proving_total),
-            phase_transcript_generation_ms: PhaseCollector::mean(&perf_collector.transcript_generation),
+            phase_transcript_generation_ms: PhaseCollector::mean(
+                &perf_collector.transcript_generation,
+            ),
             phase_fri_ms: PhaseCollector::mean(&perf_collector.fri),
             phase_verification_ms: PhaseCollector::mean(&perf_collector.verification),
             verification_passed: perf_collector.verification_passed,
             proof_size_bytes: PhaseCollector::last_or_zero(&perf_collector.proof_sizes),
             transcript_size_bytes: PhaseCollector::last_or_zero(&perf_collector.transcript_sizes),
-            fiat_shamir_rounds: PhaseCollector::last_or_zero_u32(&perf_collector.fiat_shamir_rounds),
+            fiat_shamir_rounds: PhaseCollector::last_or_zero_u32(
+                &perf_collector.fiat_shamir_rounds,
+            ),
         });
     }
 
