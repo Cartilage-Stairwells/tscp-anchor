@@ -29,6 +29,6 @@ pub trait NttBackend {
     fn inverse(&self, vals: &mut [Self::Field]);
 
     /// Backend identity string for provenance recording.
-    /// e.g. "scalar-radix2-dit", "avx512-radix2-butterfly"
+    /// e.g. "scalar-radix2-dit", "placeholder-radix2-dit"
     fn name(&self) -> &'static str;
 }
