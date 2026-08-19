@@ -5,10 +5,10 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 
 running 38 tests
-test v1_1_media_type_none_accepted ... ok
+test v1_3_rejected_evidence_populated_for_non_empty ... ok
 test v1_4_duplicate_digest_non_consecutive ... ok
 test v1_2_uppercase_hex_rejected ... ok
-test v1_3_rejected_evidence_populated_for_non_empty ... ok
+test v1_1_media_type_none_accepted ... ok
 test v1_5_canon_version_acceptance_not_checked ... ok
 test v1_7_collects_all_type_rejections ... ok
 test v2_1_empty_media_type_accepted ... ok
@@ -41,19 +41,19 @@ test v6_2_evidence_canon_version_representation ... ok
 test v6_3_duplicate_admission_not_implemented ... ok
 test v6_4_admitted_at_static ... ok
 test v6_5_canon_version_acceptance_list_undefined ... ok
-test v6_6_role_definition_matches ... ok
 test v6_7_halt_vs_collect_interpretation ... ok
+test v6_6_role_definition_matches ... ok
 
 test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
 
 running 31 tests
-test c10_validation_structural ... ok
-test c12_completeness_schema_relative ... ok
 test c11_binding_association ... ok
-test c15_spec_preserved ... ok
 test c13_no_authority_semantics ... ok
+test c12_completeness_schema_relative ... ok
+test c10_validation_structural ... ok
 test c14_authority_downstream ... ok
+test c15_spec_preserved ... ok
 test c1_evidence_cannot_enter_evaluate ... ok
 test c2_no_external_construction ... ok
 test c3_construction_paths ... ok

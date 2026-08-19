@@ -1,4 +1,4 @@
-# TSCP Admissibility Contract Specification v0.2
+# TSCP Admissibility Contract Specification v0.3
 
 **Status:** PROPOSED — specification artifact, not implementation
 **Date:** August 18, 2026
@@ -90,6 +90,7 @@ interface Evidence {
   readonly artifact_type: string;       // what kind of artifact produced this evidence
   readonly media_type: string | null;    // MIME type of the source artifact, if applicable
   readonly role: EvidenceRole;
+  readonly canon_version: string;    // TSCP-CANON-001 version this evidence was canonicalized under (Amendment A — v0.3: made explicit)
 }
 
 type EvidenceRole = "input" | "output" | "attestation" | "witness";
@@ -130,9 +131,27 @@ A Contract is a **specification of admissibility rules**. It declares what evide
 4. `min_evidence_count` must be ≥ 1
 5. `max_evidence_count` must be ≥ `min_evidence_count`
 6. `required_roles` must be a subset of `evidence_roles`
-7. `canon_version` must match an accepted TSCP-CANON-001 version
+7. `canon_version` must be a member of `AcceptedCanonVersions` (see §2.3.1)
 
 **Contract immutability:** Contracts are read-only after creation. A Contract cannot be modified by evidence, by decisions, or by custody state changes. This prevents evidence from rewriting the rules under which it is evaluated.
+
+### 2.3.1 AcceptedCanonVersions (Amendment A — v0.3)
+
+```typescript
+type AcceptedCanonVersions = "1.0";  // pinned enumerated set
+```
+
+The `AcceptedCanonVersions` type is a **fixed enumerated set** of TSCP-CANON-001 version strings. A Contract's `canon_version` field must be a member of this set. This makes the acceptance predicate concrete:
+
+```
+canon_version ∈ AcceptedCanonVersions
+```
+
+rather than the previous underspecified "must match an accepted version."
+
+**Adding future versions:** New canon versions are added by **specification amendment only**, not by implementation decision. This preserves the custody principle: the implementation inherits the accepted-version definition from the specification; it does not manufacture it.
+
+**Current accepted versions:** `"1.0"` (TSCP-CANON-001 v1.0).
 
 ### 2.4 AdmittedEvidence
 
@@ -160,7 +179,7 @@ This is the second mechanical enforcement: there is no code path from Evidence t
 
 ```typescript
 interface RejectedEvidence {
-  readonly evidence: Evidence;
+  readonly evidence: Evidence | null;  // nullable when |evidence| = 0 (Amendment B — v0.3)
   readonly contract_id: string;
   readonly reason: RejectionReason;
   readonly error_code: AdmissibilityErrorCode;
@@ -184,6 +203,7 @@ type AdmissibilityErrorCode =
   ;
 ```
 
+**Empty evidence domain (Amendment B — v0.3):** When `evidence = []` (no evidence items submitted), the `RejectedEvidence.evidence` field is `null`. This explicitly extends the rejection model to include the empty-domain case. The `error_code` is `TSCP-ADMIT-INSUFFICIENT-EVIDENCE` and the `error_stage` is `COMPLETENESS`. The specification does not require a separate rejection type for empty evidence — `null` in the `evidence` field is the defined representation.
 Rejection follows the TSCP-CANON-001 pattern: every rejection is classified by stage and error code. Independent implementations must reject for the same reason.
 
 ---
@@ -210,7 +230,7 @@ The admissibility function executes in three stages. Each stage can reject evide
 
 1. **Contract validity:** Check all Contract validity conditions (§2.3). If any fails, reject with `TSCP-ADMIT-CONTRACT-INVALID`.
 2. **Evidence structure:** Each Evidence item must have a valid `digest` (64-char lowercase hex), a non-empty `artifact_type`, and a valid `role`. Structural failures at this stage are rejected with the appropriate error code.
-3. **Canon version:** Each Evidence item's implicit canon version (established upstream during canonicalization) must match the contract's `canon_version`. Mismatches are rejected with `TSCP-ADMIT-CANON-VERSION-MISMATCH`.
+3. **Canon version:** Each Evidence item's explicit canon_version field (Amendment A — v0.3: made explicit per §2.2.1) must match the contract's `canon_version`. Mismatches are rejected with `TSCP-ADMIT-CANON-VERSION-MISMATCH`.
 
 **Semantic boundary:** Validation checks structural properties only. If a predicate supplied by an external source returns true during validation, that establishes only "the supplied predicate returned true" — not "the proposition represented by the evidence is true." Validation must not become a hidden truth oracle.
 
@@ -604,6 +624,7 @@ interface Evidence {
   readonly artifact_type: string;
   readonly media_type: string | null;
   readonly role: EvidenceRole;
+  readonly canon_version: string;    // TSCP-CANON-001 version (Amendment A)
 }
 
 interface Contract {
@@ -648,7 +669,7 @@ type AdmissibilityErrorCode =
   ;
 
 interface RejectedEvidence {
-  readonly evidence: Evidence;
+  readonly evidence: Evidence | null;  // nullable when |evidence| = 0
   readonly contract_id: string;
   readonly reason: string;
   readonly error_code: AdmissibilityErrorCode;

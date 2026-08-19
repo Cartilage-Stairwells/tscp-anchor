@@ -276,7 +276,11 @@ fn validate_contract(c: &Contract) -> Option<AdmissibilityErrorCode> {
     for r in &c.required_roles {
         if !c.evidence_roles.contains(r) { return Some(AdmissibilityErrorCode::ContractInvalid); }
     }
-    if c.canon_version.is_empty() { return Some(AdmissibilityErrorCode::ContractInvalid); }
+    // Amendment A (v0.3): canon_version must be a member of AcceptedCanonVersions.
+    // The implementation inherits the accepted set from the specification.
+    // Current accepted versions: "1.0" (TSCP-CANON-001 v1.0).
+    const ACCEPTED_CANON_VERSIONS: &[&str] = &["1.0"];
+    if !ACCEPTED_CANON_VERSIONS.contains(&c.canon_version.as_str()) { return Some(AdmissibilityErrorCode::ContractInvalid); }
     None
 }
 

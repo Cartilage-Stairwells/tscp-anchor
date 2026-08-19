@@ -138,9 +138,10 @@ fn v1_5_canon_version_acceptance_not_checked() {
         vec!["x".to_string()], vec![EvidenceRole::Input],
         1, 5, vec![EvidenceRole::Input], "garbage_non_canon_version".to_string(),
     );
-    // Rust accepts this — but spec says it should check against accepted versions
-    assert!(result.is_ok(), "Rust accepts non-empty canon_version — spec requires accepted version check");
-    // This is a DIVERGENCE but may be a spec gap (what are "accepted versions"?)
+    // Amendment A (v0.3): Rust now rejects non-accepted canon versions
+    assert!(result.is_err(), "Rust must reject non-accepted canon_version per Amendment A");
+    assert_eq!(result.unwrap_err(), AdmissibilityErrorCode::ContractInvalid);
+    // AcceptedCanonVersions = {"1.0"} — "garbage_non_canon_version" is not accepted
 }
 
 // V1.6: Spec §3.2 says "Rejection at any stage halts processing — later stages do not execute."
@@ -463,7 +464,7 @@ fn v4_7_mixed_canon_versions() {
 fn v5_1_empty_evidence_multiple_contracts() {
     let c1 = make_contract();
     let c2 = make_contract_custom(vec!["x".into()], vec![EvidenceRole::Input], 1, 3, vec![], "1.0");
-    let c3 = make_contract_custom(vec!["y".into()], vec![EvidenceRole::Witness], 3, 10, vec![EvidenceRole::Witness], "2.0");
+    let c3 = make_contract_custom(vec!["y".into()], vec![EvidenceRole::Witness], 3, 10, vec![EvidenceRole::Witness], "1.0");
 
     for c in [&c1, &c2, &c3] {
         let r = admit(c, &[]).unwrap_err();
@@ -637,11 +638,23 @@ fn v6_5_canon_version_acceptance_list_undefined() {
     // Rust checks non-empty, which is weaker but the spec doesn't give enough
     // information to implement the full check.
     // CLASSIFICATION: SPECIFICATION GAP — accepted version list undefined
-    let c = make_contract_custom(
-        vec!["t".into()], vec![EvidenceRole::Input],
-        1, 1, vec![], "any_arbitrary_version_string".into(),
+    // Amendment A (v0.3): AcceptedCanonVersions = {"1.0"}
+    // Non-accepted versions are now rejected by the implementation
+    let r = Contract::new(
+        "test-c".to_string(), "1.0".to_string(),
+        vec!["t".to_string()], vec![EvidenceRole::Input],
+        1, 1, vec![], "any_arbitrary_version_string".to_string(),
     );
-    assert!(c.id() == "test-c"); // contract accepted despite arbitrary canon_version
+    assert!(r.is_err(), "Non-accepted canon_version must be rejected per Amendment A");
+    assert_eq!(r.unwrap_err(), AdmissibilityErrorCode::ContractInvalid);
+
+    // Accepted version "1.0" is still valid
+    let r2 = Contract::new(
+        "test-c".to_string(), "1.0".to_string(),
+        vec!["t".to_string()], vec![EvidenceRole::Input],
+        1, 1, vec![], "1.0".to_string(),
+    );
+    assert!(r2.is_ok(), "Accepted canon_version 1.0 must be valid");
 }
 
 // V6.6: Spec §3.2 Stage 1.2 says "valid role" — but what defines valid?
