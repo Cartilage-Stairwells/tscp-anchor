@@ -1,0 +1,18 @@
+[package]
+name = "tscp-admissibility-kernel"
+version = "0.1.0"
+edition = "2021"
+description = "TSCP Evidence-to-Authority Kernel — Admissibility Contract experimental implementation"
+
+[lib]
+name = "tscp_admissibility_kernel"
+path = "src/lib.rs"
+
+[[test]]
+name = "validation_tests"
+path = "src/tests.rs"
+
+[dependencies]
+# No dependencies. Pure protocol logic.
+# No serde (serialization cannot manufacture AdmittedEvidence).
+# No external crates. This is independently auditable.

@@ -1,0 +1,46 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target/debug/deps/tscp_admissibility_kernel-62802fcfcd5f3cfb)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running src/tests.rs (target/debug/deps/validation_tests-7c6053fbbcc3c8a4)
+
+running 27 tests
+test c10_validation_structural ... ok
+test c11_binding_association ... ok
+test c12_completeness_schema_relative ... ok
+test c13_no_authority_semantics ... ok
+test c14_authority_downstream ... ok
+test c15_spec_preserved ... ok
+test c1_evidence_cannot_enter_evaluate ... ok
+test c2_no_external_construction ... ok
+test c3_construction_paths ... ok
+test c4_no_serialization_construction ... ok
+test c5_no_persistence_construction ... ok
+test c6_no_ffi ... ok
+test c7_no_unsafe ... ok
+test c8_no_macro_construction ... ok
+test c9_type_erasure ... ok
+test t_determinism ... ok
+test t_duplicate_digest ... ok
+test t_empty_artifact_type ... ok
+test t_excess_evidence ... ok
+test t_insufficient_evidence ... ok
+test t_invalid_contract ... ok
+test t_invalid_structure_valid_binding ... ok
+test t_missing_required_role ... ok
+test t_role_rejection ... ok
+test t_semantic_laundering ... ok
+test t_type_rejection ... ok
+test t_valid_admission ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests tscp_admissibility_kernel
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
