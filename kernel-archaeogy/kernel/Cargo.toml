@@ -16,7 +16,8 @@ path = "src/tests.rs"
 name = "round3b_correspondence"
 path = "src/round3b_tests.rs"
 
+[[test]]
+name = "round3c_amendment"
+path = "src/round3c_tests.rs"
+
 [dependencies]
-# No dependencies. Pure protocol logic.
-# No serde (serialization cannot manufacture AdmittedEvidence).
-# No external crates. This is independently auditable.
