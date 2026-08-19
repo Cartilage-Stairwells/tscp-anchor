@@ -97,7 +97,7 @@ These baselines are complementary, not competitive. They measure different scope
 | Claim | Status | Evidence |
 |---|---|---|
 | BabyBear field implementation exists | Verified | Source and tests in referenced artifacts |
-| AVX-512 backend exists | Verified | Related implementation repository (access restricted) |
+| AVX-512 backend exists | Verified | Related implementation repository; existence verified, SIMD correctness/formal verification not claimed |
 | SIMD output matches reference paths | Verified | Equivalence testing artifacts (access restricted) |
 | Montgomery arithmetic formalized | Verified | Lean 4 formal modules |
 | Entire NTT formally verified | Not claimed | — |
