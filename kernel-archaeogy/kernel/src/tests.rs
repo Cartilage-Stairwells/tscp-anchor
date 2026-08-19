@@ -1,29 +1,30 @@
-// TSCP Admissibility Contract — Experimental Validation
+// TSCP Admissibility Contract — Experimental Validation v0.2
 // Falsification-oriented. Per spec §9 (15-point criteria) + conformance tests.
+// Updated for Aria Round 3 correspondence fixes.
 
 use tscp_admissibility_kernel::*;
 use std::any::Any;
 
 fn make_contract() -> Contract {
-    Contract {
-        id: "test-contract-001".to_string(),
-        version: "1.0.0".to_string(),
-        evidence_types: vec!["test_result".to_string(), "audit_log".to_string()],
-        evidence_roles: vec![EvidenceRole::Input, EvidenceRole::Attestation, EvidenceRole::Witness],
-        min_evidence_count: 2,
-        max_evidence_count: 5,
-        required_roles: vec![EvidenceRole::Witness],
-        canon_version: "1.0".to_string(),
-    }
+    Contract::new(
+        "test-contract-001".to_string(),
+        "1.0.0".to_string(),
+        vec!["test_result".to_string(), "audit_log".to_string()],
+        vec![EvidenceRole::Input, EvidenceRole::Attestation, EvidenceRole::Witness],
+        2,
+        5,
+        vec![EvidenceRole::Witness],
+        "1.0".to_string(),
+    ).unwrap()
 }
 
 fn make_evidence(role: EvidenceRole, suffix: &str) -> Evidence {
-    // 62-char base + 2-char suffix = 64-char hex digest
     Evidence {
         digest: format!("a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1{}", suffix),
         artifact_type: "test_result".to_string(),
         media_type: Some("application/json".to_string()),
         role,
+        canon_version: "1.0".to_string(),
     }
 }
 
@@ -33,6 +34,7 @@ fn make_evidence_type(role: EvidenceRole, atype: &str, suffix: &str) -> Evidence
         artifact_type: atype.to_string(),
         media_type: None,
         role,
+        canon_version: "1.0".to_string(),
     }
 }
 
@@ -42,19 +44,15 @@ fn c1_evidence_cannot_enter_evaluate() {
     let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     let admitted = admit(&c, &ev).unwrap();
-    // evaluate() would accept AdmittedEvidence, not Evidence. Type-enforced.
     assert!(!admitted.evidence().is_empty());
 }
 
 // === CRITERION 2: AdmittedEvidence cannot be constructed externally ===
 #[test]
 fn c2_no_external_construction() {
-    // All fields private. No pub constructor. No Default.
-    // This compiles only because we access via admit():
     let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     let admitted = admit(&c, &ev).unwrap();
-    // Read-only accessors work:
     let _ = admitted.contract_id();
     let _ = admitted.admission_digest();
 }
@@ -62,14 +60,6 @@ fn c2_no_external_construction() {
 // === CRITERION 3: Every construction path enumerated ===
 #[test]
 fn c3_construction_paths() {
-    // 1. Struct literal → BLOCKED (private fields)
-    // 2. pub fn new() → DOES NOT EXIST
-    // 3. Default trait → NOT IMPLEMENTED
-    // 4. serde Deserialize → NO serde dependency
-    // 5. unsafe transmute → NO unsafe code
-    // 6. FFI → NO FFI
-    // 7. Macros → NO macros emit AdmittedEvidence
-    // 8. admit() → THE ONLY PATH
     let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     assert!(admit(&c, &ev).is_ok());
@@ -78,39 +68,27 @@ fn c3_construction_paths() {
 // === CRITERION 4: Serialization cannot manufacture admission ===
 #[test]
 fn c4_no_serialization_construction() {
-    // No serde. No Serialize/Deserialize. Manual JSON reconstruction impossible:
     let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     let admitted = admit(&c, &ev).unwrap();
     let _json = format!("{{\"contract_id\":\"{}\"}}", admitted.contract_id());
-    // Cannot deserialize back to AdmittedEvidence — no impl exists.
 }
 
 // === CRITERION 5: Persistence cannot manufacture admission ===
 #[test]
-fn c5_no_persistence_construction() {
-    // Same as serialization: no persistence trait. Re-admission required.
-}
+fn c5_no_persistence_construction() {}
 
 // === CRITERION 6: FFI cannot manufacture admission ===
 #[test]
-fn c6_no_ffi() {
-    // No extern "C", no #[no_mangle], no #[repr(C)] on AdmittedEvidence.
-}
+fn c6_no_ffi() {}
 
 // === CRITERION 7: Unsafe facilities explicitly outside TCB ===
 #[test]
-fn c7_no_unsafe() {
-    // Zero unsafe blocks. TCB = safe Rust only.
-    // grep "unsafe" src/lib.rs → only in comments.
-}
+fn c7_no_unsafe() {}
 
 // === CRITERION 8: Generated code cannot introduce constructor ===
 #[test]
-fn c8_no_macro_construction() {
-    // No derive macros except Debug/Clone/PartialEq/Eq.
-    // No macros emit AdmittedEvidence.
-}
+fn c8_no_macro_construction() {}
 
 // === CRITERION 9: Type erasure cannot bypass re-admission ===
 #[test]
@@ -119,11 +97,9 @@ fn c9_type_erasure() {
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     let admitted = admit(&c, &ev).unwrap();
 
-    // Erase to dyn Any, restore same type — works (preserves existing value)
     let erased: Box<dyn Any> = Box::new(admitted);
     assert!(erased.downcast_ref::<AdmittedEvidence>().is_some());
 
-    // Erase Evidence, try downcast to AdmittedEvidence — FAILS (different types)
     let raw_ev = make_evidence(EvidenceRole::Input, "11");
     let erased_ev: Box<dyn Any> = Box::new(raw_ev);
     assert!(erased_ev.downcast_ref::<AdmittedEvidence>().is_none());
@@ -132,12 +108,10 @@ fn c9_type_erasure() {
 // === CRITERION 10: Validation is structural only ===
 #[test]
 fn c10_validation_structural() {
-    // Fabricated digest (structurally valid 64-char hex, no real artifact) → ADMITTED.
-    // This is correct: admission = structural admissibility, NOT truth.
     let c = make_contract();
     let fake = vec![
-        Evidence { digest: "000000000000000000000000000000000000000000000000000000000000000a".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Input },
-        Evidence { digest: "000000000000000000000000000000000000000000000000000000000000000b".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Witness },
+        Evidence { digest: "000000000000000000000000000000000000000000000000000000000000000a".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Input, canon_version: "1.0".into() },
+        Evidence { digest: "000000000000000000000000000000000000000000000000000000000000000b".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Witness, canon_version: "1.0".into() },
     ];
     assert!(admit(&c, &fake).is_ok());
 }
@@ -147,7 +121,7 @@ fn c10_validation_structural() {
 fn c11_binding_association() {
     let c = make_contract();
     let ev = vec![make_evidence_type(EvidenceRole::Input, "test_result", "11"), make_evidence_type(EvidenceRole::Witness, "audit_log", "22")];
-    assert!(admit(&c, &ev).is_ok()); // Admitted — types match. Not endorsement.
+    assert!(admit(&c, &ev).is_ok());
 }
 
 // === CRITERION 12: Completeness = schema-relative, not epistemic ===
@@ -155,7 +129,7 @@ fn c11_binding_association() {
 fn c12_completeness_schema_relative() {
     let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
-    assert!(admit(&c, &ev).is_ok()); // Complete relative to schema. Not epistemically complete.
+    assert!(admit(&c, &ev).is_ok());
 }
 
 // === CRITERION 13: No authority semantics ===
@@ -164,8 +138,6 @@ fn c13_no_authority_semantics() {
     let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     let admitted = admit(&c, &ev).unwrap();
-    // Fields: contract_id, contract_version, evidence, admitted_at, admission_digest.
-    // None express authority, threshold, weight, or decision.
     assert!(admitted.contract_id().contains("test-contract"));
     assert_eq!(admitted.admission_digest().len(), 64);
 }
@@ -173,11 +145,10 @@ fn c13_no_authority_semantics() {
 // === CRITERION 14: Authority is downstream only ===
 #[test]
 fn c14_authority_downstream() {
-    // admit() returns AdmittedEvidence, not Authority or Decision.
     let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     let result = admit(&c, &ev);
-    assert!(result.is_ok()); // Ok(AdmittedEvidence) — not Ok(Authority)
+    assert!(result.is_ok());
 }
 
 // === CRITERION 15: Specification meaning preserved ===
@@ -190,7 +161,7 @@ fn c15_spec_preserved() {
     assert_eq!(rejections[0].error_stage, AdmissibilityStage::Binding);
 }
 
-// === CONFORMANCE TESTS (spec §10) ===
+// === CONFORMANCE TESTS ===
 
 #[test]
 fn t_valid_admission() {
@@ -216,6 +187,7 @@ fn t_role_rejection() {
     let ev = vec![Evidence {
         digest: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2".to_string(),
         artifact_type: "test_result".to_string(), media_type: None, role: EvidenceRole::Output,
+        canon_version: "1.0".to_string(),
     }];
     let r = admit(&c, &ev).unwrap_err();
     assert_eq!(r[0].error_code, AdmissibilityErrorCode::RoleNotAdmissible);
@@ -223,15 +195,15 @@ fn t_role_rejection() {
 
 #[test]
 fn t_insufficient_evidence() {
-    let c = make_contract(); // min=2
-    let ev = vec![make_evidence(EvidenceRole::Witness, "11")]; // only 1
+    let c = make_contract();
+    let ev = vec![make_evidence(EvidenceRole::Witness, "11")];
     let r = admit(&c, &ev).unwrap_err();
     assert_eq!(r[0].error_code, AdmissibilityErrorCode::InsufficientEvidence);
 }
 
 #[test]
 fn t_missing_required_role() {
-    let c = make_contract(); // required: Witness
+    let c = make_contract();
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Input, "22")];
     let r = admit(&c, &ev).unwrap_err();
     assert_eq!(r[0].error_code, AdmissibilityErrorCode::MissingRequiredRole);
@@ -247,15 +219,13 @@ fn t_duplicate_digest() {
 
 #[test]
 fn t_invalid_contract() {
-    let c = Contract {
-        id: "".to_string(), version: "1.0".to_string(),
-        evidence_types: vec!["x".to_string()], evidence_roles: vec![EvidenceRole::Input],
-        min_evidence_count: 1, max_evidence_count: 5, required_roles: vec![EvidenceRole::Input],
-        canon_version: "1.0".to_string(),
-    };
-    let ev = vec![make_evidence(EvidenceRole::Input, "11")];
-    let r = admit(&c, &ev).unwrap_err();
-    assert_eq!(r[0].error_code, AdmissibilityErrorCode::ContractInvalid);
+    let r = Contract::new(
+        "".to_string(), "1.0".to_string(),
+        vec!["x".to_string()], vec![EvidenceRole::Input],
+        1, 5, vec![EvidenceRole::Input], "1.0".to_string(),
+    );
+    assert!(r.is_err());
+    assert_eq!(r.unwrap_err(), AdmissibilityErrorCode::ContractInvalid);
 }
 
 #[test]
@@ -264,38 +234,99 @@ fn t_determinism() {
     let ev = vec![make_evidence(EvidenceRole::Input, "11"), make_evidence(EvidenceRole::Witness, "22")];
     let r1 = admit(&c, &ev).unwrap();
     let r2 = admit(&c, &ev).unwrap();
-    assert_eq!(r1, r2); // same inputs → identical outputs including admission digest
+    assert_eq!(r1, r2);
 }
 
-// === SEMANTIC LAUNDERING ATTACK (Aria §7) ===
+// === SEMANTIC LAUNDERING ATTACK ===
 
 #[test]
 fn t_semantic_laundering() {
-    // Fabricated digests, no real artifacts — admitted because structurally valid.
-    // This is CORRECT: admission ≠ truth. The firewall holds.
     let c = make_contract();
     let fake = vec![
-        Evidence { digest: "deadbeef000000000000000000000000000000000000000000000000deadbeef".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Input },
-        Evidence { digest: "cafef00d000000000000000000000000000000000000000000000000cafef00d".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Witness },
+        Evidence { digest: "deadbeef000000000000000000000000000000000000000000000000deadbeef".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Input, canon_version: "1.0".into() },
+        Evidence { digest: "cafef00d000000000000000000000000000000000000000000000000cafef00d".into(), artifact_type: "test_result".into(), media_type: None, role: EvidenceRole::Witness, canon_version: "1.0".into() },
     ];
     let admitted = admit(&c, &fake).unwrap();
     assert!(!admitted.admission_digest().is_empty());
-    // AdmittedEvidence with fabricated digests — admission contract satisfied.
-    // NOT truth. NOT correctness. NOT authority. Just: structurally admissible.
 }
 
-// === MISSING CONVERSE TESTS (per Johnny Stage 6) ===
+// === ARIA ROUND 3 CORRESPONDENCE FIXES ===
 
-// invalid structure + correct binding — malformed digest, valid type/role
+// FIX 1: Empty evidence slice returns RejectedEvidence, not panic.
+#[test]
+fn t_empty_evidence_no_panic() {
+    let c = make_contract();
+    let ev: Vec<Evidence> = vec![];
+    let r = admit(&c, &ev).unwrap_err();
+    assert_eq!(r[0].error_code, AdmissibilityErrorCode::InsufficientEvidence);
+    assert_eq!(r[0].error_stage, AdmissibilityStage::Completeness);
+    // evidence field is None — no panic, no indexing
+    assert!(r[0].evidence.is_none());
+}
+
+// FIX 2: Canon-version mismatch is detected and rejected.
+#[test]
+fn t_canon_version_mismatch() {
+    let c = make_contract(); // canon_version = "1.0"
+    let ev = vec![
+        Evidence {
+            digest: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1aa".to_string(),
+            artifact_type: "test_result".to_string(),
+            media_type: None,
+            role: EvidenceRole::Input,
+            canon_version: "2.0".to_string(), // mismatch!
+        },
+        make_evidence(EvidenceRole::Witness, "bb"),
+    ];
+    let r = admit(&c, &ev).unwrap_err();
+    assert_eq!(r[0].error_code, AdmissibilityErrorCode::CanonVersionMismatch);
+    assert_eq!(r[0].error_stage, AdmissibilityStage::Validation);
+}
+
+// FIX 3: Contract fields are private — cannot be mutated after construction.
+// This test compiles only because we use the read-only accessors.
+// Direct field mutation like `c.max_evidence_count = 0` would NOT compile.
+#[test]
+fn t_contract_immutability() {
+    let c = make_contract();
+    // Read-only access works:
+    assert_eq!(c.min_evidence_count(), 2);
+    assert_eq!(c.max_evidence_count(), 5);
+    assert_eq!(c.canon_version(), "1.0");
+    // The following would NOT compile (private fields):
+    // c.max_evidence_count = 0;
+    // c.evidence_types.clear();
+    // c.id = String::new();
+}
+
+// FIX 1 + converse: empty evidence with valid contract — RejectedEvidence, no panic.
+#[test]
+fn t_empty_evidence_with_empty_contract_validation() {
+    // Even if contract is invalid, empty evidence should not panic
+    let r = Contract::new(
+        "valid-id".to_string(), "1.0".to_string(),
+        vec!["x".to_string()], vec![EvidenceRole::Input],
+        1, 5, vec![EvidenceRole::Input], "1.0".to_string(),
+    );
+    let c = r.unwrap();
+    let ev: Vec<Evidence> = vec![];
+    let result = admit(&c, &ev);
+    assert!(result.is_err());
+    let rejections = result.unwrap_err();
+    assert_eq!(rejections[0].error_code, AdmissibilityErrorCode::InsufficientEvidence);
+}
+
+// Missing converse tests from v0.1
 #[test]
 fn t_invalid_structure_valid_binding() {
     let c = make_contract();
     let ev = vec![
         Evidence {
-            digest: "short".to_string(), // NOT 64-char hex
+            digest: "short".to_string(),
             artifact_type: "test_result".to_string(),
             media_type: None,
             role: EvidenceRole::Input,
+            canon_version: "1.0".to_string(),
         },
         make_evidence(EvidenceRole::Witness, "22"),
     ];
@@ -304,10 +335,9 @@ fn t_invalid_structure_valid_binding() {
     assert_eq!(r[0].error_stage, AdmissibilityStage::Validation);
 }
 
-// excess evidence — more items than max_evidence_count
 #[test]
 fn t_excess_evidence() {
-    let c = make_contract(); // max=5
+    let c = make_contract();
     let ev: Vec<Evidence> = (0..6)
         .map(|i| {
             let suffix = format!("{:02x}", i);
@@ -319,16 +349,16 @@ fn t_excess_evidence() {
     assert_eq!(r[0].error_stage, AdmissibilityStage::Completeness);
 }
 
-// valid structure + empty artifact_type
 #[test]
 fn t_empty_artifact_type() {
     let c = make_contract();
     let ev = vec![
         Evidence {
             digest: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2".to_string(),
-            artifact_type: "".to_string(), // empty — structurally invalid
+            artifact_type: "".to_string(),
             media_type: None,
             role: EvidenceRole::Input,
+            canon_version: "1.0".to_string(),
         },
         make_evidence(EvidenceRole::Witness, "22"),
     ];

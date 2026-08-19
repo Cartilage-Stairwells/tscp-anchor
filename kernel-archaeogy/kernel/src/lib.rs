@@ -1,15 +1,20 @@
-// TSCP Admissibility Contract — Experimental Implementation v0.1
+// TSCP Admissibility Contract — Experimental Implementation v0.2
 // Falsification-oriented: attempt to break the proposed boundary in a concrete language.
-// Per ADMISSIBILITY_CONTRACT_SPEC v0.2 and Aria's red-team review.
+// Per ADMISSIBILITY_CONTRACT_SPEC v0.2 and Aria's Round 3 red-team review.
 //
 // Language: Rust 1.97.1
 // Safety model: safe code only. No `unsafe`. No FFI. No reflection.
 // Dependencies: none. Pure protocol logic.
 //
+// CHANGES IN v0.2 (per Aria Round 3 correspondence audit):
+//   FIX 1: Empty evidence slice now returns RejectedEvidence instead of panicking.
+//   FIX 2: Evidence now carries canon_version; validation checks it against contract.
+//   FIX 3: Contract fields are now private; construction via Contract::new() only.
+//
 // SEMANTIC NON-IMPLICATIONS (spec §4):
 //   AdmittedEvidence means: "the admission contract was satisfied." Nothing more.
 //   AdmittedEvidence ⇏ Truth
-//   AdmittedEvidence ⇏ Correctness  
+//   AdmittedEvidence ⇏ Correctness
 //   AdmittedEvidence ⇏ Authenticity
 //   AdmittedEvidence ⇏ Authority
 //
@@ -40,45 +45,73 @@ pub enum EvidenceRole {
 /// CONSTRAINT 1: Evidence contains NO authority fields.
 /// No signature, threshold, authorization, weight, priority, or decision.
 /// Evidence is purely descriptive — it says WHAT something is, not WHETHER it authorizes.
+///
+/// FIX 2 (per Aria R3): Evidence now carries canon_version to enable
+/// canon-version correspondence checking at validation time.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Evidence {
     pub digest: CanonicalDigest,
     pub artifact_type: String,
     pub media_type: Option<String>,
     pub role: EvidenceRole,
+    pub canon_version: String,
 }
 
 /// Contract: immutable specification of admissibility rules.
+///
+/// FIX 3 (per Aria R3): All fields are now PRIVATE. Construction is via
+/// Contract::new() which validates. There is no public field mutation path.
+/// This enforces the spec's immutability requirement: "Contracts are read-only
+/// after creation."
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Contract {
-    pub id: String,
-    pub version: String,
-    pub evidence_types: Vec<String>,
-    pub evidence_roles: Vec<EvidenceRole>,
-    pub min_evidence_count: usize,
-    pub max_evidence_count: usize,
-    pub required_roles: Vec<EvidenceRole>,
-    pub canon_version: String,
+    id: String,
+    version: String,
+    evidence_types: Vec<String>,
+    evidence_roles: Vec<EvidenceRole>,
+    min_evidence_count: usize,
+    max_evidence_count: usize,
+    required_roles: Vec<EvidenceRole>,
+    canon_version: String,
+}
+
+/// Constructor + read-only accessors for Contract.
+/// The ONLY way to create a Contract is via `new()`, which validates.
+/// Fields cannot be mutated after construction.
+impl Contract {
+    pub fn new(
+        id: String,
+        version: String,
+        evidence_types: Vec<String>,
+        evidence_roles: Vec<EvidenceRole>,
+        min_evidence_count: usize,
+        max_evidence_count: usize,
+        required_roles: Vec<EvidenceRole>,
+        canon_version: String,
+    ) -> Result<Contract, AdmissibilityErrorCode> {
+        let c = Contract {
+            id, version, evidence_types, evidence_roles,
+            min_evidence_count, max_evidence_count, required_roles, canon_version,
+        };
+        if let Some(err) = validate_contract(&c) {
+            return Err(err);
+        }
+        Ok(c)
+    }
+
+    pub fn id(&self) -> &str { &self.id }
+    pub fn version(&self) -> &str { &self.version }
+    pub fn evidence_types(&self) -> &[String] { &self.evidence_types }
+    pub fn evidence_roles(&self) -> &[EvidenceRole] { &self.evidence_roles }
+    pub fn min_evidence_count(&self) -> usize { self.min_evidence_count }
+    pub fn max_evidence_count(&self) -> usize { self.max_evidence_count }
+    pub fn required_roles(&self) -> &[EvidenceRole] { &self.required_roles }
+    pub fn canon_version(&self) -> &str { &self.canon_version }
 }
 
 // ============================================================================
 // ADMITTED EVIDENCE — THE ONE-WAY TYPE (CONSTRAINT 2)
 // ============================================================================
-//
-// CONSTRUCTION PATH ENUMERATION (Aria §8.2):
-//   - No `AdmittedEvidence::new()` — does not exist
-//   - No `#[derive(Deserialize)]` — no serde, serialization cannot manufacture this type
-//   - No `Default` impl — zeroed memory cannot constitute an instance
-//   - No public fields — all private, constructor is private
-//   - No unsafe code — no transmute/reinterpret
-//   - No FFI — no foreign construction
-//   - No macros that emit `AdmittedEvidence { ... }`
-//   - `admit()` is the ONLY path
-//
-// SERIALIZATION BOUNDARY (Aria §8.1, §10):
-//   AdmittedEvidence does NOT implement Serialize or Deserialize.
-//   A serialized representation is NOT automatically the semantic type.
-//   Persistence requires a separate PersistedAdmissionRecord + re-admission.
 
 /// AdmittedEvidence: a custody classification, NOT a quality upgrade.
 /// Records that evidence crossed a specified boundary. Not "better evidence."
@@ -129,11 +162,15 @@ pub enum AdmissibilityErrorCode {
     MissingRequiredRole,
     DuplicateDigest,
     ContractInvalid,
+    // NOTE: DuplicateAdmission is specified in the error code registry (spec §2.5)
+    // but the spec §3 execution stages do not yet define the operational mechanism
+    // for determining "already admitted to this contract." This is a deferred
+    // specification gap, not an implementation omission.
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RejectedEvidence {
-    pub evidence: Evidence,
+    pub evidence: Option<Evidence>,
     pub contract_id: String,
     pub reason: String,
     pub error_code: AdmissibilityErrorCode,
@@ -246,13 +283,6 @@ fn validate_contract(c: &Contract) -> Option<AdmissibilityErrorCode> {
 // ============================================================================
 // THE ADMISSIBILITY FUNCTION (spec §3)
 // ============================================================================
-//
-// SEMANTIC FIREWALL (spec §3.3):
-//   VALIDATION → "structural/contractual validity" — NOT truth
-//   BINDING    → "association with specification" — NOT endorsement
-//   COMPLETENESS → "complete relative to schema" — NOT epistemic completeness
-//
-//   V ∧ B ∧ C → ADMISSIBLE — NOT TRUE, NOT CORRECT, NOT AUTHORIZED
 
 /// The ONLY way to produce AdmittedEvidence. Pure function.
 pub fn admit(
@@ -261,11 +291,9 @@ pub fn admit(
 ) -> Result<AdmittedEvidence, Vec<RejectedEvidence>> {
 
     // --- Stage 1: VALIDATION ---
-    // Establishes: structural/contractual validity. NOT truth.
-
     if let Some(_) = validate_contract(contract) {
         return Err(evidence.iter().map(|e| RejectedEvidence {
-            evidence: e.clone(), contract_id: contract.id.clone(),
+            evidence: Some(e.clone()), contract_id: contract.id().to_string(),
             reason: "Contract fails validity conditions".into(),
             error_code: AdmissibilityErrorCode::ContractInvalid,
             error_stage: AdmissibilityStage::Validation,
@@ -276,7 +304,7 @@ pub fn admit(
     for ev in evidence {
         if ev.digest.len() != 64 || !ev.digest.chars().all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())) {
             rejections.push(RejectedEvidence {
-                evidence: ev.clone(), contract_id: contract.id.clone(),
+                evidence: Some(ev.clone()), contract_id: contract.id().to_string(),
                 reason: "Evidence has invalid structure".into(),
                 error_code: AdmissibilityErrorCode::ContractInvalid,
                 error_stage: AdmissibilityStage::Validation,
@@ -284,9 +312,18 @@ pub fn admit(
         }
         if ev.artifact_type.is_empty() {
             rejections.push(RejectedEvidence {
-                evidence: ev.clone(), contract_id: contract.id.clone(),
+                evidence: Some(ev.clone()), contract_id: contract.id().to_string(),
                 reason: "Evidence has empty artifact_type".into(),
                 error_code: AdmissibilityErrorCode::ContractInvalid,
+                error_stage: AdmissibilityStage::Validation,
+            });
+        }
+        // FIX 2: Canon-version correspondence check (spec §3.2 Stage 1.3)
+        if ev.canon_version != contract.canon_version() {
+            rejections.push(RejectedEvidence {
+                evidence: Some(ev.clone()), contract_id: contract.id().to_string(),
+                reason: format!("canon_version mismatch: evidence={} contract={}", ev.canon_version, contract.canon_version()),
+                error_code: AdmissibilityErrorCode::CanonVersionMismatch,
                 error_stage: AdmissibilityStage::Validation,
             });
         }
@@ -294,12 +331,10 @@ pub fn admit(
     if !rejections.is_empty() { return Err(rejections); }
 
     // --- Stage 2: BINDING ---
-    // Establishes: association with contract. NOT endorsement.
-
     for ev in evidence {
-        if !contract.evidence_types.contains(&ev.artifact_type) {
+        if !contract.evidence_types().contains(&ev.artifact_type) {
             rejections.push(RejectedEvidence {
-                evidence: ev.clone(), contract_id: contract.id.clone(),
+                evidence: Some(ev.clone()), contract_id: contract.id().to_string(),
                 reason: format!("artifact_type '{}' not admissible", ev.artifact_type),
                 error_code: AdmissibilityErrorCode::TypeNotAdmissible,
                 error_stage: AdmissibilityStage::Binding,
@@ -309,9 +344,9 @@ pub fn admit(
     if !rejections.is_empty() { return Err(rejections); }
 
     for ev in evidence {
-        if !contract.evidence_roles.contains(&ev.role) {
+        if !contract.evidence_roles().contains(&ev.role) {
             rejections.push(RejectedEvidence {
-                evidence: ev.clone(), contract_id: contract.id.clone(),
+                evidence: Some(ev.clone()), contract_id: contract.id().to_string(),
                 reason: format!("role {:?} not admissible", ev.role),
                 error_code: AdmissibilityErrorCode::RoleNotAdmissible,
                 error_stage: AdmissibilityStage::Binding,
@@ -324,7 +359,7 @@ pub fn admit(
     for ev in evidence {
         if !seen.insert(&ev.digest) {
             rejections.push(RejectedEvidence {
-                evidence: ev.clone(), contract_id: contract.id.clone(),
+                evidence: Some(ev.clone()), contract_id: contract.id().to_string(),
                 reason: format!("duplicate digest: {}", ev.digest),
                 error_code: AdmissibilityErrorCode::DuplicateDigest,
                 error_stage: AdmissibilityStage::Binding,
@@ -334,31 +369,34 @@ pub fn admit(
     if !rejections.is_empty() { return Err(rejections); }
 
     // --- Stage 3: COMPLETENESS ---
-    // Establishes: complete relative to schema. NOT epistemically complete.
 
-    if evidence.len() < contract.min_evidence_count {
+    // FIX 1: Empty evidence slice returns RejectedEvidence, not panic.
+    if evidence.len() < contract.min_evidence_count() {
         return Err(vec![RejectedEvidence {
-            evidence: evidence[0].clone(), contract_id: contract.id.clone(),
-            reason: format!("insufficient: {} items, min {}", evidence.len(), contract.min_evidence_count),
+            evidence: evidence.first().cloned(),
+            contract_id: contract.id().to_string(),
+            reason: format!("insufficient: {} items, min {}", evidence.len(), contract.min_evidence_count()),
             error_code: AdmissibilityErrorCode::InsufficientEvidence,
             error_stage: AdmissibilityStage::Completeness,
         }]);
     }
 
-    if evidence.len() > contract.max_evidence_count {
+    if evidence.len() > contract.max_evidence_count() {
         return Err(vec![RejectedEvidence {
-            evidence: evidence[0].clone(), contract_id: contract.id.clone(),
-            reason: format!("excess: {} items, max {}", evidence.len(), contract.max_evidence_count),
+            evidence: evidence.first().cloned(),
+            contract_id: contract.id().to_string(),
+            reason: format!("excess: {} items, max {}", evidence.len(), contract.max_evidence_count()),
             error_code: AdmissibilityErrorCode::ExcessEvidence,
             error_stage: AdmissibilityStage::Completeness,
         }]);
     }
 
     let present: HashSet<&EvidenceRole> = evidence.iter().map(|e| &e.role).collect();
-    for req in &contract.required_roles {
+    for req in contract.required_roles() {
         if !present.contains(req) {
             return Err(vec![RejectedEvidence {
-                evidence: evidence[0].clone(), contract_id: contract.id.clone(),
+                evidence: evidence.first().cloned(),
+                contract_id: contract.id().to_string(),
                 reason: format!("missing required role: {:?}", req),
                 error_code: AdmissibilityErrorCode::MissingRequiredRole,
                 error_stage: AdmissibilityStage::Completeness,
@@ -367,32 +405,16 @@ pub fn admit(
     }
 
     // --- ALL STAGES PASSED ---
-    // The ONLY code path that constructs AdmittedEvidence.
-
     let digests: Vec<CanonicalDigest> = evidence.iter().map(|e| e.digest.clone()).collect();
     let admission_digest = compute_admission_digest(
-        &contract.id, &contract.version, &digests, &contract.canon_version,
+        contract.id(), contract.version(), &digests, contract.canon_version(),
     );
 
     Ok(AdmittedEvidence {
-        contract_id: contract.id.clone(),
-        contract_version: contract.version.clone(),
+        contract_id: contract.id().to_string(),
+        contract_version: contract.version().to_string(),
         evidence: evidence.to_vec(),
-        admitted_at: "2026-08-19T03:50:00Z".to_string(),
+        admitted_at: "2026-08-19T06:00:00Z".to_string(),
         admission_digest,
     })
 }
-
-// ============================================================================
-// DOWNSTREAM PLACEHOLDERS (NOT IMPLEMENTED — out of scope per spec)
-// ============================================================================
-//
-// evaluate(contract, admitted: AdmittedEvidence, predicate, state, transition) → Decision
-//   — accepts AdmittedEvidence, NOT raw Evidence (CONSTRAINT 2)
-//   — Decision is NOT convertible to Evidence (CONSTRAINT 3)
-//
-// apply(decision, current_state) → next_state | error
-//   — custody state machine (not yet specified)
-//
-// Authority arises ONLY through: evaluate → Decision → apply → CustodyState → Authority
-// AdmittedEvidence is one step. NOT the whole chain.
