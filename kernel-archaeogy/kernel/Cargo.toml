@@ -12,6 +12,10 @@ path = "src/lib.rs"
 name = "validation_tests"
 path = "src/tests.rs"
 
+[[test]]
+name = "round3b_correspondence"
+path = "src/round3b_tests.rs"
+
 [dependencies]
 # No dependencies. Pure protocol logic.
 # No serde (serialization cannot manufacture AdmittedEvidence).

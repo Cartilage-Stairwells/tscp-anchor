@@ -4,13 +4,56 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 
+running 38 tests
+test v1_1_media_type_none_accepted ... ok
+test v1_4_duplicate_digest_non_consecutive ... ok
+test v1_2_uppercase_hex_rejected ... ok
+test v1_3_rejected_evidence_populated_for_non_empty ... ok
+test v1_5_canon_version_acceptance_not_checked ... ok
+test v1_7_collects_all_type_rejections ... ok
+test v2_1_empty_media_type_accepted ... ok
+test v2_2_all_zeros_digest_accepted ... ok
+test v2_3_min_equals_max ... ok
+test v2_4_empty_required_roles ... ok
+test v2_5_all_same_roles_no_required ... ok
+test v2_6_role_not_in_contract_rejected ... ok
+test v3_1_validation_collects_all_failures ... ok
+test v3_2_canon_version_all_mismatches_collected ... ok
+test v3_3_multiple_validation_failures_same_item ... ok
+test v3_4_stage_ordering_validation_passes_binding_fails ... ok
+test v3_5_stage_ordering_validation_binding_pass_completeness_fails ... ok
+test v3_6_completeness_order_min_before_required ... ok
+test v4_1_empty_evidence_no_panic ... ok
+test v4_2_exactly_max ... ok
+test v4_3_one_over_max ... ok
+test v4_4_single_evidence_contract ... ok
+test v4_5_duplicate_digest_different_types_roles ... ok
+test v4_6_same_role_different_digests ... ok
+test v4_7_mixed_canon_versions ... ok
+test v5_1_empty_evidence_multiple_contracts ... ok
+test v5_2_partial_canon_mismatch ... ok
+test v5_3_contract_accessor_correctness ... ok
+test v5_4_contract_new_rejects_invalid ... ok
+test v5_5_determinism_stress ... ok
+test v5_6_admission_digest_evidence_dependent ... ok
+test v6_1_rejected_evidence_type_divergence ... ok
+test v6_2_evidence_canon_version_representation ... ok
+test v6_3_duplicate_admission_not_implemented ... ok
+test v6_4_admitted_at_static ... ok
+test v6_5_canon_version_acceptance_list_undefined ... ok
+test v6_6_role_definition_matches ... ok
+test v6_7_halt_vs_collect_interpretation ... ok
+
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
 running 31 tests
 test c10_validation_structural ... ok
 test c12_completeness_schema_relative ... ok
 test c11_binding_association ... ok
+test c15_spec_preserved ... ok
 test c13_no_authority_semantics ... ok
 test c14_authority_downstream ... ok
-test c15_spec_preserved ... ok
 test c1_evidence_cannot_enter_evaluate ... ok
 test c2_no_external_construction ... ok
 test c3_construction_paths ... ok
