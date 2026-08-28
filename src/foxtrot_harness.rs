@@ -76,6 +76,10 @@ where
     }
 
     fn compute_trace_commitment(&self, trace: &RowMajorMatrix<BabyBear>) -> Vec<u8> {
+        // ARCHER Finding 31: This is a placeholder — not a real commitment.
+        // A production implementation must use a Merkle tree commitment
+        // (BatchMerkleTreeMmcs) over the trace rows. The hardcoded bytes
+        // 0xDEADBEEF provide no cryptographic binding.
         vec![(trace.height() as u8), (trace.width() as u8), 0xDE, 0xAD, 0xBE, 0xEF]
     }
 

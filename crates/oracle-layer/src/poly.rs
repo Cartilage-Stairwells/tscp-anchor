@@ -11,14 +11,22 @@ pub fn vanishing_poly<F: Field>(n: usize) -> Vec<F> {
 
 /// Polynomial long division: numerator / denominator (den must be monic).
 /// If numerator degree < denominator degree, quotient is zero polynomial.
+///
+/// ARCHER Finding 34: Added check for zero leading coefficient.
+/// Previously, if den.last() was zero, the inverse() call would panic
+/// or produce wrong results. Now returns an empty quotient.
 pub fn poly_div<F: Field>(num: &[F], den: &[F]) -> Vec<F> {
     // If numerator degree < denominator degree, quotient is zero.
     if num.len() < den.len() {
         return vec![F::ZERO; 0]; // empty quotient
     }
+    // ARCHER Finding 34: Check denominator leading coefficient is non-zero
+    let den_lead = den.last().unwrap();
+    if *den_lead == F::ZERO {
+        return vec![F::ZERO; 0]; // division by zero polynomial — return empty
+    }
     let mut q = vec![F::ZERO; num.len() - den.len() + 1];
     let mut r = num.to_vec();
-    let den_lead = den.last().unwrap();
     for k in (0..=r.len() - den.len()).rev() {
         let coeff = r[k + den.len() - 1] * den_lead.inverse();
         q[k] = coeff;

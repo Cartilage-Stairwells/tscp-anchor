@@ -49,6 +49,11 @@ impl SoundnessAccumulator {
         }
     }
 
+    /// ARCHER Finding 35: This soundness budget tracking is NOT
+    /// cryptographically bound to the Fiat-Shamir transcript. A malicious
+    /// prover could reset the accumulator without affecting the challenge
+    /// sequence. For production, the accumulator state should be absorbed
+    /// into the challenger after each consume() call.
     pub fn consume(&mut self, bits: usize) -> Result<(), DeepAliError> {
         if bits > self.bits_remaining {
             return Err(DeepAliError::SoundnessDepleted {
@@ -229,6 +234,11 @@ impl TraceEvaluator {
         z: BabyBear,
         shift: usize,
     ) -> Result<BabyBear, DeepAliError> {
+        // ARCHER Finding 32: Uses additive shift (z + shift) — same issue as
+        // Finding 23. The constraint layer uses multiplicative shift.
+        // Also, shift is cast from usize to u32 without overflow check.
+        // TODO: Use multiplicative shift (z * shift_factor) to match
+        // constraint layer, and check shift fits in u32.
         let shifted_z = z + BabyBear::new(shift as u32);
         self.evaluate_column(col_idx, shifted_z)
     }
