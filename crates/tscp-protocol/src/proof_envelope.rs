@@ -54,8 +54,13 @@ impl ProofEnvelope {
         }
     }
 
+    /// Test-only golden corpus check: verifies the proof's claim matches
+    /// a known-good Fibonacci terminal value (294373). This is NOT a
+    /// general verification function — it is a regression check for the
+    /// G2.5 golden test. Do not use in production; use `open()` with a
+    /// verifier and check the proof payload cryptographically.
     pub fn verify_golden(&self) -> Result<(), ProofError> {
-        // G2.5 + immortality gate
+        // G2.5 + immortality gate — TEST ONLY
         if self.claim != 294373 {
             return Err(ProofError::GoldenMismatch {
                 expected: 294373,
