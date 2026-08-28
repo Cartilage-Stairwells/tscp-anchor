@@ -39,12 +39,16 @@ where
         let queries = self.generate_deep_queries(&trace);
         let mut challenger = DuplexChallenger::new(self.perm.clone());
         let quotient = self.deep_ali.compute_deep_quotient(&trace, &queries, &mut challenger)?;
-        let proof = self.delta_bridge.prove_quotient(&trace, &queries)?;
-        let trace_commitment = self.compute_trace_commitment(&trace);
-        let verified = self.delta_bridge.verify_quotient(&trace_commitment, &proof)?;
-        assert!(verified, "Foxtrot: proof verification failed");
-        self.assert_pipeline_invariants(&trace, &quotient, &proof)?;
-        Ok(proof)
+
+        // ARCHER Finding 14: FRI proving is not yet implemented.
+        // The quotient is computed correctly, but the FRI commit/query/fold
+        // pipeline is scaffolded. We verify what we can (quotient + invariants)
+        // and return an explicit error for the missing FRI step.
+        self.assert_pipeline_invariants(&trace, &quotient)?;
+
+        Err(DeepAliError::InterpolationFailure {
+            reason: "FRI proving not implemented — quotient computed, FRI pipeline pending".to_string(),
+        })
     }
 
     fn generate_synthetic_trace(&self) -> RowMajorMatrix<BabyBear> {
@@ -75,7 +79,7 @@ where
         vec![(trace.height() as u8), (trace.width() as u8), 0xDE, 0xAD, 0xBE, 0xEF]
     }
 
-    fn assert_pipeline_invariants(&self, trace: &RowMajorMatrix<BabyBear>, quotient: &[BabyBear], proof: &FriProof) -> Result<(), DeepAliError> {
+    fn assert_pipeline_invariants(&self, trace: &RowMajorMatrix<BabyBear>, quotient: &[BabyBear]) -> Result<(), DeepAliError> {
         let quotient_degree = quotient.len().saturating_sub(1);
         assert!(quotient_degree < TEST_TRACE_HEIGHT - 1, "Foxtrot: quotient degree {} exceeds bound {}", quotient_degree, TEST_TRACE_HEIGHT - 1);
         assert_eq!(trace.height(), TEST_TRACE_HEIGHT);
@@ -116,6 +120,13 @@ mod tests {
         let perm = build_test_perm();
         let mut harness = FoxtrotHarness::new(perm);
         let result = harness.run_full_pipeline();
-        assert!(result.is_ok(), "Full pipeline failed: {:?}", result.err());
+        // ARCHER Finding 14: pipeline correctly fails because FRI is not implemented
+        assert!(result.is_err(), "Pipeline should fail — FRI not implemented");
+        let err = result.unwrap_err();
+        assert!(
+            matches!(err, DeepAliError::InterpolationFailure { .. }),
+            "Expected InterpolationFailure, got: {:?}",
+            err
+        );
     }
 }

@@ -28,6 +28,7 @@ p3-symmetric.workspace = true
 p3-merkle-tree.workspace = true
 tracing = "0.1"
 tracing-subscriber = "0.3"
+sha2 = "0.10"
 
 [dev-dependencies]
 tempfile.workspace = true

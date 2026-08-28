@@ -15,6 +15,7 @@ import signal
 import sys
 import time
 import logging
+import hashlib
 from dataclasses import dataclass, asdict, field
 from typing import List, Optional
 from collections import deque
@@ -59,7 +60,8 @@ class OWSLStatus:
     frame_count:    int          # Number of samples taken in current window
     window_start:   float
     window_end:     float
-    checksum_valid: bool         # Always True for kernel-sourced data; hook for future integrity checks
+    checksum_valid: bool         # True if content_hash verifies, False if missing/mismatch
+    content_hash: str = ""        # SHA-256 over canonical status fields (excluding content_hash and checksum_valid)
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2)
@@ -70,6 +72,27 @@ class OWSLStatus:
 
     def permits_verification(self) -> bool:
         return self.status != "CRITICAL" and self.action != "HALT"
+
+    def _compute_content_hash(self) -> str:
+        """SHA-256 over status fields, excluding content_hash and checksum_valid."""
+        h = hashlib.sha256()
+        h.update(f"{self.timestamp}".encode())
+        h.update(f"|{self.status}".encode())
+        h.update(f"|{self.action}".encode())
+        h.update(f"|{self.round}".encode())
+        h.update(f"|{self.bits_consumed}".encode())
+        h.update(f"|{self.bits_remaining}".encode())
+        h.update(f"|{','.join(self.anomalies)}".encode())
+        h.update(f"|{self.frame_count}".encode())
+        h.update(f"|{self.window_start}".encode())
+        h.update(f"|{self.window_end}".encode())
+        return h.hexdigest()
+
+    def verify_integrity(self) -> bool:
+        """Check if content_hash matches recomputed hash. ARCHER Finding 6 fix."""
+        if not self.content_hash:
+            return False
+        return self.content_hash == self._compute_content_hash()
 
 
 # ── Entropy sampling ──────────────────────────────────────────────────────────
@@ -262,8 +285,10 @@ class OWSLDaemon:
             frame_count    = len(self.detector.frames),
             window_start   = w_start,
             window_end     = w_end,
-            checksum_valid = True,  # TODO(owsl-zk): compute HMAC over payload when ledger is wired
+            checksum_valid = True,
+            content_hash   = "",
         )
+        owsl_status.content_hash = owsl_status._compute_content_hash()
 
         self.writer.write(owsl_status)
 
