@@ -48,10 +48,20 @@ impl std::error::Error for BridgeError {}
 /// The oracle-layer's FriProof doesn't derive Serialize/Deserialize,
 /// so we convert it to this serializable form for byte-level digest computation.
 /// This preserves the architectural boundary: the emitter only sees Vec<u8>.
+///
+/// ARCHER Finding 29: This representation does NOT include Merkle opening proofs
+/// (query_proofs). The artifact's proof_digest is computed over an incomplete
+/// representation of the proof. For production use, the full proof including
+/// Merkle openings must be serialized.
+///
+/// ARCHER Finding 30: Merkle roots and final_value are serialized using
+/// Rust's debug format ({:?}), not canonical byte representation. This makes
+/// the digest non-reproducible across platforms or Rust versions. For production,
+/// use a canonical byte encoding (e.g., big-endian field element bytes).
 #[derive(Serialize, Deserialize)]
 pub struct SerializableFriProof {
-    pub roots: Vec<String>,  // Merkle roots as debug strings
-    pub final_value: String, // Final constant as debug string
+    pub roots: Vec<String>,  // Merkle roots as debug strings — non-canonical, see Finding 30
+    pub final_value: String, // Final constant as debug string — non-canonical, see Finding 30
     pub query_indices: Vec<usize>,
     pub num_query_rounds: usize,
     pub num_fold_rounds: usize,
