@@ -1,0 +1,373 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{array}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{axiom}{Axiom}
+\newtheorem{remark}{Remark}
+
+% Listings for code
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  framerule=0.5pt,
+  rulecolor=\color{gray},
+  xleftmargin=1em,
+  xrightmargin=1em,
+}
+
+% Section formatting
+\titleformat{\section}{\large\bfseries}{\thesection}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+
+\title{\textbf{TSCP: Cryptographic Custody Verification for\\Multi-Agent Computation Pipelines}}
+\author{Sean Christopher Southwick\\
+\texttt{github.com/Cartilage-Stairwells}\\
+\textit{Draft v1 --- August 2026}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present the Triune Structured Codex Protocol (TSCP), a protocol for cryptographic custody verification of artifacts produced by multi-agent computation pipelines. TSCP introduces a five-stage custody pipeline --- Resolve, Observe, Bind, Independent Verify, Promote --- that transforms declared hashes from assertions into independently verified claims. The protocol is built on a categorical formal backbone in Lean~4, proving that verification properties (admissibility, preservation, reflection) compose correctly across systems. We demonstrate the protocol's implementation on the Plonky3 proof system, including an AVX-512 number-theoretic transform (NTT) optimization achieving $9.15\times$ speedup with 61 verification points, backed by 83 formal theorems and 104 test vectors. We further present results from an adversarial discovery audit (ARCHER methodology) identifying 12 boundary-level security findings across the protocol's implementation, all addressed. The protocol's core principle --- ``a declared hash is an assertion, not a verification'' --- distinguishes it from existing approaches that treat cryptographic hashes as sufficient evidence of provenance.
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{The Problem}
+
+As AI systems increasingly produce artifacts that downstream systems depend on --- code, decisions, data, model weights, proofs --- there is no standard mechanism to verify that a claimed artifact actually passed through its claimed computation pipeline. Current approaches fall into three categories:
+
+\begin{enumerate}
+\item \textbf{Trust declared hashes.} A system produces an artifact, computes its hash, and publishes it. Downstream systems compare hashes to confirm identity. This is the dominant approach in software supply chains (e.g., SBOM, SLSA provenance). It is unsafe: a hash confirms \emph{what} the artifact is, not \emph{how} it was produced.
+\item \textbf{Full recomputation.} Downstream systems re-run the computation to verify the output. This is safe but expensive --- it defeats the purpose of delegation and does not scale to complex pipelines.
+\item \textbf{No verification.} Most multi-agent AI systems today simply trust the claimed output of upstream agents. This is the common case, and it is the case TSCP is designed to address.
+\end{enumerate}
+
+\subsection{The Gap}
+
+The gap between these approaches is what we call \emph{custody verification}: a structured process for verifying that an artifact's claimed provenance --- the sequence of computations that produced it --- is real, without requiring full recomputation. Zero-knowledge proofs provide a tool for this: a prover can demonstrate that a computation was executed correctly without revealing the computation's inputs or requiring the verifier to re-execute it. But existing ZK proof systems prove \emph{computation correctness}, not \emph{artifact provenance}. They answer ``was this computation valid?'' but not ``did this artifact actually come from this computation, and is the chain of custody intact?''
+
+\subsection{Our Contribution}
+
+TSCP fills this gap with four components:
+
+\begin{enumerate}
+\item \textbf{A five-stage custody pipeline} (\S\ref{sec:pipeline}) that structures the verification of artifact provenance into distinct stages with explicit invariants.
+\item \textbf{A categorical formal backbone} (\S\ref{sec:formal}) in Lean~4 that proves verification properties compose correctly across systems. The backbone is axiom-free except for two explicitly documented engineering boundaries.
+\item \textbf{A ZK implementation} (\S\ref{sec:zk}) on the Plonky3 proof system, including a sumcheck protocol with self-checking prover, FRI commitment scheme, and OWSL entropy health gating.
+\item \textbf{An NTT optimization} (\S\ref{sec:ntt}) using AVX-512 intrinsics, achieving $9.15\times$ speedup over the scalar baseline, with formal verification of correctness in Lean~4.
+\end{enumerate}
+
+\subsection{The Core Principle}
+
+TSCP is organized around a single principle: \textbf{a declared hash is an assertion, not a verification.} Most systems treat a published hash as proof that an artifact is what it claims to be. TSCP treats it as a \emph{claim} that must be independently verified through the custody pipeline before it can be promoted to a verified fact.
+
+This principle is not merely philosophical. It has concrete security consequences: the ARCHER audit (\S\ref{sec:security}) found that the protocol's implementations initially treated several boundary conditions --- empty predecessors, default authorization scopes, placeholder verification flags --- as verified when they were merely asserted. Each of these was a case where a declared hash (or its equivalent) was being treated as a verification.
+
+\section{Background}
+
+\subsection{Zero-Knowledge Proof Systems}
+
+A zero-knowledge proof system allows a prover to convince a verifier that a statement is true without revealing any information beyond the validity of the statement. Modern ZK proof systems based on the FRI protocol (Fast RS Codes Interactive Oracle Proof of Proximity) work as follows:
+
+\begin{enumerate}
+\item \textbf{Commit phase.} The prover commits to a polynomial via a Merkle tree of evaluations over a dedicated domain. The commitment is a Merkle root, which the verifier can check against later.
+\item \textbf{Challenge phase.} Challenges are derived from the commitment via a Fiat-Shamir transform, making the protocol non-interactive. The prover cannot adapt its committed values after seeing the challenges.
+\item \textbf{Query phase.} The verifier samples query indices and checks that the prover's openings at those indices are consistent with the claimed polynomial. Each round's fold consistency is verified: the folded value at the next round must equal the even/odd decomposition of the current round's values, weighted by the challenge.
+\item \textbf{Final check.} After $\log_2(n)$ folds, the polynomial reduces to a single constant. The verifier checks that this constant matches the claimed final value.
+\end{enumerate}
+
+The soundness of FRI depends on the prover being committed to its evaluations before learning which indices will be queried. If the prover could choose evaluations after seeing the queries, it could cheat at unchecked points.
+
+\subsection{Plonky3}
+
+Plonky3~\cite{plonky3} is a modular ZK proof system developed by Polygon. It provides the building blocks used by TSCP:
+
+\begin{itemize}
+\item \textbf{BabyBear field} ($p = 2^{27} - 2^{24} + 1$, a 31-bit Goldilocks prime) --- the base field for all arithmetic
+\item \textbf{Poseidon2} permutation --- the hash function used for Merkle commitments and Fiat-Shamir challenges
+\item \textbf{MerkleTreeMmcs} --- the Merkle matrix commitment scheme (MMCS) for vector commitments
+\item \textbf{DuplexChallenger} --- the Fiat-Shamir transcript for deriving challenges
+\end{itemize}
+
+TSCP uses Plonky3's audited MMCS for all Merkle commitments, rather than a hand-rolled hash tree. This is a deliberate design choice: the commitment scheme is the trust root of the entire protocol, and using an audited implementation reduces the attack surface.
+
+\subsection{Multilinear Extensions and Sumcheck}
+
+A multilinear extension (MLE) of a function $f: \{0,1\}^n \to \mathbb{F}$ is the unique multilinear polynomial that agrees with $f$ at all Boolean points. MLEs are central to modern ZK proof systems: the sumcheck protocol allows a prover to convince a verifier of the sum of an MLE over the Boolean hypercube, with the verifier only needing to evaluate the MLE at a single random point.
+
+TSCP uses sumcheck to prove that the constraint evaluations over the trace are consistent with the claimed constraints. The prover computes the MLE of the constraint evaluations and runs the sumcheck protocol; the verifier checks each round's claimed sum against a fresh challenge.
+
+\subsection{Number-Theoretic Transform}
+
+The NTT is a fundamental building block for polynomial evaluation in FRI-based proof systems. It evaluates a polynomial at all points of a multiplicative subgroup in $O(n \log n)$ operations. The performance of the NTT directly affects prover throughput, making it a critical optimization target.
+
+AVX-512 instructions provide 512-bit SIMD operations that can process 16 BabyBear elements (32-bit each) simultaneously. The butterfly operation at the heart of the NTT --- computing $(a + b, (a - b) \cdot w)$ for elements $a, b$ and twiddle factor $w$ --- maps naturally to SIMD lanes.
+
+\subsection{Lean 4}
+
+Lean~4~\cite{lean4} is an interactive theorem prover and programming language. TSCP uses Lean~4 for two purposes:
+
+\begin{enumerate}
+\item \textbf{Formal verification of the protocol's structure} --- the categorical backbone (Kernel, Universe, Bridge) and the composition theorem.
+\item \textbf{Formal verification of the NTT implementation} --- proving that the AVX-512 intrinsics correctly implement the mathematical NTT.
+\end{enumerate}
+
+Lean~4's dependent type theory provides strong guarantees: a theorem proved in Lean is checked by a small, trusted kernel, and the proof is machine-verifiable.
+
+\section{The TSCP Protocol}
+
+\subsection{The Custody Pipeline}
+\label{sec:pipeline}
+
+The custody pipeline is the core operational component of TSCP. It defines five stages through which an artifact must pass before its provenance can be considered verified:
+
+\textbf{Stage 1: Resolve.} Given an artifact's declared hash, resolve it to its canonical representation. This includes resolving symbolic references, canonicalizing serialization, and checking that the artifact exists at the claimed location. The resolution stage ensures that all downstream stages operate on the same byte-level representation.
+
+\textbf{Stage 2: Observe.} Record the artifact's observable properties --- its hash, size, type, and the computation environment that claims to have produced it. Observation does not verify; it records what can be independently checked. The OWSL (Oracle Witness Security Ledger) component monitors kernel entropy health during this stage, gating further processing on sufficient entropy.
+
+\textbf{Stage 3: Bind.} Cryptographically bind the artifact to its claimed computation. This involves creating a proof that the computation, given its claimed inputs, produces the observed artifact. In TSCP's ZK implementation, this is a sumcheck proof combined with a FRI commitment. The binding stage produces a proof artifact that can be independently verified.
+
+\textbf{Stage 4: Independent Verify.} Independently verify the binding proof. This stage does not trust the prover; it re-derives the challenges from a fresh Fiat-Shamir transcript, checks all Merkle openings, and verifies the fold consistency at each FRI round. The verification is performed with a fresh challenger seeded identically to the prover's, but without sharing state.
+
+\textbf{Stage 5: Promote.} If and only if all four preceding stages succeed, promote the artifact from ``asserted'' to ``verified'' status. The promotion is recorded on-chain (currently Sepolia testnet) via the TSCPAnchor contract, which prevents duplicate anchoring and records the committer's identity.
+
+The pipeline is sequential and fail-closed: any stage's failure prevents promotion. No stage trusts the output of a previous stage without re-verification.
+
+\subsection{Categorical Formal Backbone}
+\label{sec:formal}
+
+The formal backbone models the protocol's verification structure using category-theoretic primitives:
+
+\begin{definition}[Kernel]
+A kernel $K$ over type $\alpha$ is a structure with an admissibility predicate $\textsf{admits\_proof}: \alpha \to \textsf{Prop}$, a proof that the predicate is decidable, and a proof that at least one proof is admissible. Kernels are the trust roots: they define what counts as a valid proof in a given system.
+\end{definition}
+
+\begin{definition}[Universe]
+A universe $U$ is a structure with three kernels --- one for proofs, one for formulas, one for executions --- representing the three layers of a verification system.
+\end{definition}
+
+\begin{definition}[Bridge]
+A bridge $f: U \to V$ is a structure with maps between the proof, formula, and execution types of two universes. A bridge represents a translation or encoding between systems.
+\end{definition}
+
+\begin{definition}[Bridge Certificate]
+A certificate for a bridge proves three properties: \emph{preservation} (if $p$ is admissible in $U$, then $f(p)$ is admissible in $V$), \emph{reflection} (if $q$ is admissible in $V$, then some $p$ exists with $f(p) = q$ and $p$ is admissible in $U$), and \emph{admissibility} (the kernel admissibility structure is preserved).
+\end{definition}
+
+\begin{theorem}[Composition]
+\label{thm:composition}
+If $f: U \to V$ has a bridge certificate and $g: V \to W$ has a bridge certificate, then $g \circ f: U \to W$ has a bridge certificate.
+\end{theorem}
+
+\begin{proof}
+Preservation: given $p$ admissible in $U$, $f$'s certificate gives $f(p)$ admissible in $V$, and $g$'s certificate gives $g(f(p))$ admissible in $W$. Reflection: given $q$ admissible in $W$, $g$'s certificate gives some $q'$ in $V$ with $g(q') = q$ and $q'$ admissible, then $f$'s certificate gives some $p$ in $U$ with $f(p) = q'$ and $p$ admissible, so $g(f(p)) = q$. Admissibility follows by composition of the kernel admissible maps. \qed
+\end{proof}
+
+The backbone is axiom-free except for two engineering boundaries (\S\ref{sec:boundaries}). The proof of the composition theorem is constructive and checked by Lean~4's trusted kernel.
+
+\subsection{ZK Implementation}
+\label{sec:zk}
+
+\subsubsection{Sumcheck with Self-Checking Prover}
+
+TSCP's prover implements a sumcheck protocol that self-verifies before emitting a proof. The prover runs the sumcheck computation, then independently re-derives the verification using a fresh challenger seeded identically to the prover's. If the self-check fails, the prover returns an error instead of emitting a potentially invalid proof. This is a defense-in-depth measure: even if the prover's implementation has a bug, the self-check catches it before the proof reaches a verifier.
+
+The self-check is not a substitute for verifier-side verification. It is a prover-side integrity check that reduces the probability of emitting a malformed proof.
+
+\subsubsection{FRI Commitment Scheme}
+
+The FRI implementation follows the standard commit-query-verify structure:
+
+\begin{itemize}
+\item \textbf{Commit.} The prover builds a Merkle tree of polynomial evaluations, observes the root in the Fiat-Shamir transcript, samples a challenge, folds the evaluations in half, and repeats. After $\log_2(n)$ rounds, a single constant value remains.
+\item \textbf{Query.} After the full commitment, the prover samples query indices from the transcript and produces Merkle opening proofs for each index at each round. The query phase occurs only after all commitments are in the transcript, ensuring the prover cannot adapt to the queries.
+\item \textbf{Verify.} The verifier re-derives the challenges and query indices from a fresh transcript, then checks each round's fold consistency: the opened value at the next round must equal the even/odd decomposition of the current round's opened values, weighted by the round's challenge. All Merkle openings are verified against the claimed roots using Plonky3's audited MMCS.
+\end{itemize}
+
+\subsubsection{OWSL Entropy Health Gating}
+
+The OWSL (Oracle Witness Security Ledger) component monitors the kernel's available entropy and gates proof processing on entropy health. If available entropy falls below a threshold (default: 256 bits), the system enters a WARNING state; below 128 bits, it enters a CRITICAL state and stops processing. This is a defense against environments where the random number generator is compromised or depleted, which could undermine the Fiat-Shamir transform's soundness.
+
+The OWSL status includes a SHA-256 content hash over all status fields, verified by the Rust bridge on read. This prevents a compromised daemon from falsifying its own health reports without detection.
+
+\subsection{NTT Optimization}
+\label{sec:ntt}
+
+The AVX-512 NTT implementation processes 16 BabyBear elements per butterfly operation using 512-bit SIMD lanes. The formal verification in Lean~4 proves the following chain:
+
+\begin{enumerate}
+\item \textbf{Mathematical layer} (fully proven): Montgomery multiplication is correct ($\textsf{montgomeryMul\_scalar\_correct}$); the NTT butterfly decomposition is correct; the stage decomposition is correct.
+\item \textbf{Machine layer} (3 open axioms): The AVX-512 intrinsics ($\textsf{exec\_avx512\_mont\_mul}$, $\textsf{exec\_avx512\_butterfly}$) correctly implement the scalar algorithms. These are the machine refinement obligations --- the gap between the mathematical specification and the hardware implementation.
+\item \textbf{Connection} (proven from axioms): By transitivity, the AVX-512 implementation equals the mathematical specification:
+\end{enumerate}
+
+$$\textsf{exec\_avx512\_mont\_mul} = \textsf{scalarMul} \text{ (axiom)} = \textsf{montgomeryMul} \text{ (proven)}$$
+
+The three open axioms are explicitly documented as engineering boundaries. They are backed by 104 Rust test vectors that verify the AVX-512 output matches the scalar implementation across a range of inputs. Discharging these axioms via machine-level verification (e.g., Aeneas~\cite{aeneas} or Kraken) is identified as future work.
+
+\subsection{Engineering Boundaries}
+\label{sec:boundaries}
+
+The formal backbone has two explicitly documented axioms:
+
+\begin{axiom}[execution\_valid]
+The NTT bridge has a valid certificate (the NTT preserves admissibility). Evidence: AVX-512 butterfly kernel implementation + test suite.
+\end{axiom}
+
+\begin{axiom}[babybear\_ntt\_end\_to\_end]
+The NTT forward transform preserves admissibility end-to-end. Evidence: NTT round-trip test vectors.
+\end{axiom}
+
+These axioms are not hidden assumptions. They are documented in the source with their evidence basis, and the formal proofs explicitly note where they are used. A reader of the formal layer can identify exactly which theorems depend on these axioms and which are axiom-free.
+
+\section{Security Analysis}
+\label{sec:security}
+
+\subsection{ARCHER Methodology}
+
+The ARCHER (Adversarial Discovery) methodology is a structured approach to finding security issues at system boundaries. Rather than searching for specific attack patterns, ARCHER searches for cases where individually ordinary operations compose into unexpected behavior, where apparently irrelevant variables become relevant through interaction, and where assumptions about isolation, equivalence, reachability, harmlessness, or irrelevance fail.
+
+The core loop is: Generate $\to$ Perturb $\to$ Execute $\to$ Observe $\to$ Compare $\to$ Hypothesize $\to$ Falsify $\to$ Reproduce $\to$ Report. The methodology explicitly requires falsification: every hypothesis must be tested against alternative explanations (ordinary behavior, measurement artifact, timing, state contamination, environmental variation, implementation defect, coincidence, alternative causal mechanism).
+
+\subsection{Findings}
+
+The ARCHER audit identified 12 findings across two repositories. All findings were at system boundaries --- configuration defaults, input validation, dead code, stale documentation, or interface contracts. None were in the core cryptographic operations (FRI, sumcheck, Merkle commitments). This pattern is itself a finding: the protocol's strictness concentrates in the happy path, creating implicit assumptions that the boundaries are also strict.
+
+\subsubsection{P0 Baseline (Python)}
+
+\begin{itemize}
+\item \textbf{Finding 1: \texttt{authorized\_root} defaults to \texttt{"/"}.} The artifact resolver's authorized root directory defaulted to \texttt{"/"}, effectively disabling symlink protection. Fix: default to \texttt{None} and fail closed if not configured.
+\item \textbf{Finding 2: \texttt{verify\_predecessor} accepts null predecessor on non-genesis receipts.} Fix: reject null predecessors for non-genesis receipts.
+\item \textbf{Finding 3: Timestamp hardcodes millisecond component.} The timestamp generation function hardcoded \texttt{".000Z"}, losing millisecond precision. Fix: use real millisecond precision.
+\end{itemize}
+
+\subsubsection{tscp-anchor (Rust/Solidity)}
+
+\begin{itemize}
+\item \textbf{Finding 4: \texttt{TSCPAnchor.sol} has no access control.} Fix: added \texttt{onlyAuthorized} modifier.
+\item \textbf{Finding 5: \texttt{TSCPFriVerifier.sol} placeholder functions return true.} Fix: added \texttt{productionMode} guard defaulting to false.
+\item \textbf{Finding 6: OWSL \texttt{checksum\_valid} hardcoded to true.} Fix: added SHA-256 content hash verified on read.
+\item \textbf{Finding 7: Prover silently truncates non-power-of-2 inputs.} Fix: added validation rejecting non-power-of-2 lengths.
+\item \textbf{Finding 8: Mismatched column lengths cause panic.} Fix: covered by length-mismatch validation.
+\item \textbf{Finding 9: OWSL status file unauthenticated.} Fix: covered by content hash.
+\item \textbf{Finding 10: \texttt{ConstraintOracle} uses \texttt{f64::log2().ceil()} for \texttt{n\_vars}.} Fix: replaced with \texttt{trailing\_zeros()}.
+\item \textbf{Finding 11: \texttt{ConstraintOracle.eval} is a table lookup, not MLE.} Fix: replaced with \texttt{evaluate\_mle()}.
+\item \textbf{Finding 12: Stale Merkle tree documentation.} Fix: corrected comment.
+\end{itemize}
+
+\subsection{Pattern Analysis}
+
+The 12 findings cluster at boundaries:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Boundary type} & \textbf{Findings} \\
+\midrule
+Configuration defaults & 1, 4, 5 \\
+Input validation & 2, 7, 8 \\
+Integrity/authentication & 6, 9 \\
+Interface contracts & 10, 11 \\
+Documentation drift & 12 \\
+Precision/representation & 3, 10 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The absence of findings in the core cryptographic operations suggests that the protocol's cryptographic design is sound. The issues are at the seams --- where the cryptographic core meets the application layer, the file system, the network, or the developer's assumptions.
+
+\subsection{Remaining Boundaries}
+
+Two formal axioms (\S\ref{sec:boundaries}) and three machine refinement axioms (\S\ref{sec:ntt}) remain open. These are explicitly documented engineering boundaries, not hidden assumptions. The protocol's security claim is conditional: \emph{if} the axioms hold (backed by empirical evidence), \emph{then} the formal guarantees follow (proven in Lean~4).
+
+No external audit has been conducted. The ARCHER audit was performed by an AI agent, which provides useful coverage but is not a substitute for independent human review.
+
+\section{Related Work}
+
+\subsection{ZK Proof Systems}
+
+Plonky3~\cite{plonky3} provides the cryptographic primitives used by TSCP. RISC Zero~\cite{risczero} and StarkWare~\cite{starkware} provide general-purpose zkVMs. TSCP is complementary: it could sit on top of any proof system to add custody verification.
+
+\subsection{Software Supply Chain Security}
+
+SLSA~\cite{slsa} and SBOM~\cite{sbom} address software supply chain integrity by tracking composition and build provenance. They rely on declared hashes and metadata, not cryptographic proofs of computation. TSCP provides stronger guarantees: cryptographic proof that the claimed computation actually produced the claimed artifact.
+
+\subsection{AI Output Verification}
+
+AI watermarking~\cite{watermarking} and detection methods address identifying AI-generated content. They do not verify the production process. TSCP verifies provenance --- the chain of computations that produced an artifact --- not just content identity.
+
+\subsection{Formal Verification of Cryptographic Protocols}
+
+Projects like fiat-crypto~\cite{fiatcrypto} and EverCrypt~\cite{evercrypt} demonstrate that cryptographic implementations can be formally verified end-to-end. TSCP's Lean~4 verification follows a similar approach, with explicit engineering boundaries where machine-level verification is not yet available.
+
+\section{Discussion}
+
+\subsection{Custody Verification as a Primitive}
+
+The custody pipeline is a new primitive: a structured process for verifying artifact provenance using ZK proofs. It is not a proof system (it does not prove computations) and not a supply chain tool (it does not track composition). It is a protocol for verifying that an artifact's claimed history is real.
+
+The five stages are designed to be independently useful: a system could implement only Resolve and Observe (audit logging), add Bind (proof generation), add Independent Verify (proof checking), and finally Promote (on-chain anchoring). Each stage adds a stronger guarantee.
+
+\subsection{Generalizability}
+
+TSCP is implemented on Plonky3, but the protocol is not tied to a specific proof system. The categorical backbone's Bridge abstraction allows different proof systems to be connected: a bridge from a Plonky3 universe to a RISC Zero universe would allow custody verification across proof systems, with the composition theorem guaranteeing that verification properties are preserved.
+
+\subsection{Limits of Self-Verification}
+
+The ARCHER audit was performed by an AI agent. This is useful --- it found 12 real issues --- but it is not independent. A compromised AI assistant could suppress findings. The protocol's own principle applies: a declared audit is an assertion, not a verification. External review is necessary for the same reason that independent verification is necessary in the custody pipeline.
+
+\section{Conclusion and Future Work}
+
+TSCP provides a structured protocol for cryptographic custody verification of artifacts produced by multi-agent computation pipelines. Its categorical formal backbone proves that verification properties compose correctly, its ZK implementation provides concrete proof generation and verification, and its NTT optimization improves prover throughput. The ARCHER audit demonstrates that the protocol's security can be tested systematically and that its boundaries can be hardened.
+
+Future work:
+\begin{enumerate}
+\item \textbf{Discharge the formal axioms} using machine-level verification (Aeneas, Kraken) to complete the formal verification chain.
+\item \textbf{External audit} by an independent cryptographer.
+\item \textbf{Production FRI verifier} --- a real FRI verifier on-chain to complete the custody pipeline's promotion stage.
+\item \textbf{Multi-proof-system support} --- implement bridges to additional proof systems to demonstrate generalizability.
+\item \textbf{Standardization} --- propose the custody pipeline as a standard for AI artifact provenance verification.
+\end{enumerate}
+
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+\bibitem{plonky3} Polygon. \textit{Plonky3: A toolkit for polynomial IOPs.} 2024. \url{https://github.com/Plonky3/plonky3}
+
+\bibitem{starkware} StarkWare. \textit{StarkWare and STARKs.} 2018. \url{https://starkware.co}
+
+\bibitem{risczero} RISC Zero. \textit{RISC Zero zkVM.} 2022. \url{https://risczero.com}
+
+\bibitem{slsa} Google. \textit{SLSA: Supply-chain Levels for Software Artifacts.} 2021. \url{https://slsa.dev}
+
+\bibitem{sbom} NTIA. \textit{Software Bill of Materials.} 2021. \url{https://ntia.gov/sbom}
+
+\bibitem{watermarking} Kirchenbauer, J. et al. \textit{A Watermark for Large Language Models.} ICML 2023.
+
+\bibitem{fiatcrypto} Erbsen, A. et al. \textit{Simple High-Level Code For Cryptographic Arithmetic --- A Proof-Generating Compiler.} 2019.
+
+\bibitem{evercrypt} Bhargavan, K. et al. \textit{EverCrypt: A Fast, Verified, Cross-Platform Cryptographic Provider.} IEEE S\&P 2020.
+
+\bibitem{lean4} de Moura, L. and Ullrich, S. \textit{The Lean 4 Theorem Prover and Programming Language.} CPP 2021.
+
+\bibitem{aeneas} Achille, C. et al. \textit{Aeneas: Rust Verification by Functional Translation.} ITP 2022.
+
+\end{thebibliography}
+
+\end{document}

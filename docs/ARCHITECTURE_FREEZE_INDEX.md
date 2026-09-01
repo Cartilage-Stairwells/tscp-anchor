@@ -189,7 +189,7 @@ The architecture specification itself is frozen. This index tracks the freeze st
 ## Contact
 
 **Maintainer:** Sean Christopher Southwick
-**Outreach email:** schlagetorren@gmail.com
+**Outreach email:** [redacted]
 **Canonical email:** adamantinespine@gmail.com
 **GPG:** E747C3AF22573539
 
