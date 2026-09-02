@@ -186,6 +186,43 @@ async fn prove_handler(
             .into_response();
     }
 
+    // ARCHER Finding 7 & 8: Input validation — reject non-power-of-2 lengths
+    // and mismatched column sizes before any processing.
+    // Without this, ilog2 silently truncates non-power-of-2 inputs and
+    // mismatched lengths cause an index-out-of-bounds panic in
+    // FoldedOracleBuilder::build().
+    if req.col0.is_empty() || req.col1.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": "columns must not be empty" })),
+        )
+            .into_response();
+    }
+    if req.col0.len() != req.col1.len() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": format!(
+                    "column length mismatch: col0 has {} elements, col1 has {}",
+                    req.col0.len(), req.col1.len()
+                )
+            })),
+        )
+            .into_response();
+    }
+    if !req.col0.len().is_power_of_two() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "error": format!(
+                    "column length must be a power of 2, got {}",
+                    req.col0.len()
+                )
+            })),
+        )
+            .into_response();
+    }
+
     let n_vars = req.col0.len().ilog2() as usize;
     let col0: Vec<F> = req.col0.iter().map(|&v| F::from_u32(v)).collect();
     let col1: Vec<F> = req.col1.iter().map(|&v| F::from_u32(v)).collect();

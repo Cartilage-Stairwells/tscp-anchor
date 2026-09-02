@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -19,6 +20,8 @@ pub struct OWSLStatus {
     pub window_start: f64,
     pub window_end: f64,
     pub checksum_valid: bool,
+    #[serde(default)]
+    pub content_hash: String,
 }
 
 impl OWSLStatus {
@@ -28,6 +31,29 @@ impl OWSLStatus {
 
     pub fn permits_verification(&self) -> bool {
         self.status != "CRITICAL" && self.action != "HALT"
+    }
+
+    /// ARCHER Finding 18 fix: verify content_hash matches recomputed hash.
+    /// The top-level bridge previously trusted the daemon's checksum_valid
+    /// boolean without independent verification. Now mirrors the
+    /// prover-server bridge's content hash verification.
+    pub fn verify_content_hash(&self) -> bool {
+        if self.content_hash.is_empty() {
+            return false;
+        }
+        let mut h = Sha256::new();
+        h.update(format!("{}", self.timestamp).as_bytes());
+        h.update(format!("|{}", self.status).as_bytes());
+        h.update(format!("|{}", self.action).as_bytes());
+        h.update(format!("|{}", self.round).as_bytes());
+        h.update(format!("|{}", self.bits_consumed).as_bytes());
+        h.update(format!("|{}", self.bits_remaining).as_bytes());
+        h.update(format!("|{}", self.anomalies.join(",")).as_bytes());
+        h.update(format!("|{}", self.frame_count).as_bytes());
+        h.update(format!("|{}", self.window_start).as_bytes());
+        h.update(format!("|{}", self.window_end).as_bytes());
+        let computed = format!("{:x}", h.finalize());
+        computed == self.content_hash
     }
 
     pub fn is_fresh(&self, max_age_seconds: u64) -> bool {
@@ -40,7 +66,7 @@ impl OWSLStatus {
 
     pub fn is_healthy(&self) -> bool {
         self.permits_verification()
-            && self.checksum_valid
+            && self.verify_content_hash()
             && self.bits_remaining > 0
             && self.frame_count > 0
     }
@@ -99,7 +125,7 @@ impl OWSLBridgeReader {
         match self.read_status() {
             Ok(status) => {
                 let permits = status.permits_verification()
-                    && status.checksum_valid
+                    && status.verify_content_hash()
                     && status.bits_remaining > 0;
 
                 if !permits {

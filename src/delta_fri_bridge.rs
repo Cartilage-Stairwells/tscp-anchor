@@ -62,17 +62,20 @@ where
         trace: &RowMajorMatrix<BabyBear>,
         queries: &[DeepQuery<BabyBear>],
     ) -> Result<FriProof, DeepAliError> {
-        let quotient = self.deep_ali.compute_deep_quotient(
+        // ARCHER Finding 14 fix: FRI proving is NOT IMPLEMENTED.
+        // The previous code computed the quotient but constructed an
+        // incomplete FriProof (missing quotient_commitment, foldings,
+        // query_responses). This now returns an explicit error until
+        // the FRI commit/query/fold pipeline is implemented.
+        let _quotient = self.deep_ali.compute_deep_quotient(
             trace,
             queries,
             &mut self.challenger,
         )?;
 
-        let proof = FriProof {
-            pow_nonce: 0,
-        };
-
-        Ok(proof)
+        Err(DeepAliError::InterpolationFailure {
+            reason: "FRI proving not implemented — quotient computed but FRI commit/query/fold pipeline missing".to_string(),
+        })
     }
 
     pub fn verify_quotient(
@@ -80,7 +83,13 @@ where
         _trace_commitment: &[u8],
         _proof: &FriProof,
     ) -> Result<bool, DeepAliError> {
-        Ok(true)
+        // ARCHER Finding 13/14 fix: FRI verification is NOT IMPLEMENTED.
+        // The previous code returned Ok(true) unconditionally, which would
+        // accept any proof — including invalid ones. This is fail-closed:
+        // until a real FRI verifier is implemented, verification always
+        // returns an error. The foxtrot harness tests are updated to
+        // expect this error.
+        Err(DeepAliError::FriCommitmentMismatch { round: 0 })
     }
 }
 

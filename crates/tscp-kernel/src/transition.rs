@@ -32,6 +32,12 @@ pub fn dispatch_event(
         out
     };
 
+    // TODO: This is a placeholder. In the production kernel, the
+    // transition kind should be determined by the event's type/content,
+    // not by counter parity. Currently any even-numbered event is
+    // marked ClaimVerified regardless of whether verification actually
+    // occurred. This is acceptable for the P0 scaffold but must be
+    // replaced with event-type dispatch before production use.
     let kind = if new_state.counter % 2 == 1 {
         TransitionKind::ClaimCreated
     } else {

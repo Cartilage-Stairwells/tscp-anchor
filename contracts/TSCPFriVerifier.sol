@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.24;
 
 // ============================================================================
 // DEVELOPMENT SCAFFOLD ONLY — NOT A CRYPTOGRAPHIC FRI VERIFIER
 // ============================================================================
-// All verification functions (verifyProofOfWork, verifyFriFoldings,
-// verifyQueryResponses, verifyDegreeBound) are placeholders that return
-// true unconditionally. This contract accepts any proof from an authorized
-// caller. It is NOT deployed and NOT part of the zkSHA-Rx verification claim.
-// Do not use this contract in production. A real FRI verifier implementation
-// is future work.
+// ARCHER Finding 5: All verification functions (verifyProofOfWork,
+// verifyFriFoldings, verifyQueryResponses, verifyDegreeBound) are
+// placeholders that return true unconditionally. This contract accepts
+// any proof from an authorized caller — it is an ALLOW-LIST, not a verifier.
+//
+// SAFETY GUARDS:
+// - `productionMode` defaults to false; when false, verifyProof reverts.
+// - This prevents accidental deployment as a live verifier.
+// - Set `productionMode = true` ONLY after implementing real FRI verification.
+//
+// This contract is NOT deployed and NOT part of the zkSHA-Rx verification
+// claim. Do not use this contract in production. A real FRI verifier
+// implementation is future work.
 // ============================================================================
 
 contract TSCPFriVerifier {
@@ -41,9 +48,16 @@ contract TSCPFriVerifier {
         _;
     }
 
+    bool public productionMode = false; // ARCHER Finding 5: safety guard — verifyProof reverts unless explicitly enabled
+
     constructor() {
         owner = msg.sender;
         latestOWSLStatus = OWSLStatus(block.timestamp, "SAFE", "COMMIT", 0, 0, 128, new string[](0), 0, block.timestamp, block.timestamp, true);
+    }
+
+    function setProductionMode(bool enabled) external onlyOwner {
+        require(enabled == true, "TSCP: cannot disable production mode once enabled");
+        productionMode = enabled;
     }
 
     function authorizeProver(address prover) external onlyOwner { authorizedProvers[prover] = true; }
@@ -52,6 +66,7 @@ contract TSCPFriVerifier {
     function transferOwnership(address newOwner) external onlyOwner { owner = newOwner; }
 
     function verifyProof(bytes32 traceCommitment, FriProof calldata proof) external onlyAuthorized owslPermits returns (bool) {
+        require(productionMode, "TSCP: not in production mode — verification functions are placeholders");
         require(!verifiedTraces[traceCommitment], "TSCP: trace already verified");
         if (!verifyProofOfWork(proof.powNonce, traceCommitment)) { emit ProofRejected(traceCommitment, "PoW failed", block.timestamp); return false; }
         if (!verifyFriFoldings(proof.foldings)) { emit ProofRejected(traceCommitment, "FRI folding failed", block.timestamp); return false; }

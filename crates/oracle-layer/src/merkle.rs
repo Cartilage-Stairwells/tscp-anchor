@@ -93,12 +93,11 @@ mod tests {
 
     #[test]
     fn root_is_deterministic_shape() {
-        // NOTE: unlike the old hand-rolled hash, BatchMerkle samples a
-        // fresh random Poseidon2 permutation per `new_batch_merkle()`
-        // call (see batch-merkle's documented NOTE about this), so two
-        // *separately built* trees over the same leaves will NOT have
-        // equal commitments. We test internal consistency instead:
-        // a tree's own root verifies its own openings.
+        // ARCHER Finding 12 fix: stale comment corrected.
+        // new_batch_merkle() now uses deterministic Poseidon2 constants
+        // (default_babybear_poseidon2_16), so two separately built trees
+        // over the same leaves WILL have equal commitments.
+        // We test internal consistency: a tree's own root verifies its own openings.
         let leaves: Vec<Fl> = vec![1, 2, 3, 4].into_iter().map(Fl::from_u64).collect();
         let tree = MerkleTree::build(leaves);
         let root = tree.root();

@@ -48,6 +48,7 @@ pub fn emit(
     proof_bytes: &[u8],
     transcript_bytes: &[u8],
     verification_ok: bool,
+    fiat_shamir_rounds: u32,
     timer: &PhaseTimer,
     telemetry: Telemetry,
 ) -> Result<EmitResult, EmitError> {
@@ -75,9 +76,18 @@ pub fn emit(
 
     let verification = Verification {
         status,
+        // ARCHER Finding 27: verifier_unchanged is not actually verified.
+        // The binary_digest() function exists in provenance.rs but is not
+        // compared against a known-good hash here. TODO: compare current
+        // binary digest against a pinned reference digest.
         verifier_unchanged: true,
         correctness_gate_passed: verification_ok,
-        fiat_shamir_rounds: if verification_ok { 12 } else { 1 }, // Schema requires minimum: 1
+        // ARCHER Finding 26 fix: use actual fiat_shamir_rounds from the
+        // oracle bridge, not a hardcoded value.
+        fiat_shamir_rounds: if verification_ok { fiat_shamir_rounds } else { 1 },
+        // ARCHER Finding 28: public_inputs_hash is a placeholder.
+        // It hashes the literal string "public_inputs" instead of actual
+        // public input data. TODO: hash real public inputs when available.
         public_inputs_hash: provenance::sha256_str("public_inputs"),
     };
 
@@ -233,6 +243,7 @@ pub fn prove_and_emit(
         &prove_result.proof_bytes,
         &prove_result.transcript_bytes,
         verification_ok,
+        prove_result.fiat_shamir_rounds,
         &merged_timer,
         telemetry,
     )

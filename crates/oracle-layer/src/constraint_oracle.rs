@@ -1,41 +1,52 @@
 use crate::constraint::Constraint;
-use crate::oracle::MleOracle;
+use crate::oracle::{evaluate_mle, MleOracle};
 use p3_field::Field;
 
 /// An oracle that evaluates a constraint over a trace of rows.
 /// The trace is a hypercube: each row is a vector of field elements.
-/// The oracle maps a binary index (as a field vector) to the constraint evaluation at that row.
+/// The oracle evaluates the multilinear extension (MLE) of the
+/// constraint evaluations at all binary points.
+///
+/// ARCHER Finding 10 & 11 fix:
+/// - n_vars now uses integer log2 (trailing_zeros) instead of f64::log2().ceil()
+/// - eval now uses evaluate_mle for correct MLE evaluation at arbitrary points
+///   (previously used binary index lookup which only worked at corner points)
 pub struct ConstraintOracle<F: Field, C: Constraint<F>> {
-    trace: Vec<Vec<F>>, // rows x columns
+    /// Precomputed constraint evaluations at all binary points (rows of trace)
+    constraint_evals: Vec<F>,
+    n_vars: usize,
+    #[allow(dead_code)]
     constraint: C,
 }
 
 impl<F: Field, C: Constraint<F>> ConstraintOracle<F, C> {
     pub fn new(trace: Vec<Vec<F>>, constraint: C) -> Self {
-        Self { trace, constraint }
+        let rows = trace.len();
+        assert!(rows.is_power_of_two(), "trace length must be a power of two");
+        assert!(rows > 0, "trace must not be empty");
+
+        let n_vars = rows.trailing_zeros() as usize;
+
+        // Precompute constraint evaluations at all binary points
+        let constraint_evals: Vec<F> = trace
+            .iter()
+            .map(|row| constraint.evaluate(row))
+            .collect();
+
+        Self {
+            constraint_evals,
+            n_vars,
+            constraint,
+        }
     }
 }
 
 impl<F: Field, C: Constraint<F>> MleOracle<F> for ConstraintOracle<F, C> {
     fn n_vars(&self) -> usize {
-        let rows = self.trace.len();
-        if rows == 0 {
-            return 0;
-        }
-        // number of bits needed to address rows (power of two)
-        (rows as f64).log2().ceil() as usize
+        self.n_vars
     }
 
     fn eval(&self, point: &[F]) -> F {
-        // interpret point as binary index
-        let mut index = 0usize;
-        for (i, &bit) in point.iter().enumerate() {
-            if bit == F::ONE {
-                index |= 1 << i;
-            }
-        }
-        // assume trace length is a power of two
-        let row = &self.trace[index];
-        self.constraint.evaluate(row)
+        evaluate_mle(&self.constraint_evals, point)
     }
 }

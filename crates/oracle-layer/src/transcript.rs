@@ -2,6 +2,15 @@ use p3_poseidon2::{Poseidon2, Poseidon2Config};
 use p3_symmetric::{Absorb, CryptographicSponge, TruncatedPermutation};
 
 /// A simple Fiat-Shamir transcript using Poseidon2.
+///
+/// NOTE: The actual FRI implementation uses `Challenger` (DuplexChallenger
+/// with `default_babybear_poseidon2_16()`), not this struct. This Transcript
+/// uses `Poseidon2Config::new()` which may produce different constants than
+/// `default_babybear_poseidon2_16()`. If this struct is used for Fiat-Shamir,
+/// verify that the Poseidon2 constants match the Merkle tree's constants —
+/// otherwise commitments and challenges would be computed with different
+/// hash functions, breaking soundness. Prefer `Challenger` from
+/// `fri_protocol.rs` for all Fiat-Shamir operations.
 pub struct Transcript<F: Field, const WIDTH: usize, P: TruncatedPermutation<F, WIDTH>> {
     sponge: Poseidon2<F, Poseidon2Config<F, WIDTH, P>, WIDTH, 16>,
 }
