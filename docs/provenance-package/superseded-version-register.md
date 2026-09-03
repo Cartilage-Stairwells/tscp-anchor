@@ -55,7 +55,15 @@ pre-v2 (74,341 bytes, Aug 28) → SUPERSEDED
     ↓
 v2.0 (85,238 bytes, Aug 31) → SUPERSEDED (contains "cryptographically sound")
     ↓
-v2.1 (97,597 bytes, Aug 31) → FROZEN / AUTHORITATIVE (R-01 applied, empirical test observation)
+v2.1 (97,597 bytes, Aug 31) → SUPERSEDED (R-01 softened only, exact sentence not applied; stale .tex)
+    ↓
+v2.1.1 (60,234 bytes, Sep 2, commit 6e4e33d3) → SUPERSEDED (frozen evidentiary predecessor; R-01 exact x2 + R-02 applied)
+    ↓  Stage 6 Tier-2 audit: 3 P0 / 15 P1 / 2 P2 → 20/20 independently verified
+    ↓
+v2.1.2 (60,517 bytes, Sep 2, commit 1a054453) → SUPERSEDED (frozen predecessor, P0-corrected; re-audit passed)
+    ↓  Disposition (c82d5d9): 14 ACCEPT / 3 DEFER (individually enumerated)
+    ↓
+v2.1.3 (60,811 bytes, Sep 3, commit ca3754f3, pdf SHA 75f2ee38…) → FROZEN / AUTHORITATIVE
 ```
 
-v2.0 is retained as a provenance artifact. It is not a candidate manuscript. No modifications to v2.1 are needed based on v2.0's existence.
+v2.0 is retained as a provenance artifact. It is not a candidate manuscript. Open (verified-but-deferred): P1-08, P2-01, P2-02, plus P3 editorial notes — any future correction requires a new separately authorized chain.
