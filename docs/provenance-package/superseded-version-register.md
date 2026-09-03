@@ -13,12 +13,14 @@ summary: Provenance audit of all known TSCP manuscript copies, tracking v2.0 →
 
 | Artifact | Location | Size | Status | Notes |
 |---|---|---|---|---|
-| tscp-paper-v2.1.1.md | docs/paper/ (tscp-anchor, git) | 618 lines | **FROZEN / AUTHORITATIVE** | Source markdown. Single source of truth. R-01 exact-sentence correction + both R-02 edits applied. |
-| tscp-paper-v2.1.1.pdf | docs/paper/ (tscp-anchor, git) | 60,234 bytes | **FROZEN / AUTHORITATIVE** | Built from v2.1.1.md 2026-09-02 (Python markdown + xhtml2pdf pipeline). SHA-256: 24be832b2e8a09f853aeabb1df2d5c7584b8fa42a5ab8ce8ba735e58681f3407. Content-verified post-build. |
+| tscp-paper-v2.1.2.md | docs/paper/ (tscp-anchor, git, commit d90b15aa) | 618 lines | **FROZEN / AUTHORITATIVE** | Source markdown. Single source of truth. Three verified Stage 6 P0 corrections applied (exactly 3 lines changed vs v2.1.1); re-audit PASSED (3/3 P0 resolved, no new violations, no regression). |
+| tscp-paper-v2.1.2.pdf | docs/paper/ (tscp-anchor, git, commit d90b15aa) | 60,517 bytes | **FROZEN / AUTHORITATIVE** | Built from v2.1.2.md 2026-09-02 (Python markdown + xhtml2pdf pipeline). SHA-256: 01ad5b83a9de7f7867cea9aaf66ced79aeaf01e7218af89c2ebb02cca861aab5. Content-verified post-build; re-audited. |
+
+**Frozen with a known open gate:** the 15 P1 + 2 P2 Stage 6 findings are NOT yet independently verified or dispositioned. Their target quotes persist verbatim in v2.1.2. Freeze of v2.1.2 establishes the P0 correction is verified — it does NOT close the Stage 6 audit. P1/P2 verification/disposition proceeds as a separate gate under separate authorization.
 
 ## Version Chain
 
-v2.0 (PDF, pre-fix, "cryptographically sound" in §4.3) → v2.1 (R-01 partially softened: "empirically tested" language; exact R-01 replacement sentence NOT applied; R-02 NOT applied) → **v2.1.1 (R-01 exact replacement sentence applied at both locations; both R-02 edits applied; PDF rebuilt and content-verified)**
+v2.0 (PDF, pre-fix, "cryptographically sound" in §4.3) → v2.1 (R-01 partially softened: "empirically tested" language; exact R-01 replacement sentence NOT applied; R-02 NOT applied) → v2.1.1 (R-01 exact replacement sentence applied at both locations; both R-02 edits applied; PDF rebuilt and content-verified) → Stage 6 Tier-2 audit (3 P0 / 15 P1 / 2 P2) → independent five-point P0 verification (all 3 CONFIRMED) → **v2.1.2 (three P0 corrections applied — exactly 3 lines — with verification refinement notes incorporated; PDF rebuilt, content-verified; Stage 6 re-audit PASSED: P0 RESOLVED, NO REGRESSION)**
 
 ### v2.1 → v2.1.1 transition record (2026-09-02)
 
@@ -33,6 +35,8 @@ Verification on v2.1.1 artifacts: zero instances of "strongest"; zero instances 
 
 | Artifact | Location | Size | Status | Critical Issue | Replacement Action |
 |---|---|---|---|---|---|
+| tscp-paper-v2.1.1.md / .pdf | docs/paper/ (tscp-anchor, git, commit 6e4e33d3) | 618 lines / 60,234 bytes | **SUPERSEDED by v2.1.2 — FROZEN EVIDENTIARY PREDECESSOR** (2026-09-02) | Not a defect of v2.1.1 itself: the Stage 6 audit (post-deposit) found 3 P0 language violations (2x prover-throughput conflation; 1x Axis 3 overclaim). v2.1.1 remains the frozen audit target and predecessor artifact. | Superseded by tscp-paper-v2.1.2 (commit d90b15aa). SHA-256 of v2.1.1.pdf: 24be832b2e8a09f853aeabb1df2d5c7584b8fa42a5ab8ce8ba735e58681f3407. |
+| tscp-paper-v2.1.md / .pdf / .tex |
 | tscp-paper-v2.1.md / .pdf / .tex | docs/paper/ (tscp-anchor, git; Drive paper.pdf equivalent) | 618 lines / 97,597 bytes | **SUPERSEDED by v2.1.1** (2026-09-02) | R-01 exact replacement sentence not applied; both R-02 "strongest" instances present. Additionally: v2.1.tex is a STALE older draft (references "12 findings, all addressed") that does not correspond to the v2.1 md/pdf content — retained as historical artifact, must not be built. | Superseded by tscp-paper-v2.1.1.md/.pdf. If the v2.1 PDF was circulated externally, send a replacement notice with v2.1.1. |
 | tscp-paper-v2(1).pdf (v2.0) | This conversation (incoming_files/5a49a9298_tscp-paper-v2201.pdf) | 85,238 bytes | **SUPERSEDED** | §4.3 p.17: "cryptographically sound" — security conclusion R-01 removed | Do not circulate. Retain as provenance artifact. |
 | paper.pdf (pre-v2) | This conversation workspace (/app/conversations/.../paper.pdf) | 74,341 bytes | **SUPERSEDED** | Pre-Stage 2/3 draft. Earlier than v2.0. | Do not circulate. Historical snapshot only. |
