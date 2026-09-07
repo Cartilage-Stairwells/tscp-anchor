@@ -35,7 +35,7 @@ The TSCP custody plane architecture is frozen as of 2026-08-03. No further archi
 
 ### Google Drive — Architecture Specification Package
 
-**Location:** https://drive.google.com/drive/folders/17ogKPlh6qrsMoedW6zH_sWvD295AmMU_
+**Location:** (restricted Google Drive folder — identifier redacted per B-5/EXC-022; access available from the owner)
 **Access:** Shared (anyone with link can view)
 
 | # | Document | Status | SHA256 |

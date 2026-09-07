@@ -59,7 +59,7 @@ Benchmarking     DONE    (3.08x AVX-512, 2.37x AVX2 — measured on AMD Zen 5)
    https://github.com/Cartilage-Stairwells/tscp-anchor/blob/docs/architecture-freeze-index/docs/ARCHITECTURE_FREEZE_INDEX.md
 
 3. **Access the specification package:**
-   https://drive.google.com/drive/folders/17ogKPlh6qrsMoedW6zH_sWvD295AmMU_
+   (restricted Google Drive folder — identifier redacted per B-5/EXC-022; access available from the owner)
 
 4. **Verify document integrity:**
    Compare any document's SHA256 against the hash recorded in the freeze index.

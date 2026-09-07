@@ -138,7 +138,7 @@ Both repos contain `SHA256SUMS` files with integrity checksums for all evidence 
 | Signed tags (both repos) | ✅ Complete | 2026-07-17 07:38 PDT (tscp-anchor), 07:56 PDT (avx512-butterfly) |
 | Remote verification | ✅ Complete | 2026-07-17 07:58 PDT |
 | GitHub releases published | ✅ Complete | 2026-07-17 08:03 PDT |
-| Team notification sent | ✅ Complete | 2026-07-17 08:09 PDT (Message ID: 19f70a1d48cd8167) |
+| Team notification sent | ✅ Complete | 2026-07-17 08:09 PDT (message ID redacted — internal infrastructure identifier, B-5/EXC-022) |
 | Final verification log | ✅ This document | 2026-07-17 08:38 PDT |
 
 ---
