@@ -66,7 +66,7 @@ contract TSCPFriVerifier {
     function transferOwnership(address newOwner) external onlyOwner { owner = newOwner; }
 
     function verifyProof(bytes32 traceCommitment, FriProof calldata proof) external onlyAuthorized owslPermits returns (bool) {
-        require(productionMode, "TSCP: not in production mode — verification functions are placeholders");
+        require(productionMode, "TSCP: not in production mode - verification functions are placeholders");
         require(!verifiedTraces[traceCommitment], "TSCP: trace already verified");
         if (!verifyProofOfWork(proof.powNonce, traceCommitment)) { emit ProofRejected(traceCommitment, "PoW failed", block.timestamp); return false; }
         if (!verifyFriFoldings(proof.foldings)) { emit ProofRejected(traceCommitment, "FRI folding failed", block.timestamp); return false; }
