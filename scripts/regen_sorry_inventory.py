@@ -89,7 +89,11 @@ def main():
             per_file.append({"file": rel, "sorry_count": len(lines), "sorry_lines": lines})
             total += len(lines)
 
-    inventory = {
+    inventory = {        "scope": ("All .lean files in this repository. Line-comment (--) and "
+                  "block-comment/docstring (/-, /--) contexts are excluded as "
+                  "prose; only proof-term 'sorry' is counted. Repo-scoped "
+                  "(tscp-anchor); does not cover other repositories' Lean surfaces."),
+
         "schema_version": "2.0",
         "generated_by": "scripts/regen_sorry_inventory.py",
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),

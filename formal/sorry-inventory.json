@@ -1,8 +1,9 @@
 {
+  "scope": "All .lean files in this repository. Line-comment (--) and block-comment/docstring (/-, /--) contexts are excluded as prose; only proof-term 'sorry' is counted. Repo-scoped (tscp-anchor); does not cover other repositories' Lean surfaces.",
   "schema_version": "2.0",
   "generated_by": "scripts/regen_sorry_inventory.py",
-  "generated_at": "2026-09-07T08:29:55+00:00",
-  "source_commit": "0b2b2135a4bd53d1a82bb8e2fa823e039d4aff4b",
+  "generated_at": "2026-09-07T09:14:29+00:00",
+  "source_commit": "4c054847ea07f21b63200645716ccedabb84447a",
   "files": [
     {
       "file": "TSCP/Formal/Examples/NormalizationBridge.lean",
