@@ -9,10 +9,12 @@ pragma solidity ^0.8.24;
 // placeholders that return true unconditionally. This contract accepts
 // any proof from an authorized caller — it is an ALLOW-LIST, not a verifier.
 //
-// SAFETY GUARDS:
+// SAFETY GUARDS (fail-closed, EXC-001 remediation 2026-09-07):
 // - `productionMode` defaults to false; when false, verifyProof reverts.
-// - This prevents accidental deployment as a live verifier.
-// - Set `productionMode = true` ONLY after implementing real FRI verification.
+// - The placeholder verification functions now REVERT instead of returning
+//   true, so `productionMode = true` cannot produce a vacuous pass. Real
+//   FRI verification logic must replace them before any proof can verify.
+// - This enforces, in code, what was previously an instruction.
 //
 // This contract is NOT deployed and NOT part of the zkSHA-Rx verification
 // claim. Do not use this contract in production. A real FRI verifier
@@ -77,11 +79,14 @@ contract TSCPFriVerifier {
         return true;
     }
 
-    // --- PLACEHOLDER VERIFICATION FUNCTIONS (return true unconditionally) ---
-    function verifyProofOfWork(uint256 nonce, bytes32 traceCommitment) internal pure returns (bool) { return true; }
-    function verifyFriFoldings(uint256[][] calldata foldings) internal pure returns (bool) { return true; }
-    function verifyQueryResponses(bytes32 traceCommitment, bytes32 quotientCommitment, FriQueryResponse[] calldata responses) internal pure returns (bool) { return true; }
-    function verifyDegreeBound(uint256[] calldata finalPolynomial) internal pure returns (bool) { return true; }
+    // --- PLACEHOLDER VERIFICATION FUNCTIONS (EXC-001: fail-closed) ---
+    // These previously returned true unconditionally, making the
+    // productionMode=true path a vacuous pass (an ALLOW-LIST, not a
+    // verifier). They now revert until real FRI verification is implemented.
+    function verifyProofOfWork(uint256 nonce, bytes32 traceCommitment) internal pure returns (bool) { revert("TSCP: verification not implemented (scaffold)"); }
+    function verifyFriFoldings(uint256[][] calldata foldings) internal pure returns (bool) { revert("TSCP: verification not implemented (scaffold)"); }
+    function verifyQueryResponses(bytes32 traceCommitment, bytes32 quotientCommitment, FriQueryResponse[] calldata responses) internal pure returns (bool) { revert("TSCP: verification not implemented (scaffold)"); }
+    function verifyDegreeBound(uint256[] calldata finalPolynomial) internal pure returns (bool) { revert("TSCP: verification not implemented (scaffold)"); }
 
     function isTraceVerified(bytes32 traceCommitment) external view returns (bool) { return verifiedTraces[traceCommitment]; }
     function getOWSLSummary() external view returns (string memory status, string memory action, uint256 bitsRemaining, bool permits) {

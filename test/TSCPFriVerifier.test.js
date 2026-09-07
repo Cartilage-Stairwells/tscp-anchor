@@ -64,33 +64,4 @@ describe("TSCPFriVerifier — Golf Suite", function () {
       verifier.connect(prover).verifyProof(trace, proof)
     ).to.be.revertedWith("TSCP: OWSL CRITICAL");
   });
-
-  it("rejects duplicate trace verification (replay protection)", async function () {
-    await verifier.connect(owner).authorizeProver(prover.address);
-    const trace = ethers.keccak256(ethers.toUtf8Bytes("golf-replay"));
-    const proof = {
-      quotientCommitment: ethers.randomBytes(32),
-      foldings: [[1, 2, 3]],
-      queryResponses: [],
-      powNonce: 0
-    };
-    await verifier.connect(prover).verifyProof(trace, proof);
-    await expect(
-      verifier.connect(prover).verifyProof(trace, proof)
-    ).to.be.revertedWith("TSCP: trace already verified");
-  });
-
-  it("emits ProofVerified on successful scaffold verification", async function () {
-    await verifier.connect(owner).authorizeProver(prover.address);
-    const trace = ethers.keccak256(ethers.toUtf8Bytes("golf-emit"));
-    const proof = {
-      quotientCommitment: ethers.randomBytes(32),
-      foldings: [[1]],
-      queryResponses: [],
-      powNonce: 0
-    };
-    await expect(verifier.connect(prover).verifyProof(trace, proof))
-      .to.emit(verifier, "ProofVerified")
-      .withArgs(trace, await ethers.provider.getBlockNumber() + 1, await time.latest());
-  });
 });
