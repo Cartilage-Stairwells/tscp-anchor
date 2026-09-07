@@ -1,7 +1,7 @@
 # Plonky3 Comparison — Scalar Benchmark + AVX-512 Code Review
 
 **Date:** 2026-07-08 (original draft), **2026-07-23** (provenance + measured/inferred separation added per Aria review)
-**Status:** Evidence document. Does not modify VERIFIED_CLAIMS.md / INVESTOR_TEASER.md / SBIR_NARRATIVE.md — held per Sean's request pending review of these numbers.
+**Status:** Evidence document. Does not modify VERIFIED_CLAIMS.md / INVESTOR_TEASER.md / SBIR_NARRATIVE.md — held per Sean's request pending review of these numbers. *(Removal note, B-4: INVESTOR_TEASER.md and SBIR_NARRATIVE.md were subsequently deleted from the repository; references here are historical. VERIFIED_CLAIMS.md is superseded — see its own supersession notices.)*
 **Scope:** This document enters the evidence chain as a comparison/evidence artifact, not as a funding claim or performance claim.
 
 ---

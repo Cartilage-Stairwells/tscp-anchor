@@ -50,7 +50,7 @@ The verifier should receive or clone the following files. Each must match its re
 
 ### Benchmarks
 - `bench_suite/` — Criterion 0.5 suite (authoritative performance-of-record)
-- `plonky3_bench/` — Plonky3 comparison benchmark
+- *(Plonky3 comparison benchmark harness: **not committed** — the `plonky3_bench/` directory was never part of this repository's history; the measured comparison is documented in `PLONKY3_COMPARISON.md` instead)*
 
 ### Evidence
 - `PLONKY3_COMPARISON.md` — measured scalar comparison + AVX-512 code review
@@ -104,7 +104,9 @@ cd bench_suite && cargo bench
 # Expected: BabyBear DIT speedup ≈ 9.15×, XOR speedup ≈ 4.58×
 # (exact numbers will vary by hardware; relative ordering should hold)
 
-cd ../plonky3_bench && cargo bench --bench mont_mul_comparison
+# NOTE (B-4): plonky3_bench/ never existed in this repository's history.
+# The scalar Montgomery-multiplication comparison is documented (not runnable)
+# in PLONKY3_COMPARISON.md — measured numbers live there.
 # Expected: plonky3_r32_native faster than ours_r64_native by ~2.5-3×
 # (scalar-only; AVX-512 SIMD paths not executed without AVX-512 hardware)
 ```
@@ -133,7 +135,7 @@ cd ../plonky3_bench && cargo bench --bench mont_mul_comparison
 | `m8_test` (with AVX-512) | `21 passed; 0 failed` (all 21 executed) |
 | `lean BabyBearVerified.lean` | exit 0, no `sorry` in output |
 | `cargo bench` (bench_suite) | BabyBear DIT ≈ 9× speedup, XOR ≈ 4.5× speedup |
-| `cargo bench` (plonky3_bench) | plonky3_r32 faster than ours_r64 by ~2.5-3× |
+| `PLONKY3_COMPARISON.md` (documented; no committed harness) | plonky3_r32 faster than ours_r64 by ~2.5-3× (as measured and recorded there) |
 
 ## 6. Failure Modes
 
@@ -220,7 +222,7 @@ Results:
   m8_polyir_lowering:    [N passed / N failed]
   lean_proof:            [compiles / error]
   bench_suite:           [DIT speedup: Nx, XOR speedup: Nx]
-  plonky3_bench:         [plonky3 vs ours: Nx faster]
+  plonky3_comparison:   [documented in PLONKY3_COMPARISON.md — no harness to run]
 Falsification tests:     [all 4 failed as expected / which ones did not]
 Deviations:              [any deviations from expected outputs]
 Signature:               [verifier attestation]
