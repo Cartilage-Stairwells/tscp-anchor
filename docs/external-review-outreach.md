@@ -14,7 +14,7 @@ I've built a custody verification protocol (TSCP) on top of Plonky3 — using Ba
 **What I've built on Plonky3:**
 - FRI commit/query/verify in the oracle layer using Plonky3's BatchMerkle MMCS (working prover + verifier with proper Fiat-Shamir, Merkle verification, fold consistency)
 - Sumcheck protocol with self-checking prover (prover verifies its own proof before emitting). **Note: sumcheck verifier is not yet implemented.**
-- AVX-512 NTT optimization (9.15x speedup over scalar baseline, 16-lane SIMD)
+- AVX-512 NTT optimization (9.15× Montgomery BabyBear DIT kernel speedup over scalar baseline, 16-lane SIMD — criterion bench_suite, 100 samples; see tscp-pl-phase1 CRITERION_BENCHMARKS.md; this is a kernel microbenchmark, NOT a pipeline-level figure — canonical lineage in tscp-pl-phase1 VERIFIED_CLAIMS.md)
 - On-chain anchoring (Sepolia testnet) via TSCPAnchor contract
 - DEEP-ALI quotient computation (but not yet connected to the FRI prover)
 

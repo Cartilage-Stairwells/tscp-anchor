@@ -19,12 +19,23 @@ lifecycle management, and CVE assignment capability.
 
 For reports requiring direct encrypted communication:
 
-- **Recipient:** `adamantinespine@gmail.com`
+- **Recipient:** `schlagetorren@gmail.com`
 - **GPG fingerprint:** `8469 2E62 9412 8CC1 C4AC CD15 E747 C3AF 2257 3539`
-- **Public key:** `signer-public-key.asc` (in repository root)
+- **Public key:** `pubkey.asc` (in repository root)
 
 Encrypt your report using the public key above. Verify the fingerprint
 matches before trusting the key.
+
+**Correction (A-7 / EXC-021, 2026-09-07):** this section previously directed
+reports to `adamantinespine@gmail.com`, but the committed key carries only
+the `schlagetorren@gmail.com` UID — live encryption to the old address
+failed (reproduced: "skipped: No data"), meaning a reporter following the
+old instructions produced ciphertext no listed recipient could decrypt.
+The recipient now matches the UID that exists and was verified by live
+encrypt-to-recipient (VT-012 re-run: SUCCESS). The filename reference is
+also corrected: the committed key file is `pubkey.asc`, not
+`signer-public-key.asc`. If the owner later adds the adamantinespine UID
+to the published key, this recipient line may be revisited.
 
 ### What to Include
 

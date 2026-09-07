@@ -1,3 +1,12 @@
+> **Claims-scope note (A-1 / EXC-009, 2026-09-07):** performance figures in
+> this draft outline must carry their scope: 9.15× = Montgomery BabyBear DIT
+> kernel microbenchmark (criterion, tscp-pl-phase1 CRITERION_BENCHMARKS.md);
+> 7.23× peak / 4.42× GM = kernel-isolated Experiment A; 1.265×–1.276× =
+> pipeline-level canonical (zksha CANONICAL_RESULTS.md @ daf2a74). Kernel
+> and pipeline figures are never conflated. The frozen manuscript
+> (tscp-paper-v2.1.1.md) is intentionally NOT modified by this sweep —
+> manuscript-level claim corrections belong to the gated revision.
+
 ---
 title: TSCP Technical Paper Outline
 summary: Draft outline for a paper targeting IACR ePrint or an AI safety venue

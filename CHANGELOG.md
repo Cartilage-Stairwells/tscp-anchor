@@ -64,6 +64,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GPG key updated with dual UIDs: `adamantinespine@gmail.com` (primary) +
   `schlagetorren@gmail.com` (secondary). Old key replaced on GitHub.
 
+  > **Correction (A-7 / EXC-021, 2026-09-07):** the committed key
+  > (`pubkey.asc`) carries ONE UID — `schlagetorren@gmail.com` — as
+  > verified by `gpg --list-packets` and live encrypt-to-recipient testing.
+  > The "dual UIDs registered" statement above is contradicted by the
+  > committed key bytes and is retained only as the historical record of
+  > what was claimed at the time.
+
 ### Security
 - All commits on master GPG-signed and verified on GitHub.
 - Branch protection identified as remaining hardening step.
