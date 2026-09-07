@@ -38,7 +38,7 @@ if (hadError) process.exit(1);
 for (const name of CONTRACTS) {
   for (const contractName of Object.keys(output.contracts[name])) {
     const contract = output.contracts[name][contractName];
-    const outDir = `./artifacts/contracts/${name}`;
+    const outDir = `./artifacts/compile-solc/${name}`;
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(
       `${outDir}/${contractName}.json`,
