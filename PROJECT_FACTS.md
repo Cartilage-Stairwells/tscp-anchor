@@ -98,7 +98,7 @@ These baselines are complementary, not competitive. They measure different scope
 |---|---|---|
 | BabyBear field implementation exists | Verified | Source and tests in referenced artifacts |
 | AVX-512 backend exists | Verified | Related implementation repository; existence verified, SIMD correctness/formal verification not claimed |
-| SIMD output matches reference paths | Verified | Equivalence testing artifacts (access restricted) |
+| SIMD output matches reference paths | Verified against restricted evidence — not independently checkable from this repository | Equivalence testing artifacts in the private implementation repo (access restricted). Relabel per A-9/EXC-014, 2026-09-07: publishing the artifacts remains an owner option that would upgrade this row. |
 | Montgomery arithmetic formalized | Verified | Lean 4 formal modules |
 | Entire NTT formally verified | Not claimed | — |
 | Kernel benchmark measurements exist | Historical benchmark result | Referenced benchmark artifacts |
