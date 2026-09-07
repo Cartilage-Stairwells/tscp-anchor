@@ -154,11 +154,13 @@ Network: Sepolia
 
 Verifiable independently via any Sepolia block explorer. This is a development deployment; mainnet hardening and external audit are prerequisites for production use.
 
-Deployment transaction hashes (from `manifest.json`):
+Anchor payload digests (keccak-256, from `manifest.json`):
 ```
-0x41a7960e6f0b4d241b79320d4a736d24bc31fca8296701a88b92e0dc6749eb78
-0x126b44d63d4a28eae731398e1890954cddf3a6e2bf3ce7fc456c7a520ec1927a
+data.json: 0x41a7960e6f0b4d241b79320d4a736d24bc31fca8296701a88b92e0dc6749eb78
+gov.json:  0x126b44d63d4a28eae731398e1890954cddf3a6e2bf3ce7fc456c7a520ec1927a
 ```
+
+(Corrected 2026-09-07, finding EXC-016: these values were previously mislabeled as "deployment transaction hashes." They are keccak-256 digests of the payload files as recorded in `manifest.json` and are reproducible byte-exactly from those files; they are not Sepolia transaction hashes. The on-chain deployment is independently verifiable via the contract address above.)
 
 ---
 
