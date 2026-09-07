@@ -239,3 +239,34 @@ consistency: every ACTIVE exception's audit advisory must have a
 corresponding `audit.toml` ignore entry, and every `audit.toml` ignore
 entry must have a corresponding ACTIVE exception. Orphan ignores are
 rejected.
+
+
+---
+
+## Suppressed advisory enumeration — complete registry parity (A-5 / EXC-010)
+
+Added 2026-09-07 (R1 remediation). Acceptance predicate: the set of advisories
+suppressed by the machine-readable registry equals the set documented here.
+Registry: 42 unique advisory IDs in schemas/exceptions.json;
+audit.toml ignores: 41 (the resolved EX-0001 advisory was
+removed from the ignore list on resolution). Prior to this section the
+governance document named 8 — the diff is now closed.
+
+| Advisory ID | Severity (as recorded) | Summary | Exception | Dependency | Status |
+|---|---|---|---|---|---|| RUSTSEC-2021-0110 | medium, multiple vulnerabilities Wasmtime | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2021-0127 | (unrecorded) | (see registry) | EX-0001 | serde_cbor v0.11.2 | RESOLVED || RUSTSEC-2022-0016 | use after free externrefs epoch interruption | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0075 | pooling instance allocator bug | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0076 | high, pooling instance allocator bug | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0095 | i8x16.swizzle select v128 miscompilation | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0096 | invalid drop VMExternRef pooling allocator | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0097 | OOB write trap_code C API | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0098 | high, data leakage pooling allocator | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0099 | use after free externrefs epoch interruption | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0100 | use after free externrefs Wasmtime | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0101 | constant values division AArch64 miscompilation | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2022-0102 | medium, OOB read/write zero-memory-pages | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2023-0090 | critical, guest OOB read/write x86_64 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2023-0091 | low, i64x2.shr_s miscompilation x86_64 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2023-0092 | low, undefined behavior runtime functions | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2023-0093 | low, i8x16.select miscompilation x86_64 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2024-0438 | Windows device filenames sandbox | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2024-0439 | low, race condition CF integrity | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2024-0440 | medium, runtime crash tail calls stack traces | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2024-0441 | low, panic dropped extenref element segment | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2025-0046 | low, host panic fd_renumber WASIp1 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2025-0112 | host crash host-to-wasm component intrinsics | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2025-0118 | low 1.8, unsound shared linear memory | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0006 | medium, segfault f64.copysign x86-64 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0020 | medium, resource exhaustion WASI | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0021 | medium 6.9, panic excessive fields wasi:http | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0022 | medium, panic dropping call_async future | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0085 | medium, panic lifting flags component value | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0086 | low, host data leakage 64-bit tables Winch | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0087 | medium 4.1, segfault f64x2.splat Cranelift x86-64 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0088 | low 2.3, data leakage pooling allocators | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0089 | medium, host panic Winch table.fill | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0090 | low, use-after-free cloning wasmtime::Linker | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0091 | medium, OOB write transcoding strings | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0092 | medium 5.9, panic misaligned UTF-16 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0093 | medium 6.9, heap OOB read UTF-16 | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0094 | medium, improperly masked table.grow Winch | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0095 | critical, Winch compiler sandbox-escaping memory access | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0096 | critical, miscompiled guest heap aarch64 sandbox escape | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0114 | medium, panic table allocation | (see registry) | EX-0003 | wasmtime v29.0.1 | ACTIVE || RUSTSEC-2026-0204 | (unrecorded) | (see registry) | EX-0002 | crossbeam-epoch v0.9.18 | ACTIVE |
+**Count parity (mechanical):** registry unique IDs = 42;
+documented in this section = 42; diff = ∅.
+
+**Justification, EX-0002 (crossbeam-epoch, transitive via wasmtime) and EX-0003
+(wasmtime v29.0.1, all advisories above):** wasmtime enters this workspace only
+through tscp-wasm-smoke, a runtime smoke test; it is not part of the core
+serialization or proving stack, and no untrusted WASM is executed in CI or
+production paths. The sandbox-escape advisories RUSTSEC-2026-0095 and
+RUSTSEC-2026-0096 (critical) are accepted on that same boundary — the exposure
+they describe requires executing attacker-controlled WASM, which this
+workspace never does. **Upgrade path (recorded, not deferred indefinitely):**
+wasmtime ≥ 36.0.7 resolves all EX-0003 advisories (API migration required);
+the smoke test remains the only consumer and will be migrated with it.
+
+**EX-0001 (serde_cbor, RUSTSEC-2021-0127): RESOLVED** — dependency removed;
+record retained for governance history per the immutability rule.
