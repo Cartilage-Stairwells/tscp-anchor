@@ -320,8 +320,8 @@ async fn prove_handler(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sha2::Digest;
     use p3_baby_bear::default_babybear_poseidon2_16;
+    use sha2::Digest;
 
     fn fresh_challenger() -> Challenger {
         Challenger::new(default_babybear_poseidon2_16())
