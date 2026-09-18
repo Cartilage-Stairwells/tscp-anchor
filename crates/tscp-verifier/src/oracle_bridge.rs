@@ -60,7 +60,7 @@ impl std::error::Error for BridgeError {}
 /// use a canonical byte encoding (e.g., big-endian field element bytes).
 #[derive(Serialize, Deserialize)]
 pub struct SerializableFriProof {
-    pub roots: Vec<String>,  // Merkle roots as debug strings — non-canonical, see Finding 30
+    pub roots: Vec<String>, // Merkle roots as debug strings — non-canonical, see Finding 30
     pub final_value: String, // Final constant as debug string — non-canonical, see Finding 30
     pub query_indices: Vec<usize>,
     pub num_query_rounds: usize,
@@ -344,8 +344,8 @@ mod tests {
 
     #[test]
     fn test_bridge_rejects_non_power_of_two() {
-        let evals: Vec<F> = (0..7).map(|i| F::new(i)).collect();
-        let domain: Vec<F> = (0..7).map(|i| F::new(i)).collect();
+        let evals: Vec<F> = (0..7).map(F::new).collect();
+        let domain: Vec<F> = (0..7).map(F::new).collect();
 
         let result = prove_instrumented(evals, domain, 20);
         assert!(result.is_err());
@@ -373,8 +373,8 @@ mod tests {
 
     #[test]
     fn test_bridge_rejects_mismatched_lengths() {
-        let evals: Vec<F> = (0..8).map(|i| F::new(i)).collect();
-        let domain: Vec<F> = (0..4).map(|i| F::new(i)).collect();
+        let evals: Vec<F> = (0..8).map(F::new).collect();
+        let domain: Vec<F> = (0..4).map(F::new).collect();
 
         let result = prove_instrumented(evals, domain, 20);
         assert!(result.is_err());

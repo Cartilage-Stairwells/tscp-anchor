@@ -84,7 +84,11 @@ pub fn emit(
         correctness_gate_passed: verification_ok,
         // ARCHER Finding 26 fix: use actual fiat_shamir_rounds from the
         // oracle bridge, not a hardcoded value.
-        fiat_shamir_rounds: if verification_ok { fiat_shamir_rounds } else { 1 },
+        fiat_shamir_rounds: if verification_ok {
+            fiat_shamir_rounds
+        } else {
+            1
+        },
         // ARCHER Finding 28: public_inputs_hash is a placeholder.
         // It hashes the literal string "public_inputs" instead of actual
         // public input data. TODO: hash real public inputs when available.
@@ -344,7 +348,7 @@ mod tests {
             binary_size_bytes: None,
         };
 
-        let result = emit(&config, proof, transcript, true, &timer, telemetry).unwrap();
+        let result = emit(&config, proof, transcript, true, 5, &timer, telemetry).unwrap();
 
         // Independent SHA-256 calculation over serialized JSON string bytes
         let expected_digest = provenance::sha256_hex(result.json.as_bytes());
@@ -374,7 +378,16 @@ mod tests {
         };
 
         // Case 1: verification_ok = true
-        let res_ok = emit(&config, proof, transcript, true, &timer, telemetry.clone()).unwrap();
+        let res_ok = emit(
+            &config,
+            proof,
+            transcript,
+            true,
+            5,
+            &timer,
+            telemetry.clone(),
+        )
+        .unwrap();
         let art_ok: PulseArtifact = serde_json::from_str(&res_ok.json).unwrap();
         assert!(
             art_ok
@@ -385,7 +398,7 @@ mod tests {
         validate_json_compliance(&res_ok.json);
 
         // Case 2: verification_ok = false
-        let res_fail = emit(&config, proof, transcript, false, &timer, telemetry).unwrap();
+        let res_fail = emit(&config, proof, transcript, false, 5, &timer, telemetry).unwrap();
         let art_fail: PulseArtifact = serde_json::from_str(&res_fail.json).unwrap();
         assert!(
             art_fail
@@ -421,7 +434,7 @@ mod tests {
             binary_size_bytes: None,
         };
 
-        let result = emit(&config, proof, transcript, false, &timer, telemetry).unwrap();
+        let result = emit(&config, proof, transcript, false, 5, &timer, telemetry).unwrap();
         let art: PulseArtifact = serde_json::from_str(&result.json).unwrap();
 
         assert_eq!(art.verification.status, VerificationStatus::Fail);
@@ -458,12 +471,21 @@ mod tests {
             binary_size_bytes: None,
         };
 
-        let result1 = emit(&config, proof, transcript, true, &timer, telemetry.clone()).unwrap();
+        let result1 = emit(
+            &config,
+            proof,
+            transcript,
+            true,
+            5,
+            &timer,
+            telemetry.clone(),
+        )
+        .unwrap();
         let art1: PulseArtifact = serde_json::from_str(&result1.json).unwrap();
 
         std::thread::sleep(std::time::Duration::from_millis(1100)); // sleep over 1 second to ensure RFC3339 seconds tick
 
-        let result2 = emit(&config, proof, transcript, true, &timer, telemetry).unwrap();
+        let result2 = emit(&config, proof, transcript, true, 5, &timer, telemetry).unwrap();
         let art2: PulseArtifact = serde_json::from_str(&result2.json).unwrap();
 
         assert_ne!(art1.created_at, art2.created_at);

@@ -22,16 +22,16 @@ pub struct ConstraintOracle<F: Field, C: Constraint<F>> {
 impl<F: Field, C: Constraint<F>> ConstraintOracle<F, C> {
     pub fn new(trace: Vec<Vec<F>>, constraint: C) -> Self {
         let rows = trace.len();
-        assert!(rows.is_power_of_two(), "trace length must be a power of two");
+        assert!(
+            rows.is_power_of_two(),
+            "trace length must be a power of two"
+        );
         assert!(rows > 0, "trace must not be empty");
 
         let n_vars = rows.trailing_zeros() as usize;
 
         // Precompute constraint evaluations at all binary points
-        let constraint_evals: Vec<F> = trace
-            .iter()
-            .map(|row| constraint.evaluate(row))
-            .collect();
+        let constraint_evals: Vec<F> = trace.iter().map(|row| constraint.evaluate(row)).collect();
 
         Self {
             constraint_evals,

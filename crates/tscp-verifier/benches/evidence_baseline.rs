@@ -320,7 +320,7 @@ fn stats(samples: &[f64]) -> (f64, f64, f64, f64) {
     s.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let min = s[0];
     let max = *s.last().unwrap();
-    let median = if s.len() % 2 == 0 {
+    let median = if s.len().is_multiple_of(2) {
         (s[s.len() / 2 - 1] + s[s.len() / 2]) / 2.0
     } else {
         s[s.len() / 2]

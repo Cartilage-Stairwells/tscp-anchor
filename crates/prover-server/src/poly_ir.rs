@@ -21,8 +21,6 @@ pub enum Expr {
     Mul { left: Box<Expr>, right: Box<Expr> },
 }
 
-
-
 impl Expr {
     /// Maximum nesting depth of this expression tree.
     /// Used to prevent stack overflow during evaluation.

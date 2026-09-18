@@ -320,6 +320,7 @@ async fn prove_handler(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sha2::Digest;
     use p3_baby_bear::default_babybear_poseidon2_16;
 
     fn fresh_challenger() -> Challenger {
@@ -399,12 +400,18 @@ mod tests {
         let owsl_path = format!("{}/owsl_status.json", owsl_dir);
         std::fs::create_dir_all(&owsl_dir).unwrap();
         let pre_existing = std::fs::read(&owsl_path).ok();
+        // Compute content_hash matching OWSLStatus::verify_content_hash()
+        // (ARCHER Finding 6: the bridge now verifies the recomputed hash, so
+        // the fixture must carry a valid one, like create_test_status_json).
+        let ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs_f64();
+        let hash_input = format!("{}|SAFE|COMMIT|0|0|128||0|0|0", ts);
+        let content_hash = format!("{:x}", sha2::Sha256::digest(hash_input.as_bytes()));
         let safe_json = format!(
-            r#"{{"timestamp": {},"status": "SAFE","action": "COMMIT","round": 0,"bits_consumed": 0,"bits_remaining": 128,"anomalies": [],"frame_count": 0,"window_start": 0.0,"window_end": 0.0,"checksum_valid": true}}"#,
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs_f64()
+            r#"{{"timestamp": {},"status": "SAFE","action": "COMMIT","round": 0,"bits_consumed": 0,"bits_remaining": 128,"anomalies": [],"frame_count": 0,"window_start": 0.0,"window_end": 0.0,"checksum_valid": true,"content_hash": "{}"}}"#,
+            ts, content_hash
         );
         std::fs::write(&owsl_path, safe_json).unwrap();
 

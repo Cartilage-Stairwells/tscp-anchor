@@ -203,10 +203,7 @@ mod tests {
         let content_hash = format!("{:x}", sha2::Sha256::digest(hash_input.as_bytes()));
         format!(
             r#"{{"timestamp": {},"status": "{}","action": "{}","round": 42,"bits_consumed": 32,"bits_remaining": 96,"anomalies": [],"frame_count": 10,"window_start": 0.0,"window_end": 1000.0,"checksum_valid": true,"content_hash": "{}"}}"#,
-            ts,
-            status,
-            action,
-            content_hash
+            ts, status, action, content_hash
         )
     }
 

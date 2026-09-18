@@ -2046,6 +2046,7 @@ dependencies = [
  "p3-symmetric",
  "serde",
  "serde_json",
+ "sha2",
  "shellexpand",
  "tempfile",
  "thiserror 2.0.18",
