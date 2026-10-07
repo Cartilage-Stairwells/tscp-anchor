@@ -303,7 +303,7 @@ mod tests {
         let oracle = lcg_oracle(4, 0xDEADBEEF);
         let challenges = test_challenges(4);
         let mut proof = honest_prove(&oracle, &challenges);
-        proof.claimed_sum = proof.claimed_sum + F::ONE; // lie about the sum
+        proof.claimed_sum += F::ONE; // lie about the sum
         assert_eq!(
             verify_sumcheck(&proof, &challenges, &oracle),
             Err(SumcheckError::RoundConsistency { round: 0 }),
@@ -321,7 +321,7 @@ mod tests {
         let mut proof = honest_prove(&oracle, &challenges);
         // Tamper a middle round (index 1 of 0..4): its message no longer
         // sums to the running claim from round 0's fold.
-        proof.rounds[1][0] = proof.rounds[1][0] + F::ONE;
+        proof.rounds[1][0] += F::ONE;
         assert_eq!(
             verify_sumcheck(&proof, &challenges, &oracle),
             Err(SumcheckError::RoundConsistency { round: 1 }),
@@ -359,7 +359,7 @@ mod tests {
         // All rounds honest; only the explicit final-eval claim is lied
         // about. The folded running claim still holds the true value, so
         // the transcript binding fires.
-        proof.final_eval = proof.final_eval - F::ONE;
+        proof.final_eval -= F::ONE;
         assert_eq!(
             verify_sumcheck(&proof, &challenges, &oracle),
             Err(SumcheckError::TranscriptBinding),
