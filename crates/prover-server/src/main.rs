@@ -1,4 +1,5 @@
 pub mod deep_ali;
+pub mod deep_ali_fri;
 pub mod edia;
 pub mod owsl_bridge;
 use axum::{
