@@ -234,12 +234,24 @@ impl TraceEvaluator {
         z: BabyBear,
         shift: usize,
     ) -> Result<BabyBear, DeepAliError> {
-        // ARCHER Finding 32: Uses additive shift (z + shift) — same issue as
-        // Finding 23. The constraint layer uses multiplicative shift.
-        // Also, shift is cast from usize to u32 without overflow check.
-        // TODO: Use multiplicative shift (z * shift_factor) to match
-        // constraint layer, and check shift fits in u32.
-        let shifted_z = z + BabyBear::new(shift as u32);
+        // Issue #36 (2026-10-08, caller ruling "Option A"): the shift
+        // convention is INTEGER-DOMAIN — the trace is interpolated over
+        // the integer points {0..n-1} (see interpolate_lagrange_naive),
+        // so "k rows later" lives at z + k: the additive form is the
+        // correct arithmetic for this domain, not a defect. The
+        // multiplicative form (z*g^k) becomes correct only when the
+        // domain moves to the two-adic subgroup {g^i} — recorded with
+        // #38 (FFT interpolation); swapping it in before that pass
+        // would sample a point with no row meaning.
+        //
+        // ARCHER Finding 32 (cast half), FIXED: the usize->field cast
+        // is now checked — a shift that does not fit in u32 is a loud
+        // error instead of a silent wrap.
+        let shift_val = u32::try_from(shift).map_err(|_| DeepAliError::InvalidDeepPoint {
+            point: format!("{:?}", z),
+            reason: format!("shift {} does not fit in u32", shift),
+        })?;
+        let shifted_z = z + BabyBear::new(shift_val);
         self.evaluate_column(col_idx, shifted_z)
     }
 }
@@ -558,4 +570,79 @@ fn interpolate_lagrange_naive(evaluations: &[BabyBear]) -> Result<Vec<BabyBear>,
     }
 
     Ok(coeffs)
+}
+
+#[cfg(test)]
+mod shift_semantics_tests {
+    use super::*;
+    use p3_matrix::dense::RowMajorMatrix;
+
+    fn single_column_trace(values: &[u32]) -> RowMajorMatrix<BabyBear> {
+        let vals: Vec<BabyBear> = values.iter().map(|&v| BabyBear::from_u32(v)).collect();
+        RowMajorMatrix::new(vals, 1)
+    }
+
+    /// Issue #36: under the integer-domain convention, evaluating the
+    /// column polynomial at z + k returns the value at row k when z
+    /// names a row and the shift steps rows — a round-trip over real
+    /// trace data, not a mocked evaluation.
+    #[test]
+    fn evaluate_shifted_round_trips_row_steps() {
+        let trace = single_column_trace(&[10, 21, 32, 43]);
+        let evaluator = TraceEvaluator::from_trace(&trace).unwrap();
+        // z = 0, shift 2 -> row 2.
+        let v = evaluator
+            .evaluate_shifted(0, BabyBear::from_u32(0), 2)
+            .unwrap();
+        assert_eq!(v, BabyBear::from_u32(32));
+        // z = 1 (row 1), shift 2 -> row 3.
+        let v = evaluator
+            .evaluate_shifted(0, BabyBear::from_u32(1), 2)
+            .unwrap();
+        assert_eq!(v, BabyBear::from_u32(43));
+        // shift 0 is evaluate_column at z.
+        let v = evaluator
+            .evaluate_shifted(0, BabyBear::from_u32(3), 0)
+            .unwrap();
+        assert_eq!(v, BabyBear::from_u32(43));
+    }
+
+    /// Issue #36: the shifted evaluation must agree exactly with an
+    /// unshifted evaluation at the arithmetically shifted point.
+    #[test]
+    fn evaluate_shifted_agrees_with_column_evaluation() {
+        let trace = single_column_trace(&[7, 11, 13, 17, 19, 23]);
+        let evaluator = TraceEvaluator::from_trace(&trace).unwrap();
+        for (z, k) in [(2u32, 1usize), (0, 5), (3, 2)] {
+            let shifted = evaluator
+                .evaluate_shifted(0, BabyBear::from_u32(z), k)
+                .unwrap();
+            let direct = evaluator
+                .evaluate_column(0, BabyBear::from_u32(z) + BabyBear::from_u32(k as u32))
+                .unwrap();
+            assert_eq!(shifted, direct, "z={}, k={}", z, k);
+        }
+    }
+
+    /// ARCHER Finding 32 (cast half): a shift that does not fit in u32
+    /// must be a loud error, not a silent wrap.
+    #[test]
+    fn evaluate_shifted_rejects_shift_beyond_u32() {
+        let trace = single_column_trace(&[1, 2, 3, 4]);
+        let evaluator = TraceEvaluator::from_trace(&trace).unwrap();
+        let oversized = u32::MAX as usize + 1;
+        let err = evaluator
+            .evaluate_shifted(0, BabyBear::from_u32(0), oversized)
+            .unwrap_err();
+        match err {
+            DeepAliError::InvalidDeepPoint { reason, .. } => {
+                assert!(
+                    reason.contains("u32"),
+                    "reason must name the u32 bound: {}",
+                    reason
+                );
+            }
+            other => panic!("expected InvalidDeepPoint, got {:?}", other),
+        }
+    }
 }

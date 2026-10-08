@@ -33,7 +33,13 @@ impl<F: Field> Constraint<F> for CompositeConstraint<F> {
 pub struct AIRMorphism<F: Field> {
     pub name: String,
     pub constraint: Box<dyn Constraint<F>>,
-    pub shift: F, // multiplicative generator for subgroup
+    /// Issue #36 record: declared but unconsumed — no oracle-layer code
+    /// applies it. The DEEP-ALI evaluator's live shift convention is
+    /// additive over the integer-domain interpolation {0..n-1}
+    /// (shifted point z + k); this generator becomes the shift factor
+    /// only when the domain moves to the two-adic subgroup (#38, FFT
+    /// interpolation). Until then it is reserved, not authoritative.
+    pub shift: F, // reserved: two-adic subgroup shift generator (#36, #38)
 }
 
 pub mod lww;
