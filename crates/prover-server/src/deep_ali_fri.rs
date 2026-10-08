@@ -232,25 +232,21 @@ mod tests {
     }
 
     /// The OWSL bridge gates `compute_deep_quotient` behind a status
-    /// file (`~/.tscp/owsl_status.json`) written by the Python OWSL
-    /// daemon; a missing or stale file blocks verification by design.
-    /// Tests therefore supply a genuine, fresh, correctly-hashed PROCEED
-    /// status through the bridge's own reading path — the gate runs,
-    /// it just reads a real status instead of an error.
+    /// file written by the Python OWSL daemon; a missing or stale file
+    /// blocks verification by design. Tests therefore supply a
+    /// genuine, fresh, correctly-hashed PROCEED status through the
+    /// bridge's own reading path — the gate runs, it just reads a
+    /// real status instead of an error.
     ///
-    /// FINDING (recorded for the #34 PR body): the bridge has no
-    /// injection point, so every OWSL-dependent test suite shares one
-    /// global mutable file. The pre-existing `prove_handler` handler
-    /// test also writes and later restores/removes this path
-    /// (main.rs, same pattern). Two mitigations, both local to this
-    /// module: (a) publication is atomic — the status is written to a
-    /// temp file and renamed over the target, so a concurrent reader
-    /// never sees a partial file; (b) `honest_pipeline` re-publishes
-    /// and retries a bounded number of times if the gate reports a
-    /// block, because the rival test's restore can remove the file
-    /// between our publish and read. Neither changes any assertion:
-    /// a block after the final attempt still fails the test loudly.
-    fn write_owsl_proceed_status() {
+    /// Issue #47 (resolved): the bridge now has an injection point —
+    /// this suite passes its OWN status path (via
+    /// BabyBearDeepAli::with_owsl_status_path), so no OWSL-dependent
+    /// suite writes the process-global file and the shared-file race
+    /// is structurally gone. Atomic publication lives in the bridge
+    /// (publish_status_atomic), not re-derived here; the bounded
+    /// retry loop the race forced is deleted — a gate block on an
+    /// owned file is a genuine failure and fails the test loudly.
+    fn write_owsl_proceed_status(path: &str) {
         // FINDING (recorded for the #34 PR body): serde_json's default
         // f64 parse is not correctly-rounded — the optional
         // `float_roundtrip` feature exists for exactly this — so a
@@ -280,14 +276,25 @@ mod tests {
             r#"{{"timestamp": {},"status": "PROCEED","action": "CONTINUE","round": 1,"bits_consumed": 0,"bits_remaining": 4096,"anomalies": [],"frame_count": 1,"window_start": 0.0,"window_end": 1000.0,"checksum_valid": true,"content_hash": "{}"}}"#,
             timestamp, content_hash
         );
-        let dir = shellexpand::tilde("~/.tscp").into_owned();
-        let final_path = format!("{}/owsl_status.json", dir);
-        static TMP_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-        let tmp_suffix = TMP_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-        let tmp_path = format!("{}.tmp{}.{}", final_path, std::process::id(), tmp_suffix);
-        std::fs::create_dir_all(&dir).expect("create ~/.tscp");
-        std::fs::write(&tmp_path, json.as_bytes()).expect("write OWSL status temp file");
-        std::fs::rename(&tmp_path, &final_path).expect("atomically publish OWSL status");
+        crate::owsl_bridge::publish_status_atomic(path, &json)
+            .expect("atomically publish OWSL status");
+    }
+
+    /// Issue #47: each honest_pipeline run owns its OWSL status file —
+    /// a fresh unique path per call, published through the bridge's
+    /// own atomic publication helper. No suite shares mutable state
+    /// with any other; the shared-file race (and the retry loop it
+    /// forced) is structurally gone.
+    fn owned_owsl_status_path(tag: &str) -> String {
+        static PATH_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let n = PATH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        format!(
+            "{}/tscp_owsl_test_{}_{}_{}.json",
+            std::env::temp_dir().display(),
+            tag,
+            std::process::id(),
+            n
+        )
     }
 
     /// Run the REAL DEEP-ALI producer over the trace (through the OWSL
@@ -297,44 +304,27 @@ mod tests {
         trace: &RowMajorMatrix<BabyBear>,
         queries: &[DeepQuery<BabyBear>],
         num_queries: usize,
+        status_path: &str,
     ) -> DeepAliFriOutput {
-        // Retry policy (environmental race only, see the finding on
-        // write_owsl_proceed_status): re-publish and retry if the gate
-        // reports OWSL_HALT, because a rival suite may have restored
-        // or removed the shared file between publish and read. Any
-        // other DEEP-ALI error is a genuine failure and propagates.
-        // Three blocked attempts in a row = loud test failure.
-        const MAX_ATTEMPTS: usize = 3;
-        let prover: BabyBearDeepAli<BatchMerkle, DeepPermutation> = BabyBearDeepAli::new(64, 2);
+        // Issue #47: this suite owns its status file (status_path is
+        // unique per call), so there is no rival writer and no retry
+        // policy — a gate block here is a genuine failure and fails
+        // the test loudly on the first attempt.
+        write_owsl_proceed_status(status_path);
+        let prover: BabyBearDeepAli<BatchMerkle, DeepPermutation> =
+            BabyBearDeepAli::new(64, 2).with_owsl_status_path(status_path);
 
-        let mut last_owsl_error = None;
-        for _ in 0..MAX_ATTEMPTS {
-            write_owsl_proceed_status();
-            let mut deep_challenger = fresh_deep_challenger();
-            match prover.compute_deep_quotient(trace, queries, &mut deep_challenger) {
-                Ok(quotient) => {
-                    assert!(
-                        !quotient.is_empty(),
-                        "quotient from a real trace must have degree >= 0"
-                    );
-                    let mut prove_challenger = fresh_fri_challenger();
-                    return deep_ali_fri_prove(&quotient, &mut prove_challenger, num_queries)
-                        .expect("wiring an honest quotient into FRI must succeed");
-                }
-                Err(crate::deep_ali::DeepAliError::InvalidDeepPoint { point, reason })
-                    if point == "OWSL_HALT" =>
-                {
-                    last_owsl_error = Some(reason);
-                    continue;
-                }
-                Err(e) => panic!("honest DEEP-ALI quotient computation failed: {:?}", e),
-            }
-        }
-        panic!(
-            "OWSL gate blocked the honest pipeline after {} attempts \
-             (shared-file race suspected): {:?}",
-            MAX_ATTEMPTS, last_owsl_error
+        let mut deep_challenger = fresh_deep_challenger();
+        let quotient = prover
+            .compute_deep_quotient(trace, queries, &mut deep_challenger)
+            .expect("honest DEEP-ALI quotient computation (OWSL gate passes on an owned file)");
+        assert!(
+            !quotient.is_empty(),
+            "quotient from a real trace must have degree >= 0"
         );
+        let mut prove_challenger = fresh_fri_challenger();
+        deep_ali_fri_prove(&quotient, &mut prove_challenger, num_queries)
+            .expect("wiring an honest quotient into FRI must succeed")
     }
 
     // ── Named test path 1: honest quotient → FRI accept ─────────────
@@ -342,7 +332,12 @@ mod tests {
     #[test]
     fn honest_quotient_fri_accept() {
         let trace = lcg_trace(8, 2, 0xBEEF);
-        let out = honest_pipeline(&trace, &test_queries(), 4);
+        let out = honest_pipeline(
+            &trace,
+            &test_queries(),
+            4,
+            &owned_owsl_status_path("accept"),
+        );
         let mut verify_challenger = fresh_fri_challenger();
         assert_eq!(
             deep_ali_fri_verify(&out, &mut verify_challenger, 4),
@@ -356,7 +351,12 @@ mod tests {
     #[test]
     fn tampered_quotient_fri_reject() {
         let trace = lcg_trace(8, 2, 0xBEEF);
-        let mut out = honest_pipeline(&trace, &test_queries(), 4);
+        let mut out = honest_pipeline(
+            &trace,
+            &test_queries(),
+            4,
+            &owned_owsl_status_path("tamper"),
+        );
         // Tamper a committed quotient evaluation: the initial round's
         // first opening at x. The opening no longer matches its Merkle
         // root and the fold arithmetic breaks with it. This is the
@@ -389,7 +389,7 @@ mod tests {
     #[test]
     fn transcript_seed_mismatch_rejects() {
         let trace = lcg_trace(8, 2, 0xBEEF);
-        let out = honest_pipeline(&trace, &test_queries(), 4);
+        let out = honest_pipeline(&trace, &test_queries(), 4, &owned_owsl_status_path("seed"));
         // A verifier whose transcript diverges before the commit phase
         // re-derives different query indices than the prover's — the
         // proof cannot verify against it.
@@ -408,7 +408,12 @@ mod tests {
     #[test]
     fn domain_shape_matches_padded_quotient() {
         let trace = lcg_trace(8, 2, 0xBEEF);
-        let out = honest_pipeline(&trace, &test_queries(), 4);
+        let out = honest_pipeline(
+            &trace,
+            &test_queries(),
+            4,
+            &owned_owsl_status_path("domain"),
+        );
 
         // Quotient of trimmed length 7 (8-row trace, degree 6) lands
         // on the next power-of-two domain, strictly larger than the
@@ -458,7 +463,7 @@ mod tests {
                 column_index: 1,
             },
         ];
-        let out = honest_pipeline(&trace, &queries, 6);
+        let out = honest_pipeline(&trace, &queries, 6, &owned_owsl_status_path("padded"));
         assert_eq!(out.quotient_len, 15);
         assert_eq!(out.domain_size, 16);
         let mut verify_challenger = fresh_fri_challenger();

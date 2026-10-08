@@ -77,10 +77,16 @@ pub struct OWSLBridgeReader {
 }
 
 impl OWSLBridgeReader {
+    /// Issue #47: TSCP_OWSL_STATUS_PATH overrides the default path at
+    /// bridge construction — the process-level injection point for
+    /// harnesses and deployments that cannot thread a path explicitly.
     pub fn new() -> Self {
-        let path = shellexpand::tilde(OWSL_STATUS_PATH).into_owned();
+        let path = match std::env::var("TSCP_OWSL_STATUS_PATH") {
+            Ok(p) => PathBuf::from(p),
+            Err(_) => PathBuf::from(shellexpand::tilde(OWSL_STATUS_PATH).into_owned()),
+        };
         Self {
-            status_path: PathBuf::from(path),
+            status_path: path,
             max_age_seconds: STATUS_MAX_AGE_SECONDS,
             last_read_status: None,
         }
@@ -188,6 +194,35 @@ pub fn get_owsl_status() -> Result<OWSLStatus, String> {
     }
 }
 
+/// Issue #47: explicit-path gate — no process-global state. Callers
+/// that own their status file check it here; production code that
+/// injects no path keeps `owsl_permits_verification` (default bridge).
+pub fn owsl_permits_verification_at_path(path: &str) -> bool {
+    let mut bridge = OWSLBridgeReader::with_path(path);
+    bridge.permits_verification()
+}
+
+/// Issue #47: atomic status publication, once, in the bridge itself —
+/// write to a unique temp file and rename over the target, so a
+/// concurrent reader never observes a partial file. Suites that own
+/// their status file publish through this; none re-derives the
+/// mitigation locally.
+pub fn publish_status_atomic(path: &str, json: &str) -> Result<(), String> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
+    let target = PathBuf::from(path);
+    if let Some(parent) = target.parent() {
+        if !parent.as_os_str().is_empty() {
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("create OWSL status dir {}: {}", parent.display(), e))?;
+        }
+    }
+    let suffix = TMP_COUNTER.fetch_add(1, Ordering::SeqCst);
+    let tmp = format!("{}.tmp{}.{}", target.display(), std::process::id(), suffix);
+    fs::write(&tmp, json.as_bytes()).map_err(|e| format!("write OWSL status temp file: {}", e))?;
+    fs::rename(&tmp, &target).map_err(|e| format!("atomically publish OWSL status: {}", e))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -220,6 +255,36 @@ mod tests {
         let json = create_test_status_json("CRITICAL", "HALT");
         let status = OWSLStatus::from_json(&json).unwrap();
         assert!(!status.permits_verification());
+    }
+
+    #[test]
+    fn test_at_path_gate_and_atomic_publish_round_trip() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let status_path = temp_dir.path().join("owsl_status.json");
+        let path_str = status_path.to_str().unwrap();
+        let json = create_test_status_json("SAFE", "COMMIT");
+        publish_status_atomic(path_str, &json).expect("atomic publish must succeed");
+        assert!(owsl_permits_verification_at_path(path_str));
+        assert!(!owsl_permits_verification_at_path(
+            "/nonexistent/owsl_status.json"
+        ));
+    }
+
+    #[test]
+    fn test_env_override_sets_default_path() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let status_path = temp_dir.path().join("env_status.json");
+        let path_str = status_path.to_str().unwrap().to_string();
+        let json = create_test_status_json("PROCEED", "CONTINUE");
+        publish_status_atomic(&path_str, &json).expect("atomic publish must succeed");
+        std::env::set_var("TSCP_OWSL_STATUS_PATH", &path_str);
+        let mut bridge = OWSLBridgeReader::new();
+        let permits = bridge.permits_verification();
+        std::env::remove_var("TSCP_OWSL_STATUS_PATH");
+        assert!(
+            permits,
+            "env override must route the default reader to the injected file"
+        );
     }
 
     #[test]

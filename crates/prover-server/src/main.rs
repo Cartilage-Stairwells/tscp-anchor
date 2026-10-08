@@ -33,6 +33,10 @@ type Challenger = DuplexChallenger<F, Perm, 16, 8>;
 struct AppState {
     proving_permits: Arc<Semaphore>,
     pub edia_agent: std::sync::Arc<tokio::sync::Mutex<edia::EdiaAgent>>,
+    /// Issue #47 injection point: when Some, prove_handler gates OWSL on
+    /// this status file instead of the process-global default path.
+    /// Production wires None; tests own a unique file.
+    owsl_status_path: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -84,6 +88,7 @@ async fn main() {
     let state = AppState {
         proving_permits: Arc::new(Semaphore::new(4)), // max 4 concurrent proofs; tune as needed
         edia_agent: std::sync::Arc::new(tokio::sync::Mutex::new(edia::EdiaAgent::new(16))),
+        owsl_status_path: None,
     };
     let app = Router::new()
         .route("/prove/sumcheck", post(prove_handler))
@@ -179,7 +184,13 @@ async fn prove_handler(
         .load(std::sync::atomic::Ordering::Acquire);
     tracing::debug!(pending, "admission inflight");
 
-    if !owsl_permits_verification() {
+    // Issue #47: gate on the injected status path when the app state
+    // carries one; the process-global default applies otherwise.
+    let owsl_permits = match &state.owsl_status_path {
+        Some(p) => owsl_bridge::owsl_permits_verification_at_path(p),
+        None => owsl_permits_verification(),
+    };
+    if !owsl_permits {
         return (
             StatusCode::FORBIDDEN,
             Json(serde_json::json!({ "error": "OWSL entropy gate denied verification" })),
@@ -393,14 +404,15 @@ mod tests {
         // self-check wired in before the response is built. A healthy
         // prover must produce a proof that passes its own self-check.
         //
-        // owsl_permits_verification() reads from the real default path
-        // (~/.tscp/owsl_status.json) via a process-global lazy_static --
-        // there is no injection point, so we write a valid SAFE status
-        // file there for the duration of this test.
-        let owsl_dir = shellexpand::tilde("~/.tscp").into_owned();
-        let owsl_path = format!("{}/owsl_status.json", owsl_dir);
-        std::fs::create_dir_all(&owsl_dir).unwrap();
-        let pre_existing = std::fs::read(&owsl_path).ok();
+        // Issue #47 injection point: the handler gates on the
+        // AppState's owsl_status_path when one is set, so this suite
+        // owns a unique temp status file instead of writing (and
+        // restoring/removing) the process-global default path.
+        let owsl_path = format!(
+            "{}/tscp_owsl_selfcheck_{}.json",
+            std::env::temp_dir().display(),
+            std::process::id()
+        );
         // Compute content_hash matching OWSLStatus::verify_content_hash()
         // (ARCHER Finding 6: the bridge now verifies the recomputed hash, so
         // the fixture must carry a valid one, like create_test_status_json).
@@ -414,11 +426,13 @@ mod tests {
             r#"{{"timestamp": {},"status": "SAFE","action": "COMMIT","round": 0,"bits_consumed": 0,"bits_remaining": 128,"anomalies": [],"frame_count": 0,"window_start": 0.0,"window_end": 0.0,"checksum_valid": true,"content_hash": "{}"}}"#,
             ts, content_hash
         );
-        std::fs::write(&owsl_path, safe_json).unwrap();
+        owsl_bridge::publish_status_atomic(&owsl_path, &safe_json)
+            .expect("publish OWSL SAFE status");
 
         let state = AppState {
             proving_permits: Arc::new(Semaphore::new(4)),
             edia_agent: std::sync::Arc::new(tokio::sync::Mutex::new(edia::EdiaAgent::new(16))),
+            owsl_status_path: Some(owsl_path),
         };
 
         let req = ProofRequest {
@@ -430,19 +444,7 @@ mod tests {
 
         let response = prove_handler(State(state), Json(req)).await.into_response();
 
-        // Restore whatever was there before (or remove if nothing was),
-        // regardless of assertion outcome below.
-        let restore = || match &pre_existing {
-            Some(bytes) => {
-                let _ = std::fs::write(&owsl_path, bytes);
-            }
-            None => {
-                let _ = std::fs::remove_file(&owsl_path);
-            }
-        };
-
         let status = response.status();
-        restore();
 
         assert_eq!(
             status,

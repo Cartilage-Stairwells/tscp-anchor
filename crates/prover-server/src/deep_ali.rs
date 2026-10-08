@@ -274,6 +274,10 @@ where
     _phantom_perm: PhantomData<P>,
     pub max_degree: usize,
     pub num_columns: usize,
+    /// Issue #47 injection point: when set, this prover's OWSL gate
+    /// checks the status file at this path instead of the process-
+    /// global default. Production leaves it None.
+    pub owsl_status_path: Option<String>,
 }
 
 impl<MMCS, P> BabyBearDeepAli<MMCS, P>
@@ -286,6 +290,23 @@ where
             _phantom_perm: PhantomData,
             max_degree,
             num_columns,
+            owsl_status_path: None,
+        }
+    }
+
+    /// Issue #47 injection point: gate this prover's OWSL checks on an
+    /// explicit status-file path instead of the process-global default.
+    /// Test suites that own their status file construct their prover
+    /// with it; production leaves it unset.
+    pub fn with_owsl_status_path(mut self, path: &str) -> Self {
+        self.owsl_status_path = Some(path.to_string());
+        self
+    }
+
+    fn owsl_gate_permits(&self) -> bool {
+        match &self.owsl_status_path {
+            Some(p) => crate::owsl_bridge::owsl_permits_verification_at_path(p),
+            None => crate::owsl_bridge::owsl_permits_verification(),
         }
     }
 
@@ -421,7 +442,7 @@ where
             }
         }
 
-        if !crate::owsl_bridge::owsl_permits_verification() {
+        if !self.owsl_gate_permits() {
             return Err(DeepAliError::InvalidDeepPoint {
                 point: "OWSL_HALT".to_string(),
                 reason: "Observation Window Safety Loop flagged CRITICAL — verification aborted"
@@ -438,7 +459,7 @@ where
         queries: &[DeepQuery<BabyBear>],
         challenger: &mut DeepAliChallenger<P>,
     ) -> Result<Vec<BabyBear>, DeepAliError> {
-        if !crate::owsl_bridge::owsl_permits_verification() {
+        if !self.owsl_gate_permits() {
             return Err(DeepAliError::InvalidDeepPoint {
                 point: "OWSL_HALT".to_string(),
                 reason: "OWSL CRITICAL — cannot compute quotient over corrupted trace".to_string(),
