@@ -332,7 +332,12 @@ mod tests {
     #[test]
     fn honest_quotient_fri_accept() {
         let trace = lcg_trace(8, 2, 0xBEEF);
-        let out = honest_pipeline(&trace, &test_queries(), 4, &owned_owsl_status_path("accept"));
+        let out = honest_pipeline(
+            &trace,
+            &test_queries(),
+            4,
+            &owned_owsl_status_path("accept"),
+        );
         let mut verify_challenger = fresh_fri_challenger();
         assert_eq!(
             deep_ali_fri_verify(&out, &mut verify_challenger, 4),
@@ -346,8 +351,12 @@ mod tests {
     #[test]
     fn tampered_quotient_fri_reject() {
         let trace = lcg_trace(8, 2, 0xBEEF);
-        let mut out =
-            honest_pipeline(&trace, &test_queries(), 4, &owned_owsl_status_path("tamper"));
+        let mut out = honest_pipeline(
+            &trace,
+            &test_queries(),
+            4,
+            &owned_owsl_status_path("tamper"),
+        );
         // Tamper a committed quotient evaluation: the initial round's
         // first opening at x. The opening no longer matches its Merkle
         // root and the fold arithmetic breaks with it. This is the
@@ -399,7 +408,12 @@ mod tests {
     #[test]
     fn domain_shape_matches_padded_quotient() {
         let trace = lcg_trace(8, 2, 0xBEEF);
-        let out = honest_pipeline(&trace, &test_queries(), 4, &owned_owsl_status_path("domain"));
+        let out = honest_pipeline(
+            &trace,
+            &test_queries(),
+            4,
+            &owned_owsl_status_path("domain"),
+        );
 
         // Quotient of trimmed length 7 (8-row trace, degree 6) lands
         // on the next power-of-two domain, strictly larger than the

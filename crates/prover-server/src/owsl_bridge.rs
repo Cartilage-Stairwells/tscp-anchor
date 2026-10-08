@@ -213,17 +213,14 @@ pub fn publish_status_atomic(path: &str, json: &str) -> Result<(), String> {
     let target = PathBuf::from(path);
     if let Some(parent) = target.parent() {
         if !parent.as_os_str().is_empty() {
-            fs::create_dir_all(parent).map_err(|e| {
-                format!("create OWSL status dir {}: {}", parent.display(), e)
-            })?;
+            fs::create_dir_all(parent)
+                .map_err(|e| format!("create OWSL status dir {}: {}", parent.display(), e))?;
         }
     }
     let suffix = TMP_COUNTER.fetch_add(1, Ordering::SeqCst);
     let tmp = format!("{}.tmp{}.{}", target.display(), std::process::id(), suffix);
-    fs::write(&tmp, json.as_bytes())
-        .map_err(|e| format!("write OWSL status temp file: {}", e))?;
-    fs::rename(&tmp, &target)
-        .map_err(|e| format!("atomically publish OWSL status: {}", e))
+    fs::write(&tmp, json.as_bytes()).map_err(|e| format!("write OWSL status temp file: {}", e))?;
+    fs::rename(&tmp, &target).map_err(|e| format!("atomically publish OWSL status: {}", e))
 }
 
 #[cfg(test)]
