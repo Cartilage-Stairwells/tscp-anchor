@@ -101,7 +101,7 @@ pub struct DeepAliFriOutput {
 /// A primitive n-th root of unity in BabyBear (n a power of two,
 /// n <= 2^27), derived from the standard generator 31 — the same
 /// convention as the oracle-layer FRI test fixtures.
-fn primitive_root(n: usize) -> BabyBear {
+pub(crate) fn primitive_root(n: usize) -> BabyBear {
     debug_assert!(n.is_power_of_two() && n >= 2);
     let g = BabyBear::from_u64(31);
     let exp = (BabyBear::ORDER_U64 - 1) / n as u64;

@@ -6,6 +6,9 @@ use p3_matrix::Matrix;
 use p3_symmetric::CryptographicPermutation;
 use std::marker::PhantomData;
 
+use crate::deep_ali_fri::primitive_root;
+use oracle_layer::fft::Radix2Interpolator;
+
 pub const DEEP_ALI_LAMBDA: usize = 128;
 pub const MAX_DEEP_POINTS: usize = 16;
 pub const FRI_FOLDING_FACTOR: usize = 2;
@@ -383,7 +386,13 @@ where
         let evaluations: Vec<BabyBear> = (0..height)
             .map(|r| trace.get(r, col_idx).unwrap())
             .collect();
-        let coeffs = interpolate_lagrange_naive(&evaluations)?;
+        // Issue #38: the column polynomial is interpolated over the
+        // two-adic subgroup {omega^i} via inverse FFT (O(h log h)),
+        // replacing the integer-domain {0..h-1} naive Lagrange basis
+        // (O(h^2)). The DEEP quotient identity below is
+        // domain-independent: only the definition of the column
+        // polynomial changes, not the quotient construction.
+        let coeffs = interpolate_subgroup(&evaluations)?;
         let fz = eval_poly_horner(&coeffs, z);
 
         let n = coeffs.len();
@@ -402,6 +411,13 @@ where
             quotient[k] = coeffs[k + 1] + z * quotient[k + 1];
         }
 
+        // Issue #38 ruling 8: the synthetic division above satisfies
+        // t(x) = (x - z) * q(x) + remainder identically in the field,
+        // so evaluating at x = z gives remainder = t(z) = fz for every
+        // honest input — this branch is mathematically unreachable.
+        // It is retained deliberately as an implementation-error
+        // tripwire: it fires only if the division, the interpolation,
+        // or the Horner evaluation are misimplemented.
         let remainder = coeffs[0] + z * quotient[0];
         if remainder != fz {
             return Err(DeepAliError::QuotientRemainderNonZero {
@@ -580,6 +596,17 @@ where
     }
 }
 
+/// Integer-domain Lagrange interpolation over the points {0..n-1}.
+///
+/// Issue #38: no longer used on the live DEEP-quotient path (the live
+/// path interpolates over the two-adic subgroup; see
+/// `interpolate_subgroup`). Retained for two reasons: (1) it remains
+/// the basis of the dead-path `TraceEvaluator` (zero callers; the
+/// shift machinery that consumes it is deferred to the #52
+/// wire-or-remove decision, per the #38 ruling), and (2) it serves as
+/// the independent O(n^2) test oracle for the FFT interpolation and
+/// for documenting the convention change (quotients differ between
+/// bases; identities hold under each).
 fn interpolate_lagrange_naive(evaluations: &[BabyBear]) -> Result<Vec<BabyBear>, DeepAliError> {
     let n = evaluations.len();
 
@@ -621,6 +648,37 @@ fn interpolate_lagrange_naive(evaluations: &[BabyBear]) -> Result<Vec<BabyBear>,
     }
 
     Ok(coeffs)
+}
+
+/// Two-adic subgroup interpolation: treat the column evaluations as
+/// the values of the column polynomial t at the points
+/// {omega^0, omega^1, ..., omega^(h-1)}, where omega is the primitive
+/// h-th root of unity (generator-31 convention, shared with
+/// deep_ali_fri's FRI domain), and recover the coefficient form of t
+/// via inverse FFT (Issue #38: O(h log h), replacing the O(h^2)
+/// integer-domain Lagrange basis).
+///
+/// Height requirement (Issue #38 ruling 6): h must be a power of two
+/// and at least 2 — radix-2 inverse FFT requires a power-of-two
+/// length, and the FRI side pads to a minimum domain of 2. A trace
+/// whose height is not a power of two is a loud error, never silent
+/// padding.
+fn interpolate_subgroup(evaluations: &[BabyBear]) -> Result<Vec<BabyBear>, DeepAliError> {
+    let h = evaluations.len();
+    if h == 0 {
+        return Err(DeepAliError::InterpolationFailure {
+            reason: "empty evaluation vector".to_string(),
+        });
+    }
+    if h < 2 || !h.is_power_of_two() {
+        return Err(DeepAliError::InterpolationFailure {
+            reason: format!(
+                "two-adic subgroup interpolation requires a power-of-two height >= 2 (radix-2 inverse FFT); got height {h}"
+            ),
+        });
+    }
+    let omega = primitive_root(h);
+    Ok(Radix2Interpolator::interpolate_column(evaluations, omega))
 }
 
 #[cfg(test)]
@@ -804,5 +862,219 @@ mod accumulator_binding_tests {
         let b: BabyBear = bound.sample();
         let u: BabyBear = unbound.sample();
         assert_eq!(b, u);
+    }
+}
+
+#[cfg(test)]
+mod deep_quotient_subgroup_tests {
+    use super::*;
+    use p3_baby_bear::{default_babybear_poseidon2_24, Poseidon2BabyBear};
+    use p3_challenger::DuplexChallenger;
+    use p3_field::PrimeField64;
+
+    type DeepPermutation = Poseidon2BabyBear<24>;
+
+    fn fresh_deep_challenger() -> DeepAliChallenger<DeepPermutation> {
+        DuplexChallenger::new(default_babybear_poseidon2_24())
+    }
+
+    /// Deterministic LCG point generator (same convention as the
+    /// deep_ali_fri trace fill): independent of the trace values.
+    struct LcgPoint {
+        state: u64,
+    }
+
+    impl LcgPoint {
+        fn new(seed: u64) -> Self {
+            Self { state: seed }
+        }
+        fn next(&mut self) -> BabyBear {
+            self.state = (1103515245 * self.state + 12345) % BabyBear::ORDER_U64;
+            BabyBear::new(self.state as u32)
+        }
+    }
+
+    fn lcg_trace(rows: usize, cols: usize, seed: u64) -> RowMajorMatrix<BabyBear> {
+        let mut st = LcgPoint::new(seed);
+        let vals: Vec<BabyBear> = (0..rows * cols).map(|_| st.next()).collect();
+        RowMajorMatrix::new(vals, cols)
+    }
+
+    /// Independent O(n^2) oracle: the value of the subgroup-interpolated
+    /// polynomial at an arbitrary point x, computed directly from the
+    /// Lagrange basis over {omega^i} WITHOUT going through any
+    /// interpolation routine. Any agreement with the FFT path is
+    /// evidence the FFT interpolation is faithful.
+    #[allow(clippy::needless_range_loop)]
+    fn lagrange_value_oracle(evals: &[BabyBear], omega: BabyBear, x: BabyBear) -> BabyBear {
+        let n = evals.len();
+        let mut acc = BabyBear::ZERO;
+        for i in 0..n {
+            let xi = omega.exp_u64(i as u64);
+            let mut num = BabyBear::ONE;
+            let mut den = BabyBear::ONE;
+            for j in 0..n {
+                if i != j {
+                    let xj = omega.exp_u64(j as u64);
+                    num *= x - xj;
+                    den *= xi - xj;
+                }
+            }
+            acc += evals[i] * num * den.inverse();
+        }
+        acc
+    }
+
+    /// Synthetic division of coeffs by (x - z), the exact construction
+    /// used on the live path — replicated here so the old integer-domain
+    /// basis can be carried through the same division for comparison.
+    fn divide_by_x_minus_z(coeffs: &[BabyBear], z: BabyBear) -> (Vec<BabyBear>, BabyBear) {
+        let n = coeffs.len();
+        let mut quotient = vec![BabyBear::ZERO; n - 1];
+        if n >= 2 {
+            quotient[n - 2] = coeffs[n - 1];
+        }
+        for k in (0..n - 2).rev() {
+            quotient[k] = coeffs[k + 1] + z * quotient[k + 1];
+        }
+        let remainder = coeffs[0] + z * quotient[0];
+        (quotient, remainder)
+    }
+
+    /// Issue #38 gate 1: the FFT interpolation must be faithful to the
+    /// subgroup polynomial it claims to produce — checked against the
+    /// independent Lagrange value oracle at randomized points, not
+    /// merely round-tripped.
+    #[test]
+    fn subgroup_fft_interpolation_matches_lagrange_value_oracle() {
+        for (h, seed) in [(4usize, 0xA1), (8, 0xB2), (16, 0xC3), (32, 0xD4)] {
+            let trace = lcg_trace(h, 2, seed);
+            let omega = primitive_root(h);
+            let mut pts = LcgPoint::new(seed + 7);
+            for col in 0..2 {
+                let evals: Vec<BabyBear> = (0..h).map(|r| trace.get(r, col).unwrap()).collect();
+                let coeffs = interpolate_subgroup(&evals).expect("pow2 height interpolates");
+                for _ in 0..8 {
+                    let x = pts.next();
+                    let via_fft = eval_poly_horner(&coeffs, x);
+                    let via_oracle = lagrange_value_oracle(&evals, omega, x);
+                    assert_eq!(
+                        via_fft, via_oracle,
+                        "height {h} col {col}: FFT coefficients must define the subgroup polynomial"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Issue #38 gate 2 (acceptance condition): the DEEP quotient
+    /// identity t(x) = (x - z) * q(x) + t(z) must hold at randomized
+    /// evaluation points for the subgroup-basis quotient produced by
+    /// the live path — the identity itself, not just end-to-end tests.
+    #[test]
+    fn deep_identity_holds_at_randomized_points() {
+        for (h, seed) in [(8usize, 0x51), (16, 0x62), (32, 0x73)] {
+            let trace = lcg_trace(h, 2, seed);
+            let prover: BabyBearDeepAli<(), DeepPermutation> = BabyBearDeepAli::new(64, 2);
+            let mut z_gen = LcgPoint::new(seed * 3 + 1);
+            let mut x_gen = LcgPoint::new(seed * 5 + 11);
+            for col in 0..2 {
+                // a deterministic, non-domain query point
+                let z = z_gen.next();
+                let query = DeepQuery {
+                    point: z,
+                    trace_index: 0,
+                    column_index: col,
+                };
+                let q = prover
+                    .compute_single_quotient(&trace, &query)
+                    .expect("pow2-height trace interpolates and divides");
+                let evals: Vec<BabyBear> = (0..h).map(|r| trace.get(r, col).unwrap()).collect();
+                let t_coeffs = interpolate_subgroup(&evals).unwrap();
+                let fz = eval_poly_horner(&t_coeffs, z);
+                assert_eq!(q.len(), h - 1, "quotient degree must be h-2");
+                for _ in 0..10 {
+                    let x = x_gen.next();
+                    let lhs = eval_poly_horner(&q, x) * (x - z) + fz;
+                    let rhs = eval_poly_horner(&t_coeffs, x);
+                    assert_eq!(
+                        lhs, rhs,
+                        "DEEP identity must hold at randomized x (h={h}, col={col})"
+                    );
+                }
+            }
+        }
+        let _ = fresh_deep_challenger(); // permutation import stays exercised
+    }
+
+    /// Issue #38 gate 3: the convention change is real — the subgroup
+    /// basis and the integer basis define DIFFERENT column polynomials,
+    /// so their quotients differ, while each satisfies its own DEEP
+    /// identity. Predicted before implementation; the naive path is the
+    /// retained oracle.
+    #[test]
+    fn subgroup_basis_quotient_differs_from_integer_basis() {
+        let h = 16usize;
+        let trace = lcg_trace(h, 1, 0x99);
+        let prover: BabyBearDeepAli<(), DeepPermutation> = BabyBearDeepAli::new(64, 2);
+        let z = LcgPoint::new(0x99).next();
+        let query = DeepQuery {
+            point: z,
+            trace_index: 0,
+            column_index: 0,
+        };
+        let q_sub = prover
+            .compute_single_quotient(&trace, &query)
+            .expect("subgroup path");
+        let evals: Vec<BabyBear> = (0..h).map(|r| trace.get(r, 0).unwrap()).collect();
+        let t_int = interpolate_lagrange_naive(&evals).expect("oracle interpolates");
+        let fz_int = eval_poly_horner(&t_int, z);
+        let (q_int, remainder_int) = divide_by_x_minus_z(&t_int, z);
+        assert_eq!(
+            remainder_int, fz_int,
+            "oracle basis must satisfy its own tripwire identity"
+        );
+        assert_ne!(
+            q_sub, q_int,
+            "the two bases define different column polynomials; quotients must differ"
+        );
+        // each basis satisfies its own DEEP identity at a random point
+        let x = LcgPoint::new(0x77).next();
+        let lhs_int = eval_poly_horner(&q_int, x) * (x - z) + fz_int;
+        let rhs_int = eval_poly_horner(&t_int, x);
+        assert_eq!(lhs_int, rhs_int, "integer basis identity holds");
+        let t_sub = interpolate_subgroup(&evals).unwrap();
+        let lhs_sub = eval_poly_horner(&q_sub, x) * (x - z) + eval_poly_horner(&t_sub, z);
+        let rhs_sub = eval_poly_horner(&t_sub, x);
+        assert_eq!(lhs_sub, rhs_sub, "subgroup basis identity holds");
+    }
+
+    /// Issue #38 ruling 6: non-power-of-two (and sub-2) heights are a
+    /// loud, explicit error — never silent padding, never a panic.
+    #[test]
+    fn non_power_of_two_height_is_a_loud_error() {
+        let prover: BabyBearDeepAli<(), DeepPermutation> = BabyBearDeepAli::new(64, 2);
+        for bad_h in [0usize, 1, 3, 12, 100] {
+            let trace = lcg_trace(bad_h.max(1), 1, 0xF0);
+            let query = DeepQuery {
+                point: BabyBear::new(5),
+                trace_index: 0,
+                column_index: 0,
+            };
+            let r = prover.compute_single_quotient(&trace, &query);
+            match r {
+                Err(DeepAliError::InterpolationFailure { reason }) => {
+                    assert!(
+                        reason.contains("power-of-two"),
+                        "height {bad_h}: reason must name the power-of-two requirement, got: {reason}"
+                    );
+                }
+                Err(e) => panic!("height {bad_h}: unexpected error variant {e:?}"),
+                Ok(v) => panic!(
+                    "height {bad_h}: non-power-of-two height must not produce a quotient (got len {})",
+                    v.len()
+                ),
+            }
+        }
     }
 }
