@@ -16,13 +16,14 @@
 
 use crate::timing::{phases, PhaseTimer};
 
-use oracle_layer::fri_protocol::Challenger;
-use oracle_layer::fri_query::{fri_prove, fri_verify, FriProof};
+use oracle_layer::fri_protocol::{Challenger, FriCommitment};
+use oracle_layer::fri_query::{fri_prove, fri_verify, FriProof, FriQueryRound};
+use oracle_layer::merkle::Commitment;
 use oracle_layer::oracle::MleOracle;
 use oracle_layer::sumcheck::sumcheck_round;
 
 use p3_baby_bear::BabyBear;
-use serde::{Deserialize, Serialize};
+use p3_field::PrimeField32;
 
 /// Error type for all oracle-bridge operations.
 #[derive(Debug)]
@@ -44,54 +45,313 @@ impl std::fmt::Display for BridgeError {
 
 impl std::error::Error for BridgeError {}
 
-/// Serializable representation of a FriProof.
-/// The oracle-layer's FriProof doesn't derive Serialize/Deserialize,
-/// so we convert it to this serializable form for byte-level digest computation.
-/// This preserves the architectural boundary: the emitter only sees Vec<u8>.
-///
-/// ARCHER Finding 29: This representation does NOT include Merkle opening proofs
-/// (query_proofs). The artifact's proof_digest is computed over an incomplete
-/// representation of the proof. For production use, the full proof including
-/// Merkle openings must be serialized.
-///
-/// ARCHER Finding 30: Merkle roots and final_value are serialized using
-/// Rust's debug format ({:?}), not canonical byte representation. This makes
-/// the digest non-reproducible across platforms or Rust versions. For production,
-/// use a canonical byte encoding (e.g., big-endian field element bytes).
-#[derive(Serialize, Deserialize)]
-pub struct SerializableFriProof {
-    pub roots: Vec<String>, // Merkle roots as debug strings — non-canonical, see Finding 30
-    pub final_value: String, // Final constant as debug string — non-canonical, see Finding 30
-    pub query_indices: Vec<usize>,
-    pub num_query_rounds: usize,
-    pub num_fold_rounds: usize,
+// ---------------------------------------------------------------------------
+// tscp-fri-proof-serialization-v1 (Issue #37, ARCHER Findings 29 + 30)
+//
+// Contract: tscp-fri-proof-serialization-v1-verification/CONTRACT.md.
+// The CONTRACT is the authority; this implementation conforms to it.
+// Supersedes the pre-v1 basis (JSON with Debug-formatted roots, Merkle
+// openings omitted). Old-basis digests preserved in issue #37,
+// comment 6107484068.
+// ---------------------------------------------------------------------------
+
+pub const FRI_PROOF_MAGIC: [u8; 8] = *b"tscp-fri";
+pub const FS_TRANSCRIPT_PROXY_MAGIC: [u8; 8] = *b"tscp-fst";
+pub const FRI_PROOF_FORMAT_VERSION: u16 = 1;
+/// Digest width of the BatchMerkle commitment: 8 BabyBear elements
+/// (DIGEST_ELEMS of MerkleTreeMmcs<_, _, PaddingFreeSponge<...,16,8,8>, .., 2, 8>).
+pub const COMMITMENT_DIGEST_ELEMS: usize = 8;
+
+type Digest = [BabyBear; COMMITMENT_DIGEST_ELEMS];
+
+fn write_u16(out: &mut Vec<u8>, v: u16) {
+    out.extend_from_slice(&v.to_le_bytes());
 }
 
-/// Convert a FriProof to its serializable form.
-fn proof_to_serializable(proof: &FriProof) -> SerializableFriProof {
-    SerializableFriProof {
-        roots: proof
-            .commitment
-            .roots
-            .iter()
-            .map(|r| format!("{:?}", r))
-            .collect(),
-        final_value: format!("{:?}", proof.commitment.final_value),
-        query_indices: proof.query_indices.clone(),
-        num_query_rounds: proof.query_proofs.len(),
-        num_fold_rounds: proof.commitment.roots.len().saturating_sub(1),
+fn write_u32(out: &mut Vec<u8>, v: u32) {
+    out.extend_from_slice(&v.to_le_bytes());
+}
+
+fn write_u64(out: &mut Vec<u8>, v: u64) {
+    out.extend_from_slice(&v.to_le_bytes());
+}
+
+fn write_elem(out: &mut Vec<u8>, e: BabyBear) {
+    write_u32(out, e.as_canonical_u32());
+}
+
+fn write_digest(out: &mut Vec<u8>, d: &Digest) {
+    for e in d.iter() {
+        write_elem(out, *e);
     }
+}
+
+/// Bounded cursor: every read checks the remaining byte budget first,
+/// so no untrusted length prefix can trigger unbounded allocation.
+struct Reader<'a> {
+    buf: &'a [u8],
+    pos: usize,
+}
+
+impl<'a> Reader<'a> {
+    fn new(buf: &'a [u8]) -> Self {
+        Self { buf, pos: 0 }
+    }
+
+    fn take(&mut self, n: usize) -> Result<&'a [u8], BridgeError> {
+        let end = self
+            .pos
+            .checked_add(n)
+            .filter(|e| *e <= self.buf.len())
+            .ok_or_else(|| BridgeError::SerializationError("truncated input".to_string()))?;
+        let s = &self.buf[self.pos..end];
+        self.pos = end;
+        Ok(s)
+    }
+
+    fn read_u16(&mut self) -> Result<u16, BridgeError> {
+        let b = self.take(2)?;
+        Ok(u16::from_le_bytes([b[0], b[1]]))
+    }
+
+    fn read_u32(&mut self) -> Result<u32, BridgeError> {
+        let b = self.take(4)?;
+        Ok(u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+    }
+
+    fn read_u64(&mut self) -> Result<u64, BridgeError> {
+        let b = self.take(8)?;
+        let mut w = [0u8; 8];
+        w.copy_from_slice(b);
+        Ok(u64::from_le_bytes(w))
+    }
+
+    /// Canonical BabyBear element: value must be in [0, ORDER).
+    fn read_elem(&mut self) -> Result<BabyBear, BridgeError> {
+        let v = self.read_u32()?;
+        if v >= BabyBear::ORDER_U32 {
+            return Err(BridgeError::SerializationError(format!(
+                "field value {} >= BabyBear ORDER {}",
+                v,
+                BabyBear::ORDER_U32
+            )));
+        }
+        Ok(BabyBear::new(v))
+    }
+
+    fn read_digest(&mut self) -> Result<Digest, BridgeError> {
+        let mut d = [BabyBear::new(0); COMMITMENT_DIGEST_ELEMS];
+        for e in d.iter_mut() {
+            *e = self.read_elem()?;
+        }
+        Ok(d)
+    }
+
+    /// Length prefix bounded by the remaining byte budget divided by the
+    /// per-item width: a count larger than could possibly fit is rejected
+    /// before any allocation.
+    fn read_bounded_len(&mut self, item_width: usize) -> Result<u32, BridgeError> {
+        let n = self.read_u32()?;
+        let remaining = self.buf.len() - self.pos;
+        if n as usize > remaining / item_width {
+            return Err(BridgeError::SerializationError(format!(
+                "length prefix {} exceeds remaining budget ({} bytes left, item width {})",
+                n, remaining, item_width
+            )));
+        }
+        Ok(n)
+    }
+
+    fn read_usize_from_u64(&mut self, what: &str) -> Result<usize, BridgeError> {
+        let v = self.read_u64()?;
+        usize::try_from(v).map_err(|_| {
+            BridgeError::SerializationError(format!("{} {} does not fit usize", what, v))
+        })
+    }
+}
+
+fn encode_commitment_roots(out: &mut Vec<u8>, roots: &[Commitment], final_value: BabyBear) {
+    write_elem(out, final_value);
+    write_u32(out, roots.len() as u32);
+    for cap in roots {
+        let digests = cap.roots();
+        write_u32(out, digests.len() as u32);
+        for d in digests {
+            write_digest(out, d);
+        }
+    }
+}
+
+/// Encode a FriProof under tscp-fri-proof-serialization-v1 (contract above).
+/// Deterministic: identical proofs produce byte-identical output.
+pub fn encode_fri_proof_v1(proof: &FriProof) -> Result<Vec<u8>, BridgeError> {
+    let mut out = Vec::new();
+    out.extend_from_slice(&FRI_PROOF_MAGIC);
+    write_u16(&mut out, FRI_PROOF_FORMAT_VERSION);
+    encode_commitment_roots(
+        &mut out,
+        &proof.commitment.roots,
+        proof.commitment.final_value,
+    );
+
+    write_u32(&mut out, proof.query_indices.len() as u32);
+    for idx in &proof.query_indices {
+        let v = u64::try_from(*idx).map_err(|_| {
+            BridgeError::SerializationError(format!("query index {} does not fit u64", idx))
+        })?;
+        write_u64(&mut out, v);
+    }
+
+    for query in &proof.query_proofs {
+        write_u32(&mut out, query.len() as u32);
+        for round in query {
+            for opening in [
+                &round.opening_x,
+                &round.opening_neg_x,
+                &round.opening_folded,
+            ] {
+                let idx = u64::try_from(opening.leaf_index).map_err(|_| {
+                    BridgeError::SerializationError(format!(
+                        "leaf index {} does not fit u64",
+                        opening.leaf_index
+                    ))
+                })?;
+                write_u64(&mut out, idx);
+                write_elem(&mut out, opening.leaf_value);
+                write_u32(&mut out, opening.proof.len() as u32);
+                for d in &opening.proof {
+                    write_digest(&mut out, d);
+                }
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// Encode the commit-phase transcript proxy (record type 2 in the contract).
+pub fn encode_fs_transcript_proxy_v1(proof: &FriProof) -> Result<Vec<u8>, BridgeError> {
+    let mut out = Vec::new();
+    out.extend_from_slice(&FS_TRANSCRIPT_PROXY_MAGIC);
+    write_u16(&mut out, FRI_PROOF_FORMAT_VERSION);
+    encode_commitment_roots(
+        &mut out,
+        &proof.commitment.roots,
+        proof.commitment.final_value,
+    );
+    Ok(out)
+}
+
+/// Decode tscp-fri-proof-serialization-v1 bytes into a complete FriProof.
+/// Fails closed per the contract's rejection behavior.
+pub fn decode_fri_proof_v1(bytes: &[u8]) -> Result<FriProof, BridgeError> {
+    let mut r = Reader::new(bytes);
+
+    let magic = r.take(8)?;
+    if magic != FRI_PROOF_MAGIC {
+        return Err(BridgeError::SerializationError("bad magic".to_string()));
+    }
+    let version = r.read_u16()?;
+    if version != FRI_PROOF_FORMAT_VERSION {
+        return Err(BridgeError::SerializationError(format!(
+            "unsupported version {}",
+            version
+        )));
+    }
+
+    let final_value = r.read_elem()?;
+    let num_roots = r.read_bounded_len(4)?;
+    if num_roots < 2 {
+        return Err(BridgeError::SerializationError(format!(
+            "num_roots {} < 2",
+            num_roots
+        )));
+    }
+    let mut roots = Vec::with_capacity(num_roots as usize);
+    for _ in 0..num_roots {
+        let num_digests = r.read_bounded_len(COMMITMENT_DIGEST_ELEMS * 4)?;
+        if num_digests == 0 || !(num_digests as usize).is_power_of_two() {
+            return Err(BridgeError::SerializationError(format!(
+                "commitment digest count {} invalid (must be >= 1 and a power of two)",
+                num_digests
+            )));
+        }
+        let mut digests = Vec::with_capacity(num_digests as usize);
+        for _ in 0..num_digests {
+            digests.push(r.read_digest()?);
+        }
+        roots.push(Commitment::new(digests));
+    }
+
+    let num_queries = r.read_bounded_len(8)?;
+    if num_queries == 0 {
+        return Err(BridgeError::SerializationError(
+            "num_queries is 0".to_string(),
+        ));
+    }
+    let mut query_indices = Vec::with_capacity(num_queries as usize);
+    for _ in 0..num_queries {
+        query_indices.push(r.read_usize_from_u64("query index")?);
+    }
+
+    let expected_rounds = (num_roots - 1) as usize;
+    let mut query_proofs = Vec::with_capacity(num_queries as usize);
+    for _ in 0..num_queries {
+        let num_rounds = r.read_bounded_len(8)?;
+        if num_rounds as usize != expected_rounds {
+            return Err(BridgeError::SerializationError(format!(
+                "query round count {} != num_roots - 1 ({})",
+                num_rounds, expected_rounds
+            )));
+        }
+        let mut rounds = Vec::with_capacity(num_rounds as usize);
+        for _ in 0..num_rounds {
+            let read_opening =
+                |r: &mut Reader| -> Result<oracle_layer::merkle::MerkleOpening, BridgeError> {
+                    let leaf_index = r.read_usize_from_u64("leaf index")?;
+                    let leaf_value = r.read_elem()?;
+                    let auth_len = r.read_bounded_len(COMMITMENT_DIGEST_ELEMS * 4)?;
+                    let mut auth = Vec::with_capacity(auth_len as usize);
+                    for _ in 0..auth_len {
+                        auth.push(r.read_digest()?);
+                    }
+                    Ok(oracle_layer::merkle::MerkleOpening {
+                        leaf_index,
+                        leaf_value,
+                        proof: auth,
+                    })
+                };
+            let opening_x = read_opening(&mut r)?;
+            let opening_neg_x = read_opening(&mut r)?;
+            let opening_folded = read_opening(&mut r)?;
+            rounds.push(FriQueryRound {
+                opening_x,
+                opening_neg_x,
+                opening_folded,
+            });
+        }
+        query_proofs.push(rounds);
+    }
+
+    if r.pos != bytes.len() {
+        return Err(BridgeError::SerializationError(
+            "trailing bytes after canonical encoding".to_string(),
+        ));
+    }
+
+    Ok(FriProof {
+        commitment: FriCommitment { roots, final_value },
+        query_proofs,
+        query_indices,
+    })
 }
 
 /// Convert serialized form back to a partial FriProof for verification.
 /// Note: this reconstruction is sufficient for re-running fri_verify because
 /// the query proofs are reconstructed from the original proof data.
-/// In a real deployment, the full proof (including Merkle openings) would be
-/// serialized. For benchmarking, we re-prove and re-verify in the same process,
-/// so this is not needed — but the serialization path is exercised for digest computation.
+/// Serialize the proof under tscp-fri-proof-serialization-v1 (canonical
+/// bytes, openings included — Issue #37, Findings 29 + 30).
 fn serialize_proof(proof: &FriProof) -> Result<Vec<u8>, BridgeError> {
-    let serializable = proof_to_serializable(proof);
-    serde_json::to_vec(&serializable).map_err(|e| BridgeError::SerializationError(e.to_string()))
+    encode_fri_proof_v1(proof)
 }
 
 /// The result of an instrumented proving run.
@@ -219,15 +479,9 @@ pub fn prove_instrumented_internal(
     // --- Serialize proof to canonical bytes ---
     let proof_bytes = serialize_proof(&proof)?;
 
-    // Transcript: serialize commitment roots as proxy for Fiat-Shamir transcript
-    let transcript_data = proof
-        .commitment
-        .roots
-        .iter()
-        .map(|r| format!("{:?}", r))
-        .collect::<Vec<_>>()
-        .join("\n");
-    let transcript_bytes = transcript_data.into_bytes();
+    // Transcript: commit-phase proxy under tscp-fri-proof-serialization-v1
+    // (record type 2) — replaces the pre-v1 {:?}-formatted roots
+    let transcript_bytes = encode_fs_transcript_proxy_v1(&proof)?;
 
     let fiat_shamir_rounds = proof.commitment.roots.len() as u32;
 
@@ -391,21 +645,29 @@ mod tests {
     }
 
     #[test]
-    fn test_bridge_serialization_produces_valid_json() {
+    fn test_bridge_serialization_is_canonical_binary() {
         let n = 256usize;
         let evals: Vec<F> = (1..=n).map(|i| F::new(i as u32)).collect();
         let domain: Vec<F> = (1..=n).map(|i| F::new((i * 5 + 1) as u32)).collect();
 
         let result = prove_instrumented(evals, domain, 20).expect("prove should succeed");
 
-        // Proof bytes must be valid JSON
-        let parsed: serde_json::Value =
-            serde_json::from_slice(&result.proof_bytes).expect("proof bytes must be valid JSON");
-        assert!(parsed.is_object(), "serialized proof must be a JSON object");
-        assert!(parsed.get("roots").is_some(), "must have roots field");
+        // tscp-fri-proof-serialization-v1: binary, magic + version header,
+        // decodable and re-verifiable from bytes alone. JSON is no longer
+        // the digest input (Issue #37, Findings 29 + 30).
+        assert_eq!(
+            &result.proof_bytes[..8],
+            &FRI_PROOF_MAGIC[..],
+            "proof bytes must start with the v1 magic"
+        );
+        assert_eq!(
+            u16::from_le_bytes([result.proof_bytes[8], result.proof_bytes[9]]),
+            FRI_PROOF_FORMAT_VERSION
+        );
+        assert!(decode_fri_proof_v1(&result.proof_bytes).is_ok());
         assert!(
-            parsed.get("final_value").is_some(),
-            "must have final_value field"
+            !result.proof_bytes.windows(9).any(|w| w == b"MerkleCap"),
+            "no Debug-format residue in the digest input"
         );
     }
 
@@ -441,5 +703,277 @@ mod tests {
 
         let err = BridgeError::SerializationError("json".to_string());
         assert_eq!(format!("{}", err), "Serialization error: json");
+    }
+
+    // -----------------------------------------------------------------
+    // tscp-fri-proof-serialization-v1 acceptance gates (Issue #37)
+    // Contract: tscp-fri-proof-serialization-v1-verification/CONTRACT.md
+    // -----------------------------------------------------------------
+
+    fn v16_vector() -> (Vec<F>, Vec<F>, usize) {
+        let n = 16usize;
+        let evals: Vec<F> = (1..=n).map(|i| F::new(i as u32)).collect();
+        let domain: Vec<F> = (1..=n).map(|i| F::new((i * 5 + 1) as u32)).collect();
+        (evals, domain, 4)
+    }
+
+    fn v256_vector() -> (Vec<F>, Vec<F>, usize) {
+        let n = 256usize;
+        let evals: Vec<F> = (1..=n).map(|i| F::new(i as u32)).collect();
+        let domain: Vec<F> = (1..=n).map(|i| F::new((i * 5 + 1) as u32)).collect();
+        (evals, domain, 20)
+    }
+
+    fn v16_bytes() -> Vec<u8> {
+        let (evals, domain, q) = v16_vector();
+        prove_instrumented(evals, domain, q)
+            .expect("prove should succeed")
+            .proof_bytes
+    }
+
+    fn fresh_challenger() -> Challenger {
+        Challenger::new(p3_baby_bear::default_babybear_poseidon2_16())
+    }
+
+    /// Gate: completeness — every verification-relevant field of the proof
+    /// survives the encode/decode round trip.
+    #[test]
+    fn gate_completeness_all_fields_survive() {
+        let (evals, domain, q) = v256_vector();
+        let r = prove_instrumented_internal(evals, domain, q).expect("prove");
+        let decoded = decode_fri_proof_v1(&r.proof_bytes).expect("decode");
+
+        assert_eq!(
+            decoded.commitment.final_value.as_canonical_u32(),
+            r.proof.commitment.final_value.as_canonical_u32()
+        );
+        assert_eq!(decoded.query_indices, r.proof.query_indices);
+        assert_eq!(
+            decoded.commitment.roots.len(),
+            r.proof.commitment.roots.len()
+        );
+        for (a, b) in decoded
+            .commitment
+            .roots
+            .iter()
+            .zip(r.proof.commitment.roots.iter())
+        {
+            assert_eq!(a.num_roots(), b.num_roots());
+            for (da, db) in a.roots().iter().zip(b.roots().iter()) {
+                assert_eq!(da.len(), db.len());
+                for (xa, xb) in da.iter().zip(db.iter()) {
+                    assert_eq!(xa.as_canonical_u32(), xb.as_canonical_u32());
+                }
+            }
+        }
+        assert_eq!(decoded.query_proofs.len(), r.proof.query_proofs.len());
+        for (qa, qb) in decoded.query_proofs.iter().zip(r.proof.query_proofs.iter()) {
+            assert_eq!(qa.len(), qb.len());
+            for (ra, rb) in qa.iter().zip(qb.iter()) {
+                let pairs = [
+                    (&ra.opening_x, &rb.opening_x),
+                    (&ra.opening_neg_x, &rb.opening_neg_x),
+                    (&ra.opening_folded, &rb.opening_folded),
+                ];
+                for (oa, ob) in pairs {
+                    assert_eq!(oa.leaf_index, ob.leaf_index);
+                    assert_eq!(
+                        oa.leaf_value.as_canonical_u32(),
+                        ob.leaf_value.as_canonical_u32()
+                    );
+                    assert_eq!(oa.proof.len(), ob.proof.len());
+                    for (da, db) in oa.proof.iter().zip(ob.proof.iter()) {
+                        assert_eq!(da.len(), db.len());
+                        for (xa, xb) in da.iter().zip(db.iter()) {
+                            assert_eq!(xa.as_canonical_u32(), xb.as_canonical_u32());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Gate: determinism — identical proof, byte-identical encoding.
+    #[test]
+    fn gate_determinism_identical_bytes() {
+        let (evals, domain, q) = v16_vector();
+        let b1 = prove_instrumented(evals.clone(), domain.clone(), q)
+            .expect("prove 1")
+            .proof_bytes;
+        let b2 = prove_instrumented(evals, domain, q)
+            .expect("prove 2")
+            .proof_bytes;
+        assert_eq!(
+            b1, b2,
+            "two runs of the same vector must encode identically"
+        );
+    }
+
+    /// Gate: canonicality + rot detection — the live encoder must reproduce
+    /// the committed golden fixture exactly, and the digest must match.
+    #[test]
+    fn gate_canonicality_golden_fixture() {
+        let b = v16_bytes();
+        let fixture = std::fs::read("../../fixtures/phase3/fri_proof_v1_test_vector.bin")
+            .expect("golden fixture must exist");
+        assert_eq!(
+            b, fixture,
+            "live encoder must reproduce the committed golden fixture byte-for-byte"
+        );
+        assert_eq!(
+            crate::provenance::sha256_hex(&b),
+            "6c4d9b327a7cfc9a451a17dec48ae67e215059768e2bbef74bab05e1a937ec99"
+        );
+    }
+
+    /// Gate: digest binding — the emitted digest is sha256 over the canonical
+    /// bytes, for both vectors (256-vector digests frozen as a second golden).
+    #[test]
+    fn gate_digest_binding() {
+        let (evals, domain, q) = v256_vector();
+        let r = prove_instrumented(evals, domain, q).expect("prove");
+        assert_eq!(
+            crate::provenance::sha256_hex(&r.proof_bytes),
+            "0c5c28d09a166b1cdaa4a174613df5708e952972fc1c40704a0eaa0c9868007a"
+        );
+        assert_eq!(
+            crate::provenance::sha256_hex(&r.transcript_bytes),
+            "0a9340aa385c7bab20bc1a1799e8a41d9a5accd5472b957ade58ad30d3346531"
+        );
+    }
+
+    /// Gate: round-trip — the decoded proof verifies using ONLY the
+    /// serialized bytes, a fresh challenger, and the public domain.
+    /// The in-memory proof supplies nothing.
+    #[test]
+    fn gate_roundtrip_verifies_from_bytes_alone() {
+        for (evals, domain, q) in [v16_vector(), v256_vector()] {
+            let b = prove_instrumented(evals, domain.clone(), q)
+                .expect("prove")
+                .proof_bytes;
+            let proof = decode_fri_proof_v1(&b).expect("decode");
+            let mut challenger = fresh_challenger();
+            assert!(
+                fri_verify(&domain, &proof, &mut challenger, q),
+                "decoded proof must verify from bytes alone"
+            );
+        }
+    }
+
+    /// Gate: mutation sensitivity — every single-bit flip in the canonical
+    /// bytes either fails decode (fail closed) or breaks verification.
+    #[test]
+    fn gate_mutation_sensitivity_bit_flip_sweep() {
+        let (evals, domain, q) = v16_vector();
+        let orig = prove_instrumented(evals, domain.clone(), q)
+            .expect("prove")
+            .proof_bytes;
+        for i in 0..orig.len() {
+            let mut m = orig.clone();
+            m[i] ^= 0x01;
+            if let Ok(proof) = decode_fri_proof_v1(&m) {
+                let mut challenger = fresh_challenger();
+                assert!(
+                    !fri_verify(&domain, &proof, &mut challenger, q),
+                    "mutated byte {} decoded but still verified —                      verification-relevant byte not bound",
+                    i
+                );
+            }
+        }
+    }
+
+    /// Gate: malformed-input rejection — truncation at every prefix length.
+    #[test]
+    fn gate_malformed_truncation_sweep() {
+        let orig = v16_bytes();
+        for cut in 0..orig.len() {
+            assert!(
+                decode_fri_proof_v1(&orig[..cut]).is_err(),
+                "truncation at byte {} must be rejected",
+                cut
+            );
+        }
+    }
+
+    /// Gate: malformed-input rejection — battery of structural and
+    /// byte-level corruption. The decoder fails closed on all of them.
+    #[test]
+    fn gate_malformed_battery() {
+        let orig = v16_bytes();
+        let (evals, domain, q) = v16_vector();
+        let r = prove_instrumented(evals, domain, q).expect("prove");
+
+        // wrong magic
+        let mut m = orig.clone();
+        m[0] ^= 0xFF;
+        assert!(decode_fri_proof_v1(&m).is_err(), "bad magic");
+        // unsupported version
+        let mut m = orig.clone();
+        m[8] = 0x02;
+        assert!(decode_fri_proof_v1(&m).is_err(), "version 2 unsupported");
+        // trailing byte
+        let mut m = orig.clone();
+        m.push(0x00);
+        assert!(decode_fri_proof_v1(&m).is_err(), "trailing bytes");
+        // length-prefix budget bomb: num_roots = 0xFFFFFFFF (offset 14)
+        let mut m = orig.clone();
+        m[14] = 0xFF;
+        m[15] = 0xFF;
+        m[16] = 0xFF;
+        m[17] = 0xFF;
+        assert!(decode_fri_proof_v1(&m).is_err(), "budget bomb rejected");
+        // field value >= ORDER: final_value bytes 10..14 = FF FF FF 7F
+        let mut m = orig.clone();
+        m[10] = 0xFF;
+        m[11] = 0xFF;
+        m[12] = 0xFF;
+        m[13] = 0x7F;
+        assert!(decode_fri_proof_v1(&m).is_err(), "field value >= ORDER");
+
+        // structural: num_queries = 0 (round-trips through the encoder)
+        let mut p0 = decode_fri_proof_v1(&r.proof_bytes).expect("decode");
+        p0.query_indices.clear();
+        p0.query_proofs.clear();
+        assert!(decode_fri_proof_v1(&encode_fri_proof_v1(&p0).unwrap()).is_err());
+
+        // structural: round count inconsistent with num_roots - 1
+        let mut p1 = decode_fri_proof_v1(&r.proof_bytes).expect("decode");
+        p1.query_proofs[0].pop();
+        assert!(decode_fri_proof_v1(&encode_fri_proof_v1(&p1).unwrap()).is_err());
+
+        // structural: single root (num_roots < 2)
+        let mut p2 = decode_fri_proof_v1(&r.proof_bytes).expect("decode");
+        p2.commitment.roots.truncate(1);
+        assert!(decode_fri_proof_v1(&encode_fri_proof_v1(&p2).unwrap()).is_err());
+
+        // structural: zero digest count in a commitment — corrupt the
+        // num_digests prefix of root 0 at byte level (a count of 0 cannot
+        // be built through the public API: MerkleCap asserts power-of-two).
+        // The num_digests prefix of root 0 sits at offset 10+4+4 = 18.
+        let mut m = orig.clone();
+        m[18] = 0x00;
+        m[19] = 0x00;
+        m[20] = 0x00;
+        m[21] = 0x00;
+        assert!(decode_fri_proof_v1(&m).is_err(), "zero digest count");
+    }
+
+    /// Gate: transcript proxy is canonical — deterministic, versioned, and
+    /// free of Debug-format residue.
+    #[test]
+    fn gate_transcript_proxy_canonical() {
+        let (evals, domain, q) = v256_vector();
+        let r1 = prove_instrumented(evals.clone(), domain.clone(), q).expect("prove 1");
+        let r2 = prove_instrumented(evals, domain, q).expect("prove 2");
+        assert_eq!(r1.transcript_bytes, r2.transcript_bytes);
+        assert_eq!(
+            &r1.transcript_bytes[..8],
+            &FS_TRANSCRIPT_PROXY_MAGIC[..],
+            "transcript proxy must carry the v1 magic"
+        );
+        assert!(
+            !r1.transcript_bytes.windows(9).any(|w| w == b"MerkleCap"),
+            "no Debug-format residue in the transcript digest input"
+        );
     }
 }
