@@ -49,11 +49,12 @@ impl SoundnessAccumulator {
         }
     }
 
-    /// ARCHER Finding 35: This soundness budget tracking is NOT
-    /// cryptographically bound to the Fiat-Shamir transcript. A malicious
-    /// prover could reset the accumulator without affecting the challenge
-    /// sequence. For production, the accumulator state should be absorbed
-    /// into the challenger after each consume() call.
+    /// ARCHER Finding 35 (recorded; resolved by consume_and_bind below):
+    /// bare consume() does not bind the budget to the Fiat-Shamir
+    /// transcript — a malicious prover could reset the accumulator
+    /// without affecting the challenge sequence. Callers that must bind
+    /// use consume_and_bind(), which absorbs the accumulator state into
+    /// the challenger after each consume.
     pub fn consume(&mut self, bits: usize) -> Result<(), DeepAliError> {
         if bits > self.bits_remaining {
             return Err(DeepAliError::SoundnessDepleted {
@@ -66,6 +67,42 @@ impl SoundnessAccumulator {
         self.round += 1;
         Ok(())
     }
+
+    /// ARCHER Finding 35 (fix, Issue #39): consume AND bind. After a
+    /// successful consume(), the accumulator state — round,
+    /// bits_consumed, bits_remaining — is absorbed into the challenger
+    /// as canonical field elements, so any reset or divergence of the
+    /// accumulator between prover and verifier changes the challenge
+    /// sequence and invalidates the proof. A failed consume binds
+    /// nothing: the challenger is left byte-identical.
+    ///
+    /// Scope (per the #39 ruling, stated here so it cannot drift):
+    /// this binding makes the reported budget part of the Fiat-Shamir
+    /// statement. It does NOT make the error terms correct or the
+    /// combined bound tight — green tests prove the binding, not the
+    /// soundness analysis.
+    pub fn consume_and_bind<C: CanObserve<BabyBear>>(
+        &mut self,
+        bits: usize,
+        challenger: &mut C,
+    ) -> Result<(), DeepAliError> {
+        self.consume(bits)?;
+        let round = u32::try_from(self.round).map_err(|_| DeepAliError::AccumulatorEncoding {
+            reason: format!("round {} does not fit in u32", self.round),
+        })?;
+        let consumed =
+            u32::try_from(self.bits_consumed).map_err(|_| DeepAliError::AccumulatorEncoding {
+                reason: format!("bits_consumed {} does not fit in u32", self.bits_consumed),
+            })?;
+        let remaining =
+            u32::try_from(self.bits_remaining).map_err(|_| DeepAliError::AccumulatorEncoding {
+                reason: format!("bits_remaining {} does not fit in u32", self.bits_remaining),
+            })?;
+        challenger.observe(BabyBear::from_u32(round));
+        challenger.observe(BabyBear::from_u32(consumed));
+        challenger.observe(BabyBear::from_u32(remaining));
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -73,6 +110,11 @@ pub enum DeepAliError {
     SoundnessDepleted {
         requested: usize,
         remaining: usize,
+    },
+    /// Issue #39: accumulator state that cannot be canonically encoded
+    /// for transcript binding — a loud error, never a silent skip.
+    AccumulatorEncoding {
+        reason: String,
     },
     InvalidDeepPoint {
         point: String,
@@ -121,6 +163,13 @@ impl std::fmt::Display for DeepAliError {
                     f,
                     "DEEP-ALI soundness depleted: requested {} bits, {} remaining",
                     requested, remaining
+                )
+            }
+            Self::AccumulatorEncoding { reason } => {
+                write!(
+                    f,
+                    "Soundness accumulator state cannot be encoded for transcript binding: {}",
+                    reason
                 )
             }
             Self::InvalidDeepPoint { point, reason } => {
@@ -425,8 +474,10 @@ where
         accumulator: &mut SoundnessAccumulator,
         challenger: &mut DeepAliChallenger<P>,
     ) -> Result<(), DeepAliError> {
+        // Issue #39 / ARCHER F35: the budget consume is now transcript-
+        // bound — the accumulator state enters the challenge sequence.
         let bits_per_query = DEEP_ALI_LAMBDA / queries.len().max(1);
-        accumulator.consume(bits_per_query * queries.len())?;
+        accumulator.consume_and_bind(bits_per_query * queries.len(), challenger)?;
 
         for resp in queries {
             if resp.query.column_index >= self.num_columns {
@@ -644,5 +695,114 @@ mod shift_semantics_tests {
             }
             other => panic!("expected InvalidDeepPoint, got {:?}", other),
         }
+    }
+}
+
+#[cfg(test)]
+mod accumulator_binding_tests {
+    use super::*;
+    use p3_baby_bear::{default_babybear_poseidon2_24, Poseidon2BabyBear};
+    use p3_challenger::DuplexChallenger;
+
+    type DeepPermutation = Poseidon2BabyBear<24>;
+
+    fn fresh_deep_challenger() -> DeepAliChallenger<DeepPermutation> {
+        DuplexChallenger::new(default_babybear_poseidon2_24())
+    }
+
+    /// ARCHER F35 fix, test 1: a bound consume changes the challenge
+    /// sequence — a challenger that absorbed accumulator state and one
+    /// that did not must sample different elements, and two
+    /// challengers that absorbed identical state must agree.
+    #[test]
+    fn bound_consume_changes_and_determines_challenges() {
+        let mut acc = SoundnessAccumulator::new(DEEP_ALI_LAMBDA);
+        let mut bound = fresh_deep_challenger();
+        acc.consume_and_bind(32, &mut bound).unwrap();
+        let mut unbound = fresh_deep_challenger();
+        let b: BabyBear = bound.sample();
+        let u: BabyBear = unbound.sample();
+        assert_ne!(b, u);
+
+        let mut a1 = SoundnessAccumulator::new(DEEP_ALI_LAMBDA);
+        let mut a2 = SoundnessAccumulator::new(DEEP_ALI_LAMBDA);
+        let mut c1 = fresh_deep_challenger();
+        let mut c2 = fresh_deep_challenger();
+        a1.consume_and_bind(48, &mut c1).unwrap();
+        a2.consume_and_bind(48, &mut c2).unwrap();
+        let s1: BabyBear = c1.sample();
+        let s2: BabyBear = c2.sample();
+        assert_eq!(s1, s2);
+    }
+
+    /// ARCHER F35 fix, test 2: a failed consume binds nothing — the
+    /// challenger state is unchanged after a rejected consume_and_bind.
+    #[test]
+    fn failed_consume_binds_nothing() {
+        let mut acc = SoundnessAccumulator::new(64);
+        let mut bound = fresh_deep_challenger();
+        let err = acc.consume_and_bind(65, &mut bound).unwrap_err();
+        match err {
+            DeepAliError::SoundnessDepleted {
+                requested,
+                remaining,
+            } => {
+                assert_eq!((requested, remaining), (65, 64));
+            }
+            other => panic!("expected SoundnessDepleted, got {:?}", other),
+        }
+        let mut unbound = fresh_deep_challenger();
+        let b: BabyBear = bound.sample();
+        let u: BabyBear = unbound.sample();
+        assert_eq!(b, u);
+    }
+
+    /// ARCHER F35 fix, test 3: the adversarial reset the finding names.
+    /// A prover that silently resets its accumulator mid-stream absorbs
+    /// different state, so the two sides' challenge sequences diverge.
+    /// Under bare consume() the reset was invisible; bound, it is fatal
+    /// to the proof.
+    #[test]
+    fn reset_diverges_the_challenge_sequence() {
+        let mut honest_acc = SoundnessAccumulator::new(DEEP_ALI_LAMBDA);
+        let mut honest = fresh_deep_challenger();
+        honest_acc.consume_and_bind(32, &mut honest).unwrap();
+        honest_acc.consume_and_bind(32, &mut honest).unwrap();
+
+        let mut malicious_acc = SoundnessAccumulator::new(DEEP_ALI_LAMBDA);
+        let mut malicious = fresh_deep_challenger();
+        malicious_acc.consume_and_bind(32, &mut malicious).unwrap();
+        malicious_acc.bits_consumed = 0;
+        malicious_acc.bits_remaining = DEEP_ALI_LAMBDA;
+        malicious_acc.round = 0;
+        malicious_acc.consume_and_bind(32, &mut malicious).unwrap();
+
+        let h: BabyBear = honest.sample();
+        let m: BabyBear = malicious.sample();
+        assert_ne!(h, m);
+    }
+
+    /// Checked encoding (#36 discipline): state that does not fit in u32
+    /// is a loud AccumulatorEncoding error, and it binds nothing.
+    #[test]
+    fn oversized_state_is_a_loud_error() {
+        let mut acc = SoundnessAccumulator::new(DEEP_ALI_LAMBDA);
+        acc.bits_consumed = u32::MAX as usize + 1;
+        let mut bound = fresh_deep_challenger();
+        let err = acc.consume_and_bind(0, &mut bound).unwrap_err();
+        match err {
+            DeepAliError::AccumulatorEncoding { reason } => {
+                assert!(
+                    reason.contains("u32"),
+                    "reason must name the u32 bound: {}",
+                    reason
+                );
+            }
+            other => panic!("expected AccumulatorEncoding, got {:?}", other),
+        }
+        let mut unbound = fresh_deep_challenger();
+        let b: BabyBear = bound.sample();
+        let u: BabyBear = unbound.sample();
+        assert_eq!(b, u);
     }
 }
