@@ -49,12 +49,7 @@ jobs:
           toolchain: nightly-2026-10-08
       - uses: swatinem/rust-cache@v2
       - name: Run tests
-        run: |
-          if grep -q "avx512" /proc/cpuinfo 2>/dev/null; then
-            RUSTFLAGS="-C target-cpu=native" cargo test --workspace --release
-          else
-            cargo test --workspace --release
-          fi
+        run: cargo test --workspace --release
 
   audit:
     name: Supply Chain (cargo audit)
