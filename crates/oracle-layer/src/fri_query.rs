@@ -235,6 +235,16 @@ pub fn fri_verify(
                 return false;
             }
         }
+
+        // Bind the claimed final constant (Issue #37 mutation gate):
+        // the last fold round's folded opening is verified against the
+        // final single-leaf root; that leaf IS the constant the polynomial
+        // folded to, so it must equal commitment.final_value. Pre-#37,
+        // final_value was carried in the proof but never checked.
+        let last_round = &proof.query_proofs[q][expected_rounds - 1];
+        if last_round.opening_folded.leaf_value != proof.commitment.final_value {
+            return false;
+        }
     }
 
     true
