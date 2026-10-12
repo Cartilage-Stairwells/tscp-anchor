@@ -1,14 +1,5 @@
 {
-  "_comment": "Known, accepted proof gaps at the time this manifest was recorded (issue #61). The attestation FAILS if sorryAx or a project axiom appears for any constant outside these entries (project axioms may not be silently renamed or reintroduced), or if an expected axiom is absent. The three normalization-reflection sorries were discharged constructively under ruling S3-A (section hypothesis) \u2014 sorryAx_allowed is now empty; any future sorryAx dependency fails the gate.",
+  "_comment": "Known, accepted proof gaps at the time this manifest was recorded (issue #61). Stage 3 (ruling S3-A): the three normalization-reflection sorries were discharged constructively under a section hypothesis \u2014 sorryAx_allowed is empty; any future sorryAx dependency fails the gate. Stage 4 (ruling B, 2026-10-12): execution_valid converted from axiom to an explicit certificate hypothesis (sufficiency construction added to the corpus); babybear_ntt_end_to_end discharged to a theorem (trivial). project_axioms is now EMPTY: the corpus declares zero project axioms, and any axiom-kind project constant fails the gate.",
   "sorryAx_allowed": [],
-  "project_axioms": {
-    "TSCP.Formal.Core.execution_valid": [
-      "TSCP.Formal.Core.execution_valid",
-      "TSCP.Formal.Core.ntt_bridge_conservative",
-      "TSCP.Formal.Core.ntt_preserves_admissibility"
-    ],
-    "TSCP.Formal.Core.babybear_ntt_end_to_end": [
-      "TSCP.Formal.Core.babybear_ntt_end_to_end"
-    ]
-  }
+  "project_axioms": {}
 }

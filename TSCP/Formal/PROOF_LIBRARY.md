@@ -1,16 +1,30 @@
 # PROOF_LIBRARY.md — zkSHA-Rx Lean Formalization Corpus
 
-**State:** B3 frozen (2026-08-03) · 2 declared axioms · 0 sorries · 89 theorem declarations across 10 files
-> (Stage 3, issue #61 ruling S3-A, 2026-10-12: the three normalization-reflection sorries were
-> discharged constructively via a section hypothesis on the atom-renaming function.)
+**State:** B3 frozen (2026-08-03) · 0 axioms · 0 sorries · 90 theorem declarations across 10 files
+> (Stage 3, issue #61 ruling S3-A: the three normalization-reflection sorries were discharged
+> constructively via a section hypothesis on the atom-renaming function. Stage 4, ruling B:
+> `execution_valid` converted to an explicit certificate hypothesis with a machine-checked
+> sufficiency construction in the corpus; `babybear_ntt_end_to_end` discharged to a theorem.)
 
 > **Proof-status record (issue #61, updated at Stage 3 completion, 2026-10-12).**
-> The 89 counts declarations, not fully proved results. `Core.lean` declares two
-> `noncomputable axiom`s (`execution_valid`, `babybear_ntt_end_to_end`); Core.lean's
-> own audit record classifies them as Category-2 engineering boundaries with stated
-> closure paths — a documented engineering judgment, not a soundness guarantee:
-> any result whose proof applies an axiom is conditional on it. The disposition of
-> `execution_valid` remains open (issue #61, Stage 4).
+> The 90 counts declarations, not fully proved results — and, as of Stage 4
+> (issue #61, ruling B, 2026-10-12), the corpus declares **zero project axioms**.
+> `Core.lean` v2.3: the former `noncomputable axiom execution_valid` is REMOVED;
+> its two dependents (`ntt_bridge_conservative`, `ntt_preserves_admissibility`)
+> now take the bridge certificate as an explicit hypothesis, and the corpus
+> carries the machine-checked sufficiency construction
+> (`execution_bridge_certificate_of_surjectivity`: surjectivity of the opaque
+> `ntt_map` constructs the full certificate, injectivity not required). The
+> former `babybear_ntt_end_to_end` axiom is discharged to a theorem (`trivial`:
+> its statement is `True → True` under the trivial kernels, so the axiom carried
+> no kernel-level content).
+> **These are relocations and discharges of bookkeeping, not new mathematics:**
+> surjectivity of `ntt_map` is NOT proven — it is now a named, single-purpose
+> hypothesis, unprovable in-corpus while `ntt_map` is opaque; proving it requires
+> binding the map to the AVX-512 kernel, which is Level C work (implementation
+> correspondence). Likewise the trivial discharge of `babybear_ntt_end_to_end`
+> does not verify the NTT round-trip, whose evidence lives at the implementation
+> level. Results downstream of the certificate hypothesis are conditional on it.
 > The three former `sorry` placeholders in `Examples/NormalizationBridge.lean`
 > (proof reflection, proof-admissibility reflection, and formula reflection inside
 > `def normalization_certificate`) are **discharged**: the certificate construction
@@ -24,11 +38,12 @@
 > Kernel-level dependency auditing is executed in CI on every push and pull
 > request (PR #62): all ten roots build, every source declaration is enumerated
 > from the elaborated environment via `Lean.collectAxioms`, reconciled against a
-> source census, and gated against `audit/expected-gaps.json`, which now lists
-> **zero** accepted `sorryAx` dependencies. Per-class counts live in the
-> attestation receipt (the committed CI evidence), not in this document; the two
-> project axioms and their declared dependents remain the only accepted
-> axiom-level gaps.
+> source census, and gated against `audit/expected-gaps.json`, which now accepts
+> **zero** `sorryAx` dependencies and **zero** project axioms: any axiom-kind
+> project constant or sorry-dependent declaration fails CI. Per-class counts live
+> in the attestation receipt (the committed CI evidence), not in this document.
+> Open work (issue #61): Level C — formal-to-implementation correspondence,
+> including the surjectivity assumption now stated explicitly in `Core.lean`.
 
 ## Architecture
 
@@ -39,7 +54,7 @@ Montgomery.lean           Montgomery arithmetic (12 theorems)
         ↓
 Butterfly.lean            Butterfly algebra (27 theorems)
         ↓
-Core.lean                 NTT admissibility (2 theorems)
+Core.lean                 NTT admissibility (3 theorems + certificate construction)
 TSCP_Formal_Backbone.lean Custody framework (4 theorems)
 BridgePreservation.lean   Semantic bridge (2 theorems)
 Evidence/*.lean           Manifest binding (3 theorems)
@@ -186,6 +201,6 @@ If B4 requires new modular arithmetic, that lemma belongs in B3, not B4.
 | TSCP_Formal_Backbone.lean | 4 | Custody framework |
 | Examples/PropositionalKernel.lean | 4 | Reference: propositional kernel |
 | Evidence/ManifestBinding.lean | 3 | Manifest binding |
-| Core.lean | 2 | NTT admissibility |
+| Core.lean | 3 | NTT admissibility (incl. discharged round-trip theorem) |
 | BridgePreservation.lean | 2 | Semantic bridge |
-| **Total** | **89** | |
+| **Total** | **90** | |
