@@ -26,6 +26,10 @@ pub struct DeepResponse<F: Field> {
     pub query: DeepQuery<F>,
 }
 
+/// Reserved verifier scaffold (issue #52): part of the dormant DEEP-ALI
+/// verification path. Zero constructors anywhere in the repo, including
+/// tests. Its shift semantics (additive vs multiplicative) remain an
+/// open design decision (paper Findings 13/23/32). Not active.
 #[derive(Clone, Debug)]
 pub struct AlgebraicLink<F: Field> {
     pub constraint_index: usize,
@@ -36,6 +40,14 @@ pub struct AlgebraicLink<F: Field> {
     pub shifts: Vec<usize>,
 }
 
+/// Reserved verifier scaffold (issue #52 ruling, 2026-10-11): retained
+/// as intended, INCOMPLETE verifier infrastructure — not a working
+/// security boundary. Status: zero production constructors (all ::new
+/// call sites are #[cfg(test)]); the F35 `consume_and_bind` correction
+/// is implemented but LATENT, because its only live-code caller
+/// (`verify_deep_batch`) is itself unreachable. Activation is deferred
+/// until the end-to-end DEEP-ALI verifier's cryptographic contract is
+/// defined. Do not wire into the serving path.
 #[derive(Clone, Debug)]
 pub struct SoundnessAccumulator {
     pub bits_consumed: usize,
@@ -236,6 +248,16 @@ fn eval_poly_horner(coeffs: &[BabyBear], x: BabyBear) -> BabyBear {
     acc
 }
 
+/// Reserved verifier scaffold (issue #52): dormant shift machinery of
+/// the unreachable DEEP-ALI verification path — its only production
+/// callers are `evaluate_air_constraint`, which is only called by
+/// `verify_deep_batch`, which has no callers at all. Evaluates with an
+/// ADDITIVE shift convention (z + k) over the integer domain; whether
+/// that convention is the intended one is unresolved (Findings
+/// 13/23/32). Issue #38 moved the live interpolation path to the
+/// two-adic subgroup, but interpolation-domain selection and shift
+/// semantics are separate decisions — that change neither activates
+/// this machinery nor approves its convention. Not active.
 pub struct TraceEvaluator {
     column_polynomials: Vec<Vec<BabyBear>>,
 }
@@ -310,6 +332,17 @@ impl TraceEvaluator {
 
 pub trait DeepAliVerifier<F: Field + PrimeCharacteristicRing, Comm, C: CanObserve<F> + CanSample<F>>
 {
+    /// Reserved verifier scaffold (issue #52 ruling, 2026-10-11): the
+    /// intended DEEP-ALI batch verifier, INCOMPLETE and INACTIVE. As
+    /// implemented it: has no callers anywhere, including tests; takes
+    /// the trace as prover-supplied trusted input; uses `()` for the
+    /// trace commitment (no commitment binding); performs no quotient
+    /// verification (paper Finding 17); and relies on unresolved shift
+    /// semantics (Findings 13/23/32). The F35 accumulator binding
+    /// inside it is implemented but latent for the same reason. Wiring
+    /// this into the serving path would give unbound trace data the
+    /// appearance of cryptographic verification. Activation is
+    /// deferred until the cryptographic contract is defined.
     fn verify_deep_batch(
         &self,
         trace: &p3_matrix::dense::RowMajorMatrix<F>,
@@ -481,6 +514,10 @@ where
     MMCS: p3_commit::Mmcs<BabyBear>,
     P: CryptographicPermutation<[BabyBear; 24]>,
 {
+    /// Issue #52 ruling: retained as reserved, incomplete verifier
+    /// infrastructure. The parameter named `_trace_commitment` is `()`:
+    /// this impl binds no commitment. See the trait method's doc for the
+    /// full inactive-scaffold limitations record.
     fn verify_deep_batch(
         &self,
         trace: &RowMajorMatrix<BabyBear>,
