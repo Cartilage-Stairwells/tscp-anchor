@@ -34,12 +34,17 @@ pub struct AIRMorphism<F: Field> {
     pub name: String,
     pub constraint: Box<dyn Constraint<F>>,
     /// Issue #36 record: declared but unconsumed — no oracle-layer code
-    /// applies it. The DEEP-ALI evaluator's live shift convention is
-    /// additive over the integer-domain interpolation {0..n-1}
-    /// (shifted point z + k); this generator becomes the shift factor
-    /// only when the domain moves to the two-adic subgroup (#38, FFT
-    /// interpolation). Until then it is reserved, not authoritative.
-    pub shift: F, // reserved: two-adic subgroup shift generator (#36, #38)
+    /// applies it. Issue #52 ruling (2026-10-11): REMAINS reserved and
+    /// not authoritative. The live interpolation path moved to the
+    /// two-adic subgroup in #38 (FFT interpolation), but
+    /// interpolation-domain selection and shift semantics are SEPARATE
+    /// decisions: #38's domain change does not establish that this
+    /// generator should be activated, and the dormant DEEP-ALI shift
+    /// machinery still carries the additive convention pending the
+    /// unresolved design decision (paper Findings 13/23/32). Zero
+    /// references anywhere in the repo. Activation is deferred until
+    /// the algebraic shift-semantics contract is ruled.
+    pub shift: F, // reserved: shift generator — activation requires the shift-semantics ruling (#36, #38, #52)
 }
 
 pub mod lww;
