@@ -1,9 +1,6 @@
 {
-  "_comment": "Known, accepted proof gaps at the time this manifest was recorded (issue #61). The attestation FAILS if sorryAx or a project axiom appears for any constant outside these entries (project axioms may not be silently renamed or reintroduced), or if an expected axiom is absent.",
-  "sorryAx_allowed": [
-    "TSCP.Formal.Examples.normalization_certificate",
-    "TSCP.Formal.Examples.certified_proof_crosses_bridge"
-  ],
+  "_comment": "Known, accepted proof gaps at the time this manifest was recorded (issue #61). The attestation FAILS if sorryAx or a project axiom appears for any constant outside these entries (project axioms may not be silently renamed or reintroduced), or if an expected axiom is absent. The three normalization-reflection sorries were discharged constructively under ruling S3-A (section hypothesis) \u2014 sorryAx_allowed is now empty; any future sorryAx dependency fails the gate.",
+  "sorryAx_allowed": [],
   "project_axioms": {
     "TSCP.Formal.Core.execution_valid": [
       "TSCP.Formal.Core.execution_valid",

@@ -112,6 +112,94 @@ theorem rename_preserves_admits
   exact ⟨rename_formula f form, type_of_rename f p form ht⟩
 
 /- ===================================================================
+   SECTIONS AND REFLECTION (Stage 3, issue #61 ruling S3-A)
+
+  The reflection obligations of the bridge certificate are not valid for
+  an arbitrary atom-renaming function: a constant renaming refutes them
+  (machine-checked counterexample on issue #61). They become provable,
+  constructively, given a SECTION (right inverse) of the renaming
+  function: g : String → String with ∀ s, f (g s) = s. Injectivity is
+  not required. The certificate construction below therefore takes the
+  section as an explicit hypothesis.
+  =================================================================== -/
+
+/-- Renaming composes: renaming by g then by f is renaming by f ∘ g
+    (formulas). -/
+theorem rename_formula_comp (f g : String → String) : ∀ form : Formula,
+    rename_formula f (rename_formula g form) = rename_formula (f ∘ g) form := by
+  intro form
+  induction form with
+  | atom _ => rfl
+  | implies a b ih_a ih_b =>
+      simp only [rename_formula]
+      rw [ih_a, ih_b]
+
+/-- Renaming composes (proofs). -/
+theorem rename_proof_comp (f g : String → String) : ∀ p : Proof,
+    rename_proof f (rename_proof g p) = rename_proof (f ∘ g) p := by
+  intro p
+  induction p with
+  | assume form =>
+      simp only [rename_proof]
+      rw [rename_formula_comp f g form]
+  | mp a b ih_a ih_b =>
+      simp only [rename_proof]
+      rw [ih_a, ih_b]
+
+/-- Renaming by the identity is the identity (formulas). -/
+theorem rename_formula_id : ∀ form : Formula,
+    rename_formula (fun s => s) form = form := by
+  intro form
+  induction form with
+  | atom _ => rfl
+  | implies a b ih_a ih_b =>
+      simp only [rename_formula]
+      rw [ih_a, ih_b]
+
+/-- Renaming by the identity is the identity (proofs). -/
+theorem rename_proof_id : ∀ p : Proof,
+    rename_proof (fun s => s) p = p := by
+  intro p
+  induction p with
+  | assume form =>
+      simp only [rename_proof]
+      rw [rename_formula_id form]
+  | mp a b ih_a ih_b =>
+      simp only [rename_proof]
+      rw [ih_a, ih_b]
+
+/-- With a section of f, every admissible target proof has an admissible
+    source proof mapping to it: the preimage is `rename_proof g q`, whose
+    admissibility follows from the already-proved preservation theorem
+    (valid for arbitrary renaming functions). -/
+theorem rename_proof_reflects (f g : String → String)
+    (hsec : ∀ s, f (g s) = s) :
+    ∀ (q : Proof), admits q → ∃ (p : Proof), admits p ∧ rename_proof f p = q := by
+  intro q hq
+  refine ⟨rename_proof g q, rename_preserves_admits g q hq, ?_⟩
+  have hcomp : (f ∘ g) = (fun s => s) := funext (fun s => hsec s)
+  calc rename_proof f (rename_proof g q)
+      = rename_proof (f ∘ g) q := rename_proof_comp f g q
+    _ = rename_proof (fun s => s) q := by rw [hcomp]
+    _ = q := rename_proof_id q
+
+/-- With a section of f, every target formula has a source formula mapping
+    to it. The formula kernel is trivial (everything admissible), so only
+    surjectivity of the renaming matters. -/
+theorem rename_formula_reflects (f g : String → String)
+    (hsec : ∀ s, f (g s) = s) :
+    ∀ (form : Formula), trivial_formula_kernel.admits_proof form →
+      ∃ (form' : Formula), trivial_formula_kernel.admits_proof form' ∧
+        rename_formula f form' = form := by
+  intro form _
+  refine ⟨rename_formula g form, trivial, ?_⟩
+  have hcomp : (f ∘ g) = (fun s => s) := funext (fun s => hsec s)
+  calc rename_formula f (rename_formula g form)
+      = rename_formula (f ∘ g) form := rename_formula_comp f g form
+    _ = rename_formula (fun s => s) form := by rw [hcomp]
+    _ = form := rename_formula_id form
+
+/- ===================================================================
    BRIDGE CONSTRUCTION
 
   Build a bridge between two propositional universes (same structure,
@@ -155,22 +243,18 @@ theorem rename_preserves_exec_admits
 
     This is the independently checkable evidence that the bridge preserves
     admissibility. It includes custody metadata (digest, version, timestamp). -/
-def normalization_certificate (f : String → String) :
+def normalization_certificate (f : String → String) (g : String → String)
+    (hsec : ∀ s, f (g s) = s) :
     BridgeCertificate (normalization_bridge f) where
   proof_preservation := fun p hp => rename_preserves_admits f p hp
-  proof_reflection := by
-    sorry  -- reflection requires invertibility (future work)
+  proof_reflection := rename_proof_reflects f g hsec
   proof_admissibility := {
     preserves := fun p hp => rename_preserves_admits f p hp
-    reflects := by
-      intro q hq
-      sorry  -- reflection requires invertibility (future work)
+    reflects := rename_proof_reflects f g hsec
   }
   formula_admissibility := {
     preserves := fun form h => trivial
-    reflects := by
-      intro form h
-      sorry  -- reflection requires invertibility (future work)
+    reflects := rename_formula_reflects f g hsec
   }
   exec_admissibility := {
     preserves := fun x h => h
@@ -196,9 +280,9 @@ def normalization_certificate (f : String → String) :
 /-- End-to-end: a certified proof, transported across the normalization
     bridge, remains certified in the target universe. -/
 theorem certified_proof_crosses_bridge
-    (f : String → String)
+    (f : String → String) (g : String → String) (hsec : ∀ s, f (g s) = s)
     (cp : CertifiedProof propositional_kernel) :
     Truth propositional_universe (normalization_bridge f |>.proof_map cp.proof) :=
-  (normalization_certificate f).proof_preservation cp.proof cp.certified
+  (normalization_certificate f g hsec).proof_preservation cp.proof cp.certified
 
 end TSCP.Formal.Examples
