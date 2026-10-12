@@ -49,6 +49,7 @@ jobs:
           source ~/.elan/env
           PIN="$(cat lean-toolchain)"
           PIN_VERSION="${PIN#leanprover/lean4:}"
+          PIN_VERSION="${PIN_VERSION#v}"
           ACTUAL="$(lean --version | sed -E 's/Lean \(version ([0-9A-Za-z.\-]+).*/\1/')"
           if [ "$ACTUAL" != "$PIN_VERSION" ]; then
             echo "TOOLCHAIN MISMATCH: pin=$PIN_VERSION actual=$ACTUAL"
