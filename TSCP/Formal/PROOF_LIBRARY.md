@@ -1,6 +1,25 @@
 # PROOF_LIBRARY.md — zkSHA-Rx Lean Formalization Corpus
 
-**State:** B3 frozen (2026-08-03) · 0 axioms · 0 sorries · 83 proven theorems across 10 files
+**State:** B3 frozen (2026-08-03) · 2 declared axioms · 3 sorries · 83 theorem declarations across 10 files
+
+> **Proof-status record (issue #41, census at `8d1f8db2a`, 2026-10-11).**
+> The 83 counts declarations, not fully proved results. `Core.lean` declares two
+> `noncomputable axiom`s (`execution_valid`, `babybear_ntt_end_to_end`); Core.lean's
+> own audit record classifies them as Category-2 engineering boundaries with stated
+> closure paths — a documented engineering judgment, not a soundness guarantee:
+> any result whose proof applies an axiom is conditional on it.
+> `Examples/NormalizationBridge.lean` contains three `sorry` tactics, all inside
+> `def normalization_certificate`, each marked "reflection requires invertibility
+> (future work)". The source-level census identifies two of the 83 declarations as
+> dependent on these gaps, in different dependency categories:
+> `ntt_preserves_admissibility` (Core.lean) on the declared axiom `execution_valid`,
+> and `certified_proof_crosses_bridge` (NormalizationBridge.lean) on the
+> sorry-containing definition `normalization_certificate`. The remaining 81 were
+> not identified as directly applying either reported gap in the source-level
+> census; their complete kernel-level dependency status remains subject to the
+> planned Lean checks. All dependency identifications are source-level; kernel-level
+> verification (`#print axioms`) has not yet been executed. This record corrects the
+> status claim only; the underlying proof gaps remain open.
 
 ## Architecture
 
