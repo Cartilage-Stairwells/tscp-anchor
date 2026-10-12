@@ -7,6 +7,13 @@ on:
     paths:
       - 'TSCP/Formal/**'
       - 'lakefile.lean'
+      - 'audit/**'
+      - '.github/workflows/tscp-attestation.yml'
+  pull_request:
+    paths:
+      - 'TSCP/Formal/**'
+      - 'lakefile.lean'
+      - 'audit/**'
       - '.github/workflows/tscp-attestation.yml'
   workflow_dispatch:
 
@@ -24,39 +31,84 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Lean toolchain
+      - name: Free runner disk (Mathlib cache needs the space)
         run: |
-          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.32.1
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup || true
+          df -h /
+
+      - name: 'Install elan (default: the lean-toolchain pin, nothing else)'
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
           source ~/.elan/env
+          elan toolchain install "$(cat lean-toolchain)"
+          elan default "$(cat lean-toolchain)"
 
-      - name: Verify toolchain
+      - name: Verify toolchain matches the lean-toolchain pin
         run: |
-          lean --version
-          lake --version
+          source ~/.elan/env
+          PIN="$(cat lean-toolchain)"
+          PIN_VERSION="${PIN#leanprover/lean4:}"
+          ACTUAL="$(lean --version | sed -E 's/Lean \(version ([0-9A-Za-z.\-]+).*/\1/')"
+          if [ "$ACTUAL" != "$PIN_VERSION" ]; then
+            echo "TOOLCHAIN MISMATCH: pin=$PIN_VERSION actual=$ACTUAL"
+            exit 1
+          fi
+          echo "Toolchain verified: $ACTUAL"
 
-      - name: Build formal backbone
+      - name: Record environment identity
         run: |
-          set -e
-          echo "## TSCP Formal Verification Results" > receipt.md
-          echo "" >> receipt.md
-          echo "**Commit:** ${{ github.sha }}" >> receipt.md
-          echo "**Branch:** ${{ github.ref_name }}" >> receipt.md
-          echo "**Run:** ${{ github.run_id }}" >> receipt.md
-          echo "**Toolchain:** $(lean --version)" >> receipt.md
-          echo "" >> receipt.md
-          echo "## Module Results" >> receipt.md
-          echo "" >> receipt.md
-          echo "| Module | Status |" >> receipt.md
-          echo "|--------|--------|" >> receipt.md
+          source ~/.elan/env
+          {
+            echo "## TSCP Formal Verification Results"
+            echo ""
+            echo "**Commit:** ${{ github.sha }}"
+            echo "**Branch:** ${{ github.ref_name }}"
+            echo "**Run:** ${{ github.run_id }}"
+            echo "**Toolchain:** $(lean --version)"
+          } > receipt.md
+
+      - name: Fetch dependencies (Mathlib pinned in lakefile.lean)
+        run: |
+          source ~/.elan/env
+          lake update 2>&1 | tee fetch.log
+          MATHLIB_REV="$(git -C .lake/packages/mathlib rev-parse HEAD)"
+          MATHLIB_PIN="51e6992efd06126df61a496bebf8f49482a4e129"
+          if [ "$MATHLIB_REV" != "$MATHLIB_PIN" ]; then
+            echo "MATHLIB PIN MISMATCH: expected $MATHLIB_PIN, got $MATHLIB_REV"
+            exit 1
+          fi
+          echo "**Mathlib:** $MATHLIB_REV (tag v4.33.0-rc2, pinned in lakefile.lean)" >> receipt.md
+
+      - name: Fetch Mathlib olean cache
+        run: |
+          source ~/.elan/env
+          lake exe cache get 2>&1 | tail -5
+          df -h /
+
+      - name: Build all ten declared roots
+        run: |
+          source ~/.elan/env
+          set -o pipefail
+          {
+            echo ""
+            echo "## Module Results"
+            echo ""
+            echo "| Module | Status |"
+            echo "|--------|--------|"
+          } >> receipt.md
           BUILD_FAILED=0
           for mod in \
             TSCP.Formal.TSCP_Formal_Backbone \
             TSCP.Formal.BridgePreservation \
-            TSCP.Formal.Examples.PropositionalKernel \
-            TSCP.Formal.Examples.NormalizationBridge \
+            TSCP.Formal.Butterfly \
+            TSCP.Formal.Core \
             TSCP.Formal.Evidence.ManifestBinding \
-            TSCP.Formal.Core; do
+            TSCP.Formal.Examples.NormalizationBridge \
+            TSCP.Formal.Examples.PropositionalKernel \
+            TSCP.Formal.Montgomery \
+            TSCP.Formal.NTTStage \
+            TSCP.Formal.ReviewerSemantics; do
             if lake build "$mod" 2>&1 | tee -a build.log | grep -q "Build completed successfully"; then
               echo "| $mod | PASS |" >> receipt.md
             else
@@ -65,29 +117,49 @@ jobs:
             fi
           done
           if [ "$BUILD_FAILED" = "1" ]; then
-            echo ""
             echo "Build failed — see build.log"
             exit 1
           fi
-          echo "" >> receipt.md
-          echo "## Accepted Gaps" >> receipt.md
-          echo "" >> receipt.md
-          echo "**Axioms:** $(grep -rn '^axiom\|^noncomputable axiom' TSCP/Formal/ --include='*.lean' | wc -l) (hardware/runtime boundary)" >> receipt.md
-          echo "**Sorry:** $(grep -rn 'sorry' TSCP/Formal/ --include='*.lean' | grep -v 'Method:\|grep-based\|scan for' | wc -l) (NormalizationBridge reflection)" >> receipt.md
-          echo "**Classical:** 0" >> receipt.md
-          echo "" >> receipt.md
-          echo "## Working Tree" >> receipt.md
-          echo '```' >> receipt.md
-          git status --short >> receipt.md
-          echo '(clean)' >> receipt.md
-          echo '```' >> receipt.md
+
+      - name: Run kernel-level dependency audit (all ten roots in scope)
+        run: |
+          source ~/.elan/env
+          set -o pipefail
+          lake env lean audit/Audit.lean > audit-output.txt 2> audit-warnings.log
+          AUDIT_LINES="$(grep -c '^AUDIT|' audit-output.txt || true)"
+          if [ "$AUDIT_LINES" -eq 0 ]; then
+            echo "AUDIT PRODUCED NO OUTPUT — see audit-warnings.log"
+            cat audit-warnings.log || true
+            exit 1
+          fi
+          echo "Audited $AUDIT_LINES constants from the built environment"
+
+      - name: Check audit against expected gaps (gate)
+        run: |
+          {
+            echo ""
+            echo ""
+          } >> receipt.md
+          python3 audit/check_audit.py audit-output.txt audit/expected-gaps.json >> receipt.md
+
+      - name: Record working tree honestly
+        run: |
+          {
+            echo ""
+            echo "## Working Tree"
+            echo '```'
+            git status --short || true
+            echo '```'
+          } >> receipt.md
 
       - name: Generate SHA256 evidence
         run: |
           find TSCP/Formal -type f -name "*.lean" -exec sha256sum {} + | sort > formal-sha256sums.txt
-          cat formal-sha256sums.txt
           sha256sum build.log >> formal-sha256sums.txt
           sha256sum receipt.md >> formal-sha256sums.txt
+          sha256sum audit-output.txt >> formal-sha256sums.txt
+          sha256sum audit/expected-gaps.json >> formal-sha256sums.txt
+          cat formal-sha256sums.txt
 
       - name: Attest verification evidence
         uses: actions/attest-build-provenance@v2
@@ -104,6 +176,9 @@ jobs:
             receipt.md
             formal-sha256sums.txt
             build.log
+            audit-output.txt
+            audit-warnings.log
+            fetch.log
           retention-days: 90
 
       - name: Summary
@@ -112,4 +187,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           cat receipt.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Attestation attached via GitHub Build Provenance." >> $GITHUB_STEP_SUMMARY
+          echo "Attestation attached via GitHub Build Provenance. Audit gate enforced: unexpected sorryAx or project-axiom dependencies fail this workflow." >> $GITHUB_STEP_SUMMARY
