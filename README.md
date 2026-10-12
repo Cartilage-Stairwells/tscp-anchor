@@ -56,7 +56,7 @@ tscp-anchor provides three things:
 
 **Supporting systems:**
 
-- **OWSL** (Oracle Witness Status Layer) — operational witness-status daemon used for runtime health gating and execution policy. Writes atomic status to `~/.tscp/owsl_status.json` every 30 seconds. Rust bridge in `src/owsl_bridge.rs`.
+- **OWSL** (Oracle Witness Status Layer) — operational witness-status daemon used for runtime health gating and execution policy. Writes atomic status to `~/.tscp/owsl_status.json` every 30 seconds. Rust bridge in `crates/prover-server/src/owsl_bridge.rs`.
 - **TSCPAnchor.sol** — Solidity contract for on-chain artifact registration.
 - **Lean 4 kernel** (`TraceCoreProver.lean`) — formal semantics layer defining the Mazurkiewicz trace monoid and categorical compiler functor that underpin the protocol's theoretical guarantees.
 
@@ -180,7 +180,7 @@ python3 src/owsl_ipc.py status
 sv status owsl
 ```
 
-Status is written atomically to `~/.tscp/owsl_status.json`. The Rust bridge (`src/owsl_bridge.rs`) enforces configured execution policy based on the current status.
+Status is written atomically to `~/.tscp/owsl_status.json`. The Rust bridge (`crates/prover-server/src/owsl_bridge.rs`) enforces configured execution policy based on the current status.
 
 ---
 
