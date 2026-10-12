@@ -1,25 +1,34 @@
 # PROOF_LIBRARY.md — zkSHA-Rx Lean Formalization Corpus
 
-**State:** B3 frozen (2026-08-03) · 2 declared axioms · 3 sorries · 83 theorem declarations across 10 files
+**State:** B3 frozen (2026-08-03) · 2 declared axioms · 0 sorries · 89 theorem declarations across 10 files
+> (Stage 3, issue #61 ruling S3-A, 2026-10-12: the three normalization-reflection sorries were
+> discharged constructively via a section hypothesis on the atom-renaming function.)
 
-> **Proof-status record (issue #41, census at `8d1f8db2a`, 2026-10-11).**
-> The 83 counts declarations, not fully proved results. `Core.lean` declares two
+> **Proof-status record (issue #61, updated at Stage 3 completion, 2026-10-12).**
+> The 89 counts declarations, not fully proved results. `Core.lean` declares two
 > `noncomputable axiom`s (`execution_valid`, `babybear_ntt_end_to_end`); Core.lean's
 > own audit record classifies them as Category-2 engineering boundaries with stated
 > closure paths — a documented engineering judgment, not a soundness guarantee:
-> any result whose proof applies an axiom is conditional on it.
-> `Examples/NormalizationBridge.lean` contains three `sorry` tactics, all inside
-> `def normalization_certificate`, each marked "reflection requires invertibility
-> (future work)". The source-level census identifies two of the 83 declarations as
-> dependent on these gaps, in different dependency categories:
-> `ntt_preserves_admissibility` (Core.lean) on the declared axiom `execution_valid`,
-> and `certified_proof_crosses_bridge` (NormalizationBridge.lean) on the
-> sorry-containing definition `normalization_certificate`. The remaining 81 were
-> not identified as directly applying either reported gap in the source-level
-> census; their complete kernel-level dependency status remains subject to the
-> planned Lean checks. All dependency identifications are source-level; kernel-level
-> verification (`#print axioms`) has not yet been executed. This record corrects the
-> status claim only; the underlying proof gaps remain open.
+> any result whose proof applies an axiom is conditional on it. The disposition of
+> `execution_valid` remains open (issue #61, Stage 4).
+> The three former `sorry` placeholders in `Examples/NormalizationBridge.lean`
+> (proof reflection, proof-admissibility reflection, and formula reflection inside
+> `def normalization_certificate`) are **discharged**: the certificate construction
+> now takes an explicit section hypothesis (`g : String → String`,
+> `hsec : ∀ s, f (g s) = s`) and proves all three reflection obligations
+> constructively. The unrestricted reflection contract is false — the
+> constant-renaming counterexample is machine-checked on issue #61 — so the
+> strengthened construction is the discharged form, not a weakening of the
+> generic `BridgeCertificate` contract, which is unchanged.
+> `certified_proof_crosses_bridge` now carries the section hypotheses explicitly.
+> Kernel-level dependency auditing is executed in CI on every push and pull
+> request (PR #62): all ten roots build, every source declaration is enumerated
+> from the elaborated environment via `Lean.collectAxioms`, reconciled against a
+> source census, and gated against `audit/expected-gaps.json`, which now lists
+> **zero** accepted `sorryAx` dependencies. Per-class counts live in the
+> attestation receipt (the committed CI evidence), not in this document; the two
+> project axioms and their declared dependents remain the only accepted
+> axiom-level gaps.
 
 ## Architecture
 
@@ -173,10 +182,10 @@ If B4 requires new modular arithmetic, that lemma belongs in B3, not B4.
 | NTTStage.lean | 8 | Stage composition (B4) |
 | ReviewerSemantics.lean | 15 | Layer 0 semantic types |
 | Montgomery.lean | 12 | Montgomery representation |
-| Examples/NormalizationBridge.lean | 6 | Reference: normalization bridge |
+| Examples/NormalizationBridge.lean | 12 | Reference: normalization bridge (incl. section/reflection lemmas) |
 | TSCP_Formal_Backbone.lean | 4 | Custody framework |
 | Examples/PropositionalKernel.lean | 4 | Reference: propositional kernel |
 | Evidence/ManifestBinding.lean | 3 | Manifest binding |
 | Core.lean | 2 | NTT admissibility |
 | BridgePreservation.lean | 2 | Semantic bridge |
-| **Total** | **83** | |
+| **Total** | **89** | |
