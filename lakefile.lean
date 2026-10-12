@@ -3,7 +3,7 @@ open Lake DSL
 
 package «tscp-formal» where
 
-require mathlib from git "https://github.com/leanprover-community/mathlib4.git"
+require mathlib from git "https://github.com/leanprover-community/mathlib4.git" @ "51e6992efd06126df61a496bebf8f49482a4e129"
 
 lean_lib «TSCP» where
   roots := #[`TSCP.Formal.TSCP_Formal_Backbone, `TSCP.Formal.BridgePreservation,
