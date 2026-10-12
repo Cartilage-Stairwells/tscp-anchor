@@ -1,6 +1,6 @@
 # PROOF_LIBRARY.md — zkSHA-Rx Lean Formalization Corpus
 
-**State:** B3 frozen (2026-08-03) · 0 axioms · 0 sorries · 90 theorem declarations across 10 files
+**State:** B3 frozen (2026-08-03) · B5 full-transform round-trip proven (2026-10-12) · 0 axioms · 0 sorries · 101 theorem declarations across 11 files
 > (Stage 3, issue #61 ruling S3-A: the three normalization-reflection sorries were discharged
 > constructively via a section hypothesis on the atom-renaming function. Stage 4, ruling B:
 > `execution_valid` converted to an explicit certificate hypothesis with a machine-checked
@@ -153,6 +153,24 @@ Examples/*.lean           Reference examples (10 theorems)
 | `stage_deterministic` | NTTStage | Stage application is deterministic (rfl) | **B5**: NTT determinism |
 | `disjoint_butterflies_commute` | NTTStage | Butterflies on disjoint index pairs commute (funext + 4-case split) | **B5**: schedule independence |
 | `stage_concat` | NTTStage | Stage concatenation: `apply (s₁ ++ s₂) = apply s₂ ∘ apply s₁` (via `List.foldl_append`) | **B5**: NTT = list of stages, multi-stage composition |
+
+### 11. Full NTT Transform (B5)
+
+Constructed on the `Nat → Nat` carrier as a DISTINCT object (ruling R3_DISTINCT_RELATED / Path C, 2026-10-12): no relation to the opaque `Core.ntt_map` is asserted here; that correspondence is deferred to Level C.
+
+| Lemma/Theorem | File | Purpose | Method |
+|---------------|------|---------|--------|
+| `P_prime` | NTTFull | `Nat.Prime P` — the BabyBear ring is a field | Bounded kernel trial division (d ≤ 44869 since 44870² > P), `decide` over the finite range, bridged via `Nat.prime_def_lt'`; zero axioms beyond the standard three |
+| `b5_ntt_forward` | NTTFull | Full forward NTT: `stages.foldl Stage.apply` | Definition (B4 composition) |
+| `inv_applyButterfly` / `inv_stage_apply` / `b5_ntt_inverse` | NTTFull | Exact inverse transform via B3 `dif_butterfly_inv`, applied in LIFO order | Definitions |
+| `MatchOp` / `MatchOps` / `MatchStage` / `MatchInverse` | NTTFull | Explicit matching predicates (Amendment 1): same indices, inverse twiddles; stage ops reversed (LIFO); stage lists paired in order, applied in reverse | Definitions |
+| `op_inv_duality` | NTTFull | A matched inverse butterfly exactly undoes a forward butterfly | B3 `dif_invertible` + B4 `applyButterfly_at_i/at_j/untouched` |
+| `stage_inv_duality` | NTTFull | A matched stage exactly inverts the forward stage | Induction on the op list via `stage_inv_duality_gen` |
+| `b5_forward_preserves_validity` | NTTFull | Forward transform preserves field validity | Induction via B4 `stage_preserves_validity` |
+| `b5_stage_composition` | NTTFull | Stage-list concatenation folds associatively | `List.foldl_append` |
+| `b5_ntt_roundtrip` | NTTFull | **Full round-trip identity**: `b5_ntt_inverse inv_stages (b5_ntt_forward stages v) = v` — exact, no N⁻¹ scale factor | Induction over the stage list; per-stage exact duality |
+
+Amended construction note (recorded with the b5_proofs task result, 2026-10-12): the drafted plan's `stage_inverse_step` (`= mod_mul (v k) 2`, cancelled by an `inv_scale`) is mathematically false — a DIF butterfly is not inverted by a forward-shape butterfly with an inverse twiddle. The exact inverse is `dif_butterfly_inv` (B3, certified by `dif_invertible`); with LIFO ordering every stage inverts exactly and the halving lives inside the inverse butterfly, so no scale factor arises.
 
 ### 9. Custody Framework (Layer 0)
 
