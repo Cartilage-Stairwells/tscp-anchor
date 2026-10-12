@@ -29,6 +29,7 @@ import TSCP.Formal.Examples.PropositionalKernel
 import TSCP.Formal.Montgomery
 import TSCP.Formal.NTTStage
 import TSCP.Formal.ReviewerSemantics
+import TSCP.Formal.NTTFull
 import Lean.Elab.Command
 
 open Lean Elab Command in

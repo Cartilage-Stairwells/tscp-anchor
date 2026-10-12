@@ -87,7 +87,7 @@ jobs:
           lake exe cache get 2>&1 | tail -5
           df -h /
 
-      - name: Build all ten declared roots
+      - name: Build all eleven declared roots
         run: |
           source ~/.elan/env
           set -o pipefail
@@ -108,6 +108,7 @@ jobs:
             TSCP.Formal.Examples.NormalizationBridge \
             TSCP.Formal.Examples.PropositionalKernel \
             TSCP.Formal.Montgomery \
+            TSCP.Formal.NTTFull \
             TSCP.Formal.NTTStage \
             TSCP.Formal.ReviewerSemantics; do
             if lake build "$mod" 2>&1 | tee -a build.log | grep -q "Build completed successfully"; then
@@ -122,7 +123,7 @@ jobs:
             exit 1
           fi
 
-      - name: Run kernel-level dependency audit (all ten roots in scope)
+      - name: Run kernel-level dependency audit (all eleven roots in scope)
         run: |
           source ~/.elan/env
           set -o pipefail
