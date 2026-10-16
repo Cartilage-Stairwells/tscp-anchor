@@ -1,0 +1,67 @@
+---
+title: TSCP Release A — Claims Statement
+summary: Scoped public claims for the B5 formal-verification release, derived from the final audit record (tscp-anchor #61, comment 6132730770). Every claim is bound to a named revision and evidence artifact.
+---
+
+# TSCP Release A — Claims Statement
+
+**Release commit (formal corpus):** `Cartilage-Stairwells/tscp-anchor` @ `70e614f3c2cd9f21ea3d2b0021a523921c33f079` (master)
+**Implementation repo:** `Cartilage-Stairwells/avx512-butterfly` — evidence-bearing revision `1cdf93a89bcc4a0c325a6d3571c265a9b26ba82f` (B6 differential suite); current master `2fdf2bddf2ebf719b1ba3c15cadaa4cd62d8a952` adds CI-workflow fixes only (PRs #20-#22), no production-code changes
+**Licenses:** tscp-anchor: Apache-2.0. avx512-butterfly: Apache-2.0/MIT (repo and all dependencies, per the PR #19 pre-merge review).
+**Date:** 2026-10-16
+
+## 1. Claims supported by the evidence
+
+### C1 — Exact NTT round-trip theorem (Lean-verified)
+For the B5 construct on the `Nat → Nat` carrier (module `TSCP.Formal.NTTFull`): the inverse transform composed with the forward transform is the identity, with no external N⁻¹ scale factor (inversion via `dif_butterfly_inv` in LIFO order with halving internal to the inverse operation). Supporting theorems: `P_prime` (primality of P = 0x78000001 = 15·2²⁷+1, bounded kernel trial division), `b5_forward_preserves_validity`, `stage_inv_duality`, `b5_stage_composition`.
+
+**Evidence:** CI attestation run 38300810290 on the exact release commit — 11/11 modules build clean (Lean v4.33.0-rc2, Mathlib 51e6992e); kernel audit 919 constants, 0 axioms; source classification 101 theorems = 50 clean / 46 foundational / 5 classical / **0 project axioms / 0 sorry-dependent**; audit gate PASSED vs `audit/expected-gaps.json`; receipt artifact 11771145127 (`tscp-verification-receipt-70e614f3c…`, sha256:7304e3c54293662e64c101104dab5e87231eb91baf11b3086d44bdaf60d2f3b6). Independently re-verified in the final audit (tscp-anchor issue #61, comment 6132730770).
+
+**Scope boundary:** the theorem holds for the verified model (canonical residues x ∈ [0, P-1], pow2 lengths N = 2^k, k ≤ 27, matched-inverse stage lists). It is a result about the formal NTT construct, not a universal implementation-correctness claim.
+
+### C2 — Montgomery REDC single-lane kernel equivalence (SMT-verified)
+The 64-bit REDC kernel (`mont_reduce_epu64`, single lane) is bit-exact equivalent to its modular specification for all inputs in [0, 2⁶⁴−1].
+
+**Evidence:** Z3 5.1.0 (`unsat`, sealed script `mont_reduce_epu64.smt2`, sha256:b43758a8…; independent audit re-run 1m38s) plus mutation control (`mutation_wrong_mu.smt2` returns `sat`, confirming the check has teeth). Labeled SMT-verified, not Lean-verified.
+
+### C3 — SIMD-vs-scalar differential conformance (tested-corpus evidence)
+The AVX-512 fused butterfly pass engine agrees bit-exactly with the scalar reference engine (`scalar_engine_fused_butterfly_pass`, the sole baseline) over the tested conformance corpus on native AVX-512 hardware.
+
+**Evidence:** differential suite `tests/b6_conformance_levelc.rs` green on real AVX-512 silicon — CI run 173 on branch head `da90e17a4` (id 38304740467), enforced on master post-merge (AVX-512 Build and Test run 174 on `1cdf93a8`, VEP Validation run 129). Corpus: sizes 2/16/32/64/1024, maximal canonical inputs (P−1), twiddle boundary values, deterministic PRNG vectors pinned by manifest seed.
+
+**Scope boundary:** finite test evidence over the tested corpus on x86-64 hosts with native avx512f+avx512dq. It does NOT establish universal equivalence over all inputs; that stronger claim is where the Layer 2 SMT proof applies (kernel level only).
+
+## 2. Claims NOT supported by the evidence (do not make)
+
+1. **No universal implementation-equivalence claim.** No theorem or proof binds the Lean B5 construct to the Rust engines as universally equivalent.
+2. **No `Core.ntt_map` correspondence claim.** B5 is a distinct construct on the `Nat → Nat` carrier (ruling R3_DISTINCT_RELATED / Path C). `Core.ntt_map` remains opaque; its surjectivity hypothesis is a named, open boundary. Layer 1 scalar-refinement obligations (O-A/O-B/O-C) are specified but unproved.
+3. **No performance claim.** No qualified-host benchmark has been executed. No speedup, throughput, cost-per-op, or energy figure may be stated until the sealed qualified-host run exists (Release B).
+4. **No corpus-completeness claim.** The audited census covers the 11 build roots under the pinned toolchain; it is not a completeness result for the whole TSCP corpus.
+
+## 3. Reproduction
+
+**Formal side (tscp-anchor @ 70e614f3c):**
+```
+git clone https://github.com/Cartilage-Stairwells/tscp-anchor && cd tscp-anchor
+git checkout 70e614f3c2cd9f21ea3d2b0021a523921c33f079
+# toolchain: lean-toolchain pins Lean v4.33.0-rc2 (d8b18978); Mathlib at 51e6992e
+lake build          # all 11 roots, incl. TSCP.Formal.NTTFull
+python3 formal/check_audit.py   # audit gate: 0 sorryAx, 0 project axioms, census reconciled
+```
+
+**Implementation side (avx512-butterfly @ 1cdf93a8):**
+```
+git clone https://github.com/Cartilage-Stairwells/avx512-butterfly && cd avx512-butterfly
+git checkout 1cdf93a89bcc4a0c325a6d3571c265a9b26ba82f
+cargo test         # differential suite runs on AVX-512F+DQ hosts; fails closed otherwise
+```
+
+**Audit trail:** tscp-anchor issue #61 — B5 merge record (comment 6131572668), master attestation (6131981664), Level C evidence (6132667358), final audit (6132730770). PR #19 merge record: comment 6139873806.
+
+## 4. Known limitations, stated plainly
+
+- Layer 1 scalar refinement: spec only, obligations unproved.
+- Layer 3 differential: finite corpus, not universal proof.
+- `Core.ntt_map` surjectivity: named open hypothesis (Level C scope).
+- Qualified-host benchmark: not yet executed (Release B).
+- CI Custody Enforcement check: repaired 2026-10-16 (PRs #20/#21 — JSON-path defect plus a latent boolean-case defect; enforcement live and green since run 102, first green run in workflow history). The ubuntu-latest silicon lottery for fail-closed AVX-512 suites was also repaired (PR #22, D17 extension): master CI is green on any runner.
