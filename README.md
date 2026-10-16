@@ -1,3 +1,22 @@
+## Release A — formally verified NTT over BabyBear (2026-10-16)
+
+**The result:** an exact round-trip identity for the full NTT construct — the inverse
+transform composed with the forward transform is the identity, with the inverse built
+from `dif_butterfly_inv` in LIFO order (no external N^-1 factor) — machine-checked in
+Lean 4 under the pinned toolchain and kernel-audited: **101 theorems, zero project
+axioms, zero `sorryAx`** across 11 build roots (CI attestation run 38300810290 on this
+commit). See **[CLAIMS_STATEMENT.md](CLAIMS_STATEMENT.md)** for the full evidence
+binding and claim boundaries — what is proven, what is SMT-verified at the kernel level,
+what is differential test evidence on silicon, and what is explicitly NOT claimed (no
+universal implementation equivalence, no `Core.ntt_map` correspondence, no performance
+numbers pending the qualified-host benchmark).
+
+**Companion implementation:** [avx512-butterfly](https://github.com/Cartilage-Stairwells/avx512-butterfly) —
+AVX-512 engines with CI-enforced bit-exact parity against the scalar reference on native
+silicon.
+
+---
+
 # tscp-anchor
 
 The **Triune Structured Codex Protocol (TSCP)** is a multi-agent coordination standard that governs state transitions, governance events, and oracle-layer operations across a sovereign AI execution environment. **TSCP Anchor** is its cryptographic proving layer — the component responsible for making every protocol claim independently verifiable.
