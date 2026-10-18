@@ -6,7 +6,8 @@ summary: Scoped public claims for the B5 formal-verification release, derived fr
 # TSCP Release A — Claims Statement
 
 **Release commit (formal corpus):** `Cartilage-Stairwells/tscp-anchor` @ `70e614f3c2cd9f21ea3d2b0021a523921c33f079` (master)
-**Implementation repo:** `Cartilage-Stairwells/avx512-butterfly` — evidence-bearing revision `1cdf93a89bcc4a0c325a6d3571c265a9b26ba82f` (B6 differential suite); current master `2fdf2bddf2ebf719b1ba3c15cadaa4cd62d8a952` adds CI-workflow fixes only (PRs #20-#22), no production-code changes
+**Implementation repo:** `Cartilage-Stairwells/avx512-butterfly` — evidence-bearing revision `1cdf93a89bcc4a0c325a6d3571c265a9b26ba82f` (B6 differential suite); master lineage since Release A: `2fdf2bdd` (CI fixes, PRs #20-#22) → `1398ad8f` (archive intake) → `f3e97040` (legacy DIT seal) → `cac1c8a9` (Firebird iteration 1: 32-bit-lane subtraction-form REDC kernel, PR #33) → `87468e13` (Firebird iteration 3: software-pipelined fused pass, PR #36). Kernel arithmetic at `87468e13` is the Z3-verified subtraction-form REDC (C2 formulation); the iteration-3 change is a load/store schedule, not arithmetic, and output parity is gate-proven on silicon (run 39137142420).
+**Revision:** Rev 2, 2026-10-18 — adds claim C4 (host-named sealed performance evidence, Release B-adjacent) and retires the "no qualified-host benchmark" limitation; correctness claims C1-C3 unchanged; corpus tree of record unchanged from `70e614f3`
 **Licenses:** tscp-anchor: Apache-2.0. avx512-butterfly: Apache-2.0/MIT (repo and all dependencies, per the PR #19 pre-merge review).
 **Date:** 2026-10-16
 
@@ -31,11 +32,25 @@ The AVX-512 fused butterfly pass engine agrees bit-exactly with the scalar refer
 
 **Scope boundary:** finite test evidence over the tested corpus on x86-64 hosts with native avx512f+avx512dq. It does NOT establish universal equivalence over all inputs; that stronger claim is where the Layer 2 SMT proof applies (kernel level only).
 
+### C4 — Kernel-throughput vs Plonky3 on named hosts (sealed qualified-runner evidence)
+On each named host below, the AVX-512 fused butterfly pass (`avx512_engine_fused_butterfly_pass`, software-pipelined schedule, master `87468e13f`) completes the same-size pass faster than Plonky3 `p3-baby-bear` 0.6.3 (pinned) packed AVX-512 butterfly (`p3_packed_butterfly_pass`) in the sealed capture:
+
+| host | 2^16 | 2^18 | 2^20 |
+|---|---|---|---|
+| Intel Xeon Platinum 8573C | 1.165x | 1.223x | 1.007x |
+| AMD EPYC 9V74 | 1.113x | 1.129x | 1.127x |
+| Intel Xeon Platinum 8370C | 1.233x | 1.073x | 1.021x |
+| Intel Xeon 6973P-C | 1.070x | 1.006x | 2.120x |
+
+**Evidence:** sealed capture run 39137424483 (workflow "Plonky3 Comparison Capture", 8-attempt matrix, D17 silicon exclusion, named-CPU provenance, per-attempt SHA256SUMS 247/247 verified at adoption); specimen committed measurement-only at `avx512-butterfly` `repro-v0.3/captures/plonky3_comparison_iter3_87468e13/` (PR #37, merge `31b29e1e`); medians table and honest boundaries in the specimen's `VERDICT.md`. Correctness of the measured kernel: silicon differential run 39137142420 (Xeon 8573C) — fused == generic == legacy byte-identical, B6 differential vs scalar trust root, external-p3 parity at 2^20-2^24. Earlier sealed specimens retained unmodified: iteration 1 (`plonky3_comparison_iter1_f8a8a38/`, run 39132995107, kernel relane flipped the prior p3 deficit) and the legacy DIT verdict (`legacy_dit_1398ad8f/`, run showing the 2026-07 9.15x figure is host-dependent and non-portable).
+
+**Scope boundary:** host-named and sealed. Shared GitHub-hosted runners (named CPUs, not dedicated bare metal). Kernel-throughput of one fused butterfly pass only; p3 pinned 0.6.3; no end-to-end NTT, proof-system, or cross-version claim. No universal performance claim is made: performance is host-dependent by nature, and only correctness claims are universal.
+
 ## 2. Claims NOT supported by the evidence (do not make)
 
 1. **No universal implementation-equivalence claim.** No theorem or proof binds the Lean B5 construct to the Rust engines as universally equivalent.
 2. **No `Core.ntt_map` correspondence claim.** B5 is a distinct construct on the `Nat → Nat` carrier (ruling R3_DISTINCT_RELATED / Path C). `Core.ntt_map` remains opaque; its surjectivity hypothesis is a named, open boundary. Layer 1 scalar-refinement obligations (O-A/O-B/O-C) are specified but unproved.
-3. **No performance claim.** No qualified-host benchmark has been executed. No speedup, throughput, cost-per-op, or energy figure may be stated until the sealed qualified-host run exists (Release B).
+3. **No performance claim beyond the host-named sealed evidence of C4.** No universal speedup, no end-to-end or whole-system figure, no cost-per-op or energy figure, no comparison against p3 versions other than the pinned 0.6.3, and no extrapolation to unmeasured hosts. The legacy 9.15x figure is host-dependent and non-portable (sealed legacy verdict) and must not be restated as a portable claim.
 4. **No corpus-completeness claim.** The audited census covers the 11 build roots under the pinned toolchain; it is not a completeness result for the whole TSCP corpus.
 
 ## 3. Reproduction
@@ -63,5 +78,5 @@ cargo test         # differential suite runs on AVX-512F+DQ hosts; fails closed 
 - Layer 1 scalar refinement: spec only, obligations unproved.
 - Layer 3 differential: finite corpus, not universal proof.
 - `Core.ntt_map` surjectivity: named open hypothesis (Level C scope).
-- Qualified-host benchmark: not yet executed (Release B).
+- Qualified-host benchmark: executed on shared GitHub-hosted runners with named AVX-512 CPUs (owner-accepted physical step; C4). A dedicated-bare-metal specimen remains the stronger evidence class if ever available.
 - CI Custody Enforcement check: repaired 2026-10-16 (PRs #20/#21 — JSON-path defect plus a latent boolean-case defect; enforcement live and green since run 102, first green run in workflow history). The ubuntu-latest silicon lottery for fail-closed AVX-512 suites was also repaired (PR #22, D17 extension): master CI is green on any runner.
