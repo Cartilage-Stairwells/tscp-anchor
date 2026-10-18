@@ -7,9 +7,10 @@ Lean 4 under the pinned toolchain and kernel-audited: **101 theorems, zero proje
 axioms, zero `sorryAx`** across 11 build roots (CI attestation run 38300810290 on this
 commit). See **[CLAIMS_STATEMENT.md](CLAIMS_STATEMENT.md)** for the full evidence
 binding and claim boundaries — what is proven, what is SMT-verified at the kernel level,
-what is differential test evidence on silicon, and what is explicitly NOT claimed (no
+what is differential test evidence on silicon, what is explicitly NOT claimed (no
 universal implementation equivalence, no `Core.ntt_map` correspondence, no performance
-numbers pending the qualified-host benchmark).
+claim beyond host-named sealed numbers), and the sealed host-named kernel-throughput
+comparison vs Plonky3 (claim C4, Rev 2 2026-10-18).
 
 **Companion implementation:** [avx512-butterfly](https://github.com/Cartilage-Stairwells/avx512-butterfly) —
 AVX-512 engines with CI-enforced bit-exact parity against the scalar reference on native
