@@ -61,7 +61,7 @@ git clone https://github.com/Cartilage-Stairwells/tscp-anchor && cd tscp-anchor
 git checkout 70e614f3c2cd9f21ea3d2b0021a523921c33f079
 # toolchain: lean-toolchain pins Lean v4.33.0-rc2 (d8b18978); Mathlib at 51e6992e
 lake build          # all 11 roots, incl. TSCP.Formal.NTTFull
-python3 formal/check_audit.py   # audit gate: 0 sorryAx, 0 project axioms, census reconciled
+python3 audit/check_audit.py   # audit gate: 0 sorryAx, 0 project axioms, census reconciled
 ```
 
 **Implementation side (avx512-butterfly @ 1cdf93a8):**
