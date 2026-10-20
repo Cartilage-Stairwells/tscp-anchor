@@ -297,3 +297,6 @@ The `avx512-butterfly` repository (implementation, benchmarks, evidence) is acce
 
 See PROJECT_FACTS.md — Frozen Claims Table for full claim boundaries.
 
+
+
+Current cross-repository evidence map: [TSCP Evidence Index](docs/TSCP_EVIDENCE_INDEX_2026-10-20.md).
