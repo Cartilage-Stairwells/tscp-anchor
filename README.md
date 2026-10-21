@@ -299,4 +299,4 @@ See PROJECT_FACTS.md — Frozen Claims Table for full claim boundaries.
 
 
 
-Current cross-repository evidence map: [TSCP Evidence Index](docs/TSCP_EVIDENCE_INDEX_2026-10-20.md).
+Current cross-repository evidence map: [TSCP Evidence Index](docs/TSCP_EVIDENCE_INDEX_2026-10-21.md).
