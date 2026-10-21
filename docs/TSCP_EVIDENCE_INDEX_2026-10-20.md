@@ -14,6 +14,7 @@ claims statement.
 | AVX-512 implementation and sealed captures | [avx512-butterfly](https://github.com/Cartilage-Stairwells/avx512-butterfly) | Access-controlled, current implementation evidence |
 | Phase 1 legacy artifact | `tscp-pl-phase1` | Private, historical microbenchmarks and formal artifact; provenance and licensing unresolved |
 | Serialization custody and rebinding | `tscp-zkptp` | Private, V1/V2 identity migration and custody records |
+| Evidence custody and provider-bound execution records | `tscp-evidence` | Private custody repository; historical Ollama receipt and current bounded test verification |
 | Formal refinement artifact | `zksha-rx` | Private, provenance and licensing review; C3-ISA boundary open |
 | Reviewer package | [zksha-rx-reviewer-access](https://github.com/Cartilage-Stairwells/zksha-rx-reviewer-access) | Public curated surface; mixed-source licensing boundary documented, no blanket license claim |
 | P0 resolver baseline | [tscp-v04-p0-baseline](https://github.com/Cartilage-Stairwells/tscp-v04-p0-baseline) | Public, Apache-2.0, bounded resolver evidence |
