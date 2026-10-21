@@ -1,4 +1,4 @@
-# TSCP Evidence Index — 2026-10-20
+# TSCP Evidence Index — 2026-10-21
 
 This page identifies the current Cartilage-Stairwells evidence surfaces. Older
 paper drafts, outreach drafts, and benchmark narratives remain in the repository
