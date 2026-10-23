@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1120" width="920" height="1120">
+  <defs>
+    <style>
+      .bg { fill: #0f1419; }
+      .frozen { fill: #1a2e24; stroke: #3d7a5a; stroke-width: 2.5; }
+      .drafted { fill: #2a2618; stroke: #8a7a3d; stroke-width: 2; stroke-dasharray: 7 5; }
+      .estab { fill: #1a2430; stroke: #4a6a88; stroke-width: 2; }
+      .title { fill: #e8eef4; font-family: Georgia, "Palatino Linotype", serif; font-size: 24px; font-weight: 600; }
+      .sub { fill: #9aabbc; font-family: Georgia, serif; font-size: 12px; }
+      .h { fill: #f4f7fa; font-family: Georgia, serif; font-size: 18px; font-weight: 600; }
+      .role { fill: #c5d4e0; font-family: Georgia, serif; font-size: 13px; }
+      .q { fill: #8ec8a8; font-family: Georgia, serif; font-size: 12px; font-style: italic; }
+      .meta { fill: #b8c5d0; font-family: Georgia, serif; font-size: 11px; }
+      .arrow { stroke: #7a8fa3; stroke-width: 2; fill: none; marker-end: url(#arr); }
+      .rule { fill: #c9d6e2; font-family: Georgia, serif; font-size: 12px; }
+      .note { fill: #d7c48a; font-family: Georgia, serif; font-size: 11px; }
+      .badge { fill: #2d4a3c; }
+      .badge-t { fill: #a8e0c0; font-family: Georgia, serif; font-size: 10px; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#7a8fa3"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="920" height="1120"/>
+  <text class="title" x="460" y="40" text-anchor="middle">TSCP Named Roles — v1.1</text>
+  <text class="sub" x="460" y="62" text-anchor="middle">Names supplement layer numbers. Human documentation only. FROZEN mnemonic is lexical expansion only.</text>
+
+  <!-- VoxArchon -->
+  <rect class="frozen" x="150" y="88" width="620" height="130" rx="8"/>
+  <text class="h" x="460" y="120" text-anchor="middle">VoxArchon (Layer 0)</text>
+  <text class="role" x="460" y="142" text-anchor="middle">Semantic Sovereign</text>
+  <text class="q" x="460" y="164" text-anchor="middle">“What is true?”</text>
+  <text class="meta" x="460" y="188" text-anchor="middle">Semantic projection · intent vocabulary · relationship types · DAG firewall</text>
+  <text class="meta" x="460" y="204" text-anchor="middle">Defines semantic_equal and complete · emits meaning, does not freeze bytes</text>
+
+  <path class="arrow" d="M460 218 L460 248"/>
+
+  <!-- VexProbe -->
+  <rect class="drafted" x="150" y="250" width="620" height="130" rx="8"/>
+  <text class="h" x="460" y="282" text-anchor="middle">VexProbe (Layer 1)</text>
+  <text class="role" x="460" y="304" text-anchor="middle">Evaluation / Interrogation</text>
+  <text class="q" x="460" y="326" text-anchor="middle">“How do we test it?”</text>
+  <text class="meta" x="460" y="350" text-anchor="middle">Boundary injection · semantic mutation testing · determinism check</text>
+  <text class="meta" x="460" y="366" text-anchor="middle">Ephemeral sandbox · observational feedback only · does not mutate semantics</text>
+
+  <path class="arrow" d="M460 380 L460 410"/>
+
+  <!-- VexVector -->
+  <rect class="frozen" x="150" y="412" width="620" height="130" rx="8"/>
+  <text class="h" x="460" y="444" text-anchor="middle">VexVector (Layer 2)</text>
+  <text class="role" x="460" y="466" text-anchor="middle">Deterministic Transformer</text>
+  <text class="q" x="460" y="488" text-anchor="middle">“How do we encode it?”</text>
+  <text class="meta" x="460" y="512" text-anchor="middle">normalize → NFC → RFC 8785 → JSON → hash → signature</text>
+  <text class="meta" x="460" y="528" text-anchor="middle">Array→Finset→sorted · signature authenticates, does not identify</text>
+
+  <path class="arrow" d="M460 542 L460 572"/>
+
+  <!-- VoxCanon -->
+  <rect class="drafted" x="150" y="574" width="620" height="110" rx="8"/>
+  <text class="h" x="460" y="606" text-anchor="middle">VoxCanon (Conformance)</text>
+  <text class="role" x="460" y="628" text-anchor="middle">Alignment / Compliance</text>
+  <text class="q" x="460" y="650" text-anchor="middle">“Does it comply?”</text>
+  <text class="meta" x="460" y="670" text-anchor="middle">Downstream alignment to VoxArchon mandates · not a performance instrument</text>
+
+  <path class="arrow" d="M460 684 L460 714"/>
+
+  <!-- VexScale -->
+  <rect class="estab" x="150" y="716" width="620" height="110" rx="8"/>
+  <text class="h" x="460" y="748" text-anchor="middle">VexScale (Benchmark Plane)</text>
+  <text class="role" x="460" y="770" text-anchor="middle">Measurement / Observation</text>
+  <text class="q" x="460" y="792" text-anchor="middle">“Does it perform?”</text>
+  <text class="meta" x="460" y="812" text-anchor="middle">ESTABLISHED relative to external reference frame · observational metrics</text>
+
+  <text class="rule" x="460" y="870" text-anchor="middle">VoxArchon emits → VexProbe assays → VexVector freezes → VoxCanon aligns → VexScale weighs</text>
+  <text class="rule" x="460" y="892" text-anchor="middle">Feedback remains observational only. Semantic content must not mutate on the return path.</text>
+  <text class="note" x="460" y="930" text-anchor="middle">FROZEN = Forensically Retained Operator Zeroed Exhaustive Numbers (mnemonic expansion only;</text>
+  <text class="note" x="460" y="948" text-anchor="middle">does not by itself create additional verification predicates).</text>
+  <text class="sub" x="460" y="990" text-anchor="middle">Status labels are declared stack positions. This diagram does not independently verify freeze or establishment evidence.</text>
+  <text class="sub" x="460" y="1012" text-anchor="middle">Interpretive readings of Vox/Vex rhythm or suffix progression remain INTERPRETATION.</text>
+  <text class="sub" x="460" y="1060" text-anchor="middle">TSCP_NAMED_ROLES_v1.1 · documentation handles only · no machine artifact identifiers</text>
+</svg>
