@@ -300,3 +300,9 @@ See PROJECT_FACTS.md — Frozen Claims Table for full claim boundaries.
 
 
 Current cross-repository evidence map: [TSCP Evidence Index](docs/TSCP_EVIDENCE_INDEX_2026-10-21.md).
+
+## License
+
+This repository is licensed under the Apache License 2.0. See [LICENSE](LICENSE).
+
+Public visibility and the license do not broaden the evidence claims beyond the documented scope (see [TSCP Evidence Index](docs/TSCP_EVIDENCE_INDEX_2026-10-21.md)). Private correspondence, credentials, operational material, and out-of-repository work remain outside this repository and outside this license statement.
