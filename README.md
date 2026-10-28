@@ -12,7 +12,7 @@ universal implementation equivalence, no `Core.ntt_map` correspondence, no perfo
 claim beyond host-named sealed numbers), and the sealed host-named kernel-throughput
 comparison vs Plonky3 (claim C4, Rev 2 2026-10-18).
 
-**Companion implementation:** [avx512-butterfly](https://github.com/Cartilage-Stairwells/avx512-butterfly) —
+**Companion implementation:** `avx512-butterfly` ([access restricted](#reviewer-access); public evidence at [avx512-butterfly-evidence](https://github.com/Cartilage-Stairwells/avx512-butterfly-evidence)) —
 AVX-512 engines with CI-enforced bit-exact parity against the scalar reference on native
 silicon.
 
@@ -260,7 +260,7 @@ This repository is suitable for research evaluation, technical due diligence, an
 - [TSCP Specification](tscp-docs/) — protocol governance documents
 - [Lean 4 kernel](TraceCoreProver.lean) — formal semantics
 - [Triune-Oracle](https://github.com/Triune-Oracle) — parent organization
-- [tscp-pl-phase1](https://github.com/Cartilage-Stairwells/tscp-pl-phase1) — frozen Phase 1 AVX-512 research artifact
+- `tscp-pl-phase1` — frozen Phase 1 AVX-512 research artifact ([access restricted](#reviewer-access))
 - `avx512-butterfly` — AVX-512 BabyBear NTT kernel benchmark artifact (access restricted; contact for access)
 - [PROJECT_FACTS.md](PROJECT_FACTS.md) — verified project facts, evidence boundaries, and reviewer reference
 
