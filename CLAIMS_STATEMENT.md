@@ -22,7 +22,14 @@ For the B5 construct on the `Nat → Nat` carrier (module `TSCP.Formal.NTTFull`)
 
 **Scope boundary:** the theorem holds for the verified model (canonical residues x ∈ [0, P-1], pow2 lengths N = 2^k, k ≤ 27, matched-inverse stage lists). It is a result about the formal NTT construct, not a universal implementation-correctness claim.
 
-**Corpus counts across tags.** The reviewer surface (`zksha-rx-reviewer-access`) cites 88 theorem declarations at tag `formal-corpus-v2026-09-11`. That tag predates `NTTFull.lean` (11 declarations) and the `NormalizationBridge` expansion (6 → 12), and its 88 span the whole tree, including the `TraceCoreProver` and `BabyBear` scaffolds. This statement counts 101 inside the 11 Release A build roots. Both figures are correct for their commits; neither revises the other.
+**Corpus counts across tags.** The reviewer surface (`zksha-rx-reviewer-access`) cites 88 theorem declarations at tag `formal-corpus-v2026-09-11`; this statement counts 101 at Release A (`70e614f3`). The difference is exact and reproduces from the source:
+
+| Count | Composition |
+|---|---|
+| **88** at `formal-corpus-v2026-09-11` | 84 inside the build roots + 4 in scaffolds (`TraceCoreProver/Kernel.lean` 3, `BabyBear/Element.lean` 1) |
+| **101** at Release A | 84 + 11 (`NTTFull.lean`, new at Release A) + 6 (`NormalizationBridge`, 6 → 12) = 101 |
+
+The delta is 17, not 13, because four of the 88 were scaffold declarations outside any build root. Both figures are correct for their commits and neither revises the other.
 
 ### C2 — Montgomery REDC single-lane kernel equivalence (SMT-verified)
 The 64-bit REDC kernel (`mont_reduce_epu64`, single lane) is bit-exact equivalent to its modular specification for all inputs in [0, 2⁶⁴−1].
