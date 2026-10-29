@@ -16,9 +16,20 @@ summary: Scoped public claims for the B5 formal-verification release, derived fr
 ### C1 — Exact NTT round-trip theorem (Lean-verified)
 For the B5 construct on the `Nat → Nat` carrier (module `TSCP.Formal.NTTFull`): the inverse transform composed with the forward transform is the identity, with no external N⁻¹ scale factor (inversion via `dif_butterfly_inv` in LIFO order with halving internal to the inverse operation). Supporting theorems: `P_prime` (primality of P = 0x78000001 = 15·2²⁷+1, bounded kernel trial division), `b5_forward_preserves_validity`, `stage_inv_duality`, `b5_stage_composition`.
 
-**Evidence:** CI attestation run 38300810290 on the exact release commit — 11/11 modules build clean (Lean v4.33.0-rc2, Mathlib 51e6992e); kernel audit 919 constants, 0 axioms; source classification 101 theorems = 50 clean / 46 foundational / 5 classical / **0 project axioms / 0 sorry-dependent**; audit gate PASSED vs `audit/expected-gaps.json`; receipt artifact 11771145127 (`tscp-verification-receipt-70e614f3c…`, sha256:7304e3c54293662e64c101104dab5e87231eb91baf11b3086d44bdaf60d2f3b6). Independently re-verified in the final audit (tscp-anchor issue #61, comment 6132730770).
+**Evidence:** CI attestation run 38300810290 on the exact release commit — 11/11 modules build clean (Lean v4.33.0-rc2, Mathlib 51e6992e); kernel audit 919 constants, 0 axioms; source classification 101 theorems = 50 clean / 46 foundational / 5 classical / **0 project axioms / 0 sorry-dependent**, of which **96 are substantive and 5 are structural/definitional** (named below); audit gate PASSED vs `audit/expected-gaps.json`; receipt artifact 11771145127 (`tscp-verification-receipt-70e614f3c…`, sha256:7304e3c54293662e64c101104dab5e87231eb91baf11b3086d44bdaf60d2f3b6). Independently re-verified in the final audit (tscp-anchor issue #61, comment 6132730770).
+
+**Structural theorems (5 of 101).** `Core.lean`'s `Universe` layer is scaffolding for later composition, not a model of the NTT: `ntt_map` is `opaque` and both kernels define `admits_proof := fun _ => True`. Five of the 101 declarations are therefore definitional rather than mathematical — `babybear_ntt_end_to_end` (a `True → True` implication), `governance_transition_preserves_truth` (`X ↔ X` by `rfl`, with its authorization and transition hypotheses unused), `proof_valid`, `verified_path_certified`, and `rename_preserves_formula_admits`. They introduce no axioms, conceal no `sorry`, and carry no part of C1–C4. The remaining 96 theorems — Montgomery, butterfly, stage composition and the NTT round-trip corpus — are substantive and are what the claims below rest on.
 
 **Scope boundary:** the theorem holds for the verified model (canonical residues x ∈ [0, P-1], pow2 lengths N = 2^k, k ≤ 27, matched-inverse stage lists). It is a result about the formal NTT construct, not a universal implementation-correctness claim.
+
+**Corpus counts across tags.** The reviewer surface (`zksha-rx-reviewer-access`) cites 88 theorem declarations at tag `formal-corpus-v2026-09-11`; this statement counts 101 at Release A (`70e614f3`). The difference is exact and reproduces from the source:
+
+| Count | Composition |
+|---|---|
+| **88** at `formal-corpus-v2026-09-11` | 84 inside the build roots + 4 in scaffolds (`TraceCoreProver/Kernel.lean` 3, `BabyBear/Element.lean` 1) |
+| **101** at Release A | 84 + 11 (`NTTFull.lean`, new at Release A) + 6 (`NormalizationBridge`, 6 → 12) = 101 |
+
+The delta is 17, not 13, because four of the 88 were scaffold declarations outside any build root. Both figures are correct for their commits and neither revises the other.
 
 ### C2 — Montgomery REDC single-lane kernel equivalence (SMT-verified)
 The 64-bit REDC kernel (`mont_reduce_epu64`, single lane) is bit-exact equivalent to its modular specification for all inputs in [0, 2⁶⁴−1].
