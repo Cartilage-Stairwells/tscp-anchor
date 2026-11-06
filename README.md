@@ -78,7 +78,7 @@ tscp-anchor provides three things:
 
 - **OWSL** (Oracle Witness Status Layer) — operational witness-status daemon used for runtime health gating and execution policy. Writes atomic status to `~/.tscp/owsl_status.json` every 30 seconds. Rust bridge in `crates/prover-server/src/owsl_bridge.rs`.
 - **TSCPAnchor.sol** — Solidity contract for on-chain artifact registration.
-- **Lean 4 kernel** (`TraceCoreProver.lean`) — formal semantics layer defining the Mazurkiewicz trace monoid and categorical compiler functor that underpin the protocol's theoretical guarantees.
+- **Lean 4 scaffold** (`TraceCoreProver.lean`) — formal-semantics scaffold for the Mazurkiewicz trace monoid and categorical compiler functor. It sits OUTSIDE the 11 audited build roots, contains 3 theorems and 12 `sorry` placeholders, and is therefore NOT part of the 101-theorem kernel-audited count; `CLAIMS_STATEMENT.md` records it as a scaffold (3 of the 88 declarations at `formal-corpus-v2026-09-11`).
 
 ---
 
@@ -258,7 +258,7 @@ This repository is suitable for research evaluation, technical due diligence, an
 ## Related
 
 - [TSCP Specification](tscp-docs/) — protocol governance documents
-- [Lean 4 kernel](TraceCoreProver.lean) — formal semantics
+- [Lean 4 scaffold](TraceCoreProver.lean) — formal semantics, outside the 11 audited build roots (3 theorems, 12 `sorry`)
 - [Triune-Oracle](https://github.com/Triune-Oracle) — parent organization
 - `tscp-pl-phase1` — frozen Phase 1 AVX-512 research artifact ([access restricted](#reviewer-access))
 - `avx512-butterfly` — AVX-512 BabyBear NTT kernel benchmark artifact (access restricted; contact for access)

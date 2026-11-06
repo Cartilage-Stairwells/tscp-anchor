@@ -4,6 +4,8 @@
 **Status:** Evidence document. Does not modify VERIFIED_CLAIMS.md / INVESTOR_TEASER.md / SBIR_NARRATIVE.md — held per Sean's request pending review of these numbers. *(Removal note, B-4: INVESTOR_TEASER.md and SBIR_NARRATIVE.md were subsequently deleted from the repository; references here are historical. VERIFIED_CLAIMS.md is superseded — see its own supersession notices.)*
 **Scope:** This document enters the evidence chain as a comparison/evidence artifact, not as a funding claim or performance claim.
 
+> **SUPERSEDED 2026-11-06.** The 9.69x figure below is NOT current and must not be quoted as a performance claim. It is superseded by claim C4 in `CLAIMS_STATEMENT.md`, which pins Plonky3 0.6.3 and reports host-named kernel-throughput ratios of 1.006x to 2.120x across 12 cells on four named CPUs. Three limits measurable in this file itself: line 19 records the benchmark host as `avx2` only with no AVX-512, so 9.69x is a scalar-context number that says nothing about the AVX-512 kernel; the reproduction command at line 28 cites `plonky3_bench/`, which does not exist in this repository; and `CLAIMS_STATEMENT.md` records the legacy 9.15x figure as host-dependent and non-portable. Read 9.69x as historical only.
+
 ---
 
 ## 0. Benchmark Provenance
