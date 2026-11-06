@@ -190,7 +190,7 @@ LAYER 3 — INTERPRETATION    future analysis, comparisons                      
 
 | Baseline | Scope | Hardware | Method | Result | Relationship |
 |---|---|---|---|---|---|
-| `firebird_74c6e5f` | End-to-end prover | Intel Ice Lake-SP | target-cpu=icelake-server | (sealed, see FIREBIRD_AVX512_BASELINE.md) | Different scope + hardware |
+| `firebird_74c6e5f` | End-to-end prover | Intel Ice Lake-SP | target-cpu=icelake-server | (frozen at `6b5839dd`, unsigned; see FIREBIRD_AVX512_BASELINE.md) | Different scope + hardware |
 | `experiment_a_afea62bc` | Kernel butterfly | AMD Zen 5 | target-cpu=x86-64 | 7.23x peak, 4.42x GM | This baseline |
 
 These are complementary, not competitive. firebird_74c6e5f measures the proving

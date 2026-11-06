@@ -10,7 +10,7 @@ Corrections require a new evidence identity, not modification of an existing one
 
 | Evidence Identity | Backend | Hardware | Status | Record SHA-256 | Git Tag / Branch |
 |---|---|---|---|---|---|
-| `firebird_74c6e5f` | AVX-512 CPU | Intel Ice Lake-SP (family=6, model=106) | Sealed | `0d9c2c8e...` | `benchmark/firebird_74c6e5f` |
+| `firebird_74c6e5f` | AVX-512 CPU | Intel Ice Lake-SP (family=6, model=106) | Frozen, unsigned (tag `benchmark/firebird_74c6e5f`, annotated, not GPG-signed) | `0d9c2c8e...` | `benchmark/firebird_74c6e5f` |
 | `experiment_a_afea62bc` | AVX-512 CPU (kernel) | AMD Zen 5 (family=191, model=2) | Registered | `afea62bc...` | `evidence/experiment-a` (zksha-rx-reviewer-access) |
 
 ---
@@ -21,7 +21,7 @@ Each evidence baseline receives a unique identifier. The firebird series uses
 `firebird_<8hex>` for end-to-end proving pipeline baselines. The experiment series
 uses `experiment_<letter>_<8hex>` for isolated kernel-level measurements.
 
-The identifier is permanent once sealed or registered. A superseded baseline
+The identifier is permanent once frozen or registered. A superseded baseline
 retains its identity and status; it is never renamed or overwritten.
 
 ### Cross-Repository Evidence

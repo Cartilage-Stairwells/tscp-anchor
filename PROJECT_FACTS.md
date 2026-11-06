@@ -81,11 +81,11 @@ Kernel speedup does not linearly compose into end-to-end pipeline speedup. Cache
 
 ### Registered Evidence Baselines
 
-This repository registers evidence baselines in [BENCHMARK_PROVENANCE.md](docs/benchmarks/BENCHMARK_PROVENANCE.md). Each baseline has a unique evidence identity and is immutable once sealed or registered.
+This repository registers evidence baselines in [BENCHMARK_PROVENANCE.md](docs/benchmarks/BENCHMARK_PROVENANCE.md). Each baseline has a unique evidence identity and is immutable once frozen or registered.
 
 | Evidence identity | Scope | Hardware | Method | Result | Status |
 |---|---|---|---|---|---|
-| `firebird_74c6e5f` | End-to-end prover | Intel Ice Lake-SP | `target-cpu=icelake-server` | (sealed) | Sealed |
+| `firebird_74c6e5f` | End-to-end prover | Intel Ice Lake-SP | `target-cpu=icelake-server` | (frozen at `6b5839dd`) | Frozen, unsigned |
 | `experiment_a_afea62bc` | Kernel butterfly | AMD Zen 5 | `target-cpu=x86-64` | 7.23x peak, 4.42x GM | Registered |
 
 The `experiment_a_afea62bc` baseline is a cross-repository evidence artifact. Its evidence resides in `Cartilage-Stairwells/zksha-rx-reviewer-access` (branch `evidence/experiment-a`, commit `8df0c247`). See [EXPERIMENT_A_EVIDENCE_REFERENCE.md](docs/benchmarks/EXPERIMENT_A_EVIDENCE_REFERENCE.md) for the full cross-reference.

@@ -1,7 +1,9 @@
 # CPU AVX-512 Evidence Baseline — firebird_74c6e5f
 
-> This document describes the sealed CPU AVX-512 evidence baseline identified as
-> **firebird_74c6e5f**. It does not modify or supersede the evidence artifact.
+> This document describes the CPU AVX-512 evidence baseline identified as
+> **firebird_74c6e5f**: frozen at commit `6b5839dd` (repository state) and
+> attested by annotated tag `benchmark/firebird_74c6e5f`, which is **unsigned**.
+> It does not modify or supersede the evidence artifact.
 > The evidence artifact is immutable; corrections require a new evidence identity.
 
 ---
@@ -35,6 +37,9 @@ It establishes **one** reproducible CPU AVX-512 reference environment.
 | Evidence manifest SHA-256 | `a6b80d0d13fc8391c246910c90892ce81dcd325395ceb8f8487f162ea597ea44` |
 | Evidence directory | `/app/benchmark_scaffold/evidence_firebird_74c6e5f/` |
 | Canonical record | `/app/benchmark_scaffold/firebird_74c6e5f.json` |
+| Repository state | `6b5839dd` (frozen; force-push-free since 2026-08-12) |
+| Git tag | `benchmark/firebird_74c6e5f` — annotated, **not GPG-signed** (`git verify-tag` exits 1) |
+| Seal status | **Not sealed.** No signature, digest manifest or timestamp receipt over the evidence bundle is published |
 
 ## Provenance Chain
 
@@ -63,10 +68,11 @@ It establishes **one** reproducible CPU AVX-512 reference environment.
 
 ### Commit Hash Mapping
 
-The evidence record (firebird_74c6e5f.json) was sealed with the original unsigned
-commit hashes. The commits were subsequently re-signed with GPG signatures to
-satisfy the repository's commit-signing rules. The content is identical; only the
-hashes changed.
+The evidence record (firebird_74c6e5f.json) records the original unsigned commit
+hashes. The commits were subsequently re-signed with GPG signatures to satisfy the
+repository's commit-signing rules. The content is identical; only the hashes
+changed — verified by comparing the git tree object of each re-signed commit with
+its predecessor (all seven pairs have identical trees).
 
 | Role | Hash in evidence record | Hash in repository (signed, GitHub-verified) |
 |---|---|---|
@@ -181,7 +187,7 @@ LAYER 3 — INTERPRETATION    future analysis           (evolves freely)
 
 ## Audit Trail
 
-The evidence baseline was sealed after an 8-point audit:
+The evidence baseline was frozen after an 8-point audit:
 
 1. Benchmark infrastructure committed (`ae51e194`, originally `d4c63c38`)
 2. Diff contains only intended benchmark/evidence infrastructure
@@ -193,6 +199,24 @@ The evidence baseline was sealed after an 8-point audit:
 8. Final commit hash recorded alongside `firebird_74c6e5f`
 
 All 8 checks: **PASSED**.
+
+These eight checks concern the capture and its commit provenance. None of them is
+a cryptographic seal, and no sealing artifact accompanies this baseline.
+
+### Seal Status (audited 2026-11-06)
+
+| Surface | Observation |
+|---|---|
+| Tag object | `118a5898`, type `tag` (annotated) |
+| Tag signature | none — `git verify-tag` exits 1 with `error: no signature found`; GitHub reports `verified: false, reason: "unsigned"` |
+| Tagged commit `653ce061` | GPG-signed and `verified: true` (reason `valid`) by GitHub |
+| Release `benchmark/firebird_74c6e5f` | 0 assets — no digest manifest, signature file or timestamp receipt attached |
+| Evidence bundle | not published: no file named `firebird_74c6e5f.*` exists in this repository at any branch head |
+| Repository attestations | none (`GET /repos/.../attestations` → HTTP 404) |
+
+The record retains three SHA-256 values (`0d9c2c8e…`, `7feb104a…`, `a6b80d0d…`),
+but no published artifact matches them, so they are commitments to unpublished
+bytes rather than a verifiable digest manifest.
 
 ---
 
