@@ -15,6 +15,7 @@ export const receiptSchema = z.object({
   block_number: z.number().int().nonnegative(),
   batch_hash: z.string().regex(eth_hash_regex),
   artifact_hash: z.string().regex(hex64_regex),
+  content_keccak: z.string().regex(eth_hash_regex).optional(),
   timestamp_utc: z.string().regex(timestamp_utc_regex),
   anchor_mode: z.enum(["single", "batch"]),
   source: z.object({
