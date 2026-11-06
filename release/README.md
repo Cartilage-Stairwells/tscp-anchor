@@ -188,7 +188,7 @@ Expected: `Good signature from "SEAN CHRISTOPHER SOUTHWICK"` with key `84692E629
 ```bash
 curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.32.1
 source ~/.elan/env
-lake build
+lake build TSCP
 ```
 
 Expected: 6/6 modules compile, 0 errors.

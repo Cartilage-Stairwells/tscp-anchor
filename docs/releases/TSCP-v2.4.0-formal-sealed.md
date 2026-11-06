@@ -79,7 +79,7 @@ cd tscp-anchor
 git checkout bf5f9df
 curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:v4.32.1
 source ~/.elan/env
-lake build
+lake build TSCP
 ```
 
 ## Layer Separation

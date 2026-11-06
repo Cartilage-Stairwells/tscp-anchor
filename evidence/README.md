@@ -33,7 +33,7 @@ This directory (captured evidence)
 A third party can verify by:
 1. Clone the repository at the sealed commit
 2. Check the GitHub attestation: `gh attestation verify <subject-digest> --repo Cartilage-Stairwells/tscp-anchor`
-3. Run `lake build` to reproduce the compilation
+3. Run `lake build TSCP` to reproduce the compilation
 4. Compare their SHA256 sums with the attested evidence
 5. Inspect `formal/` for axiom/sorry inventory
 6. Read `docs/trust-boundary.md` for the trust boundary analysis
