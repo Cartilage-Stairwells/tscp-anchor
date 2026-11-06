@@ -1,3 +1,20 @@
+/*
+ * BINDING NOTE (2026-11-06).
+ * The earlier verifier checked two things in isolation: a local sha256 of the
+ * path the receipt names about itself, and (online only) that batch_hash appears
+ * in the anchoring tx logs. Nothing joined them, so a receipt could pass with
+ * content that the on-chain hash never committed to.
+ *
+ * This version requires the receipt to name content_keccak, the keccak256 of the
+ * exact bytes it attests, and recomputes it. Offline now refuses to reach VALID
+ * without that binding.
+ *
+ * RESIDUAL, and it is not closed here: content_keccak is still an assertion by
+ * the receipt unless the anchored batch_hash is computed over a payload that
+ * includes it. Making that true is a generator and contract decision, and it
+ * cannot be applied retroactively to anchors already on chain. Receipts without
+ * content_keccak therefore report UNBOUND, never VALID.
+ */
 import fs from "fs";
 import crypto from "crypto";
 import { ethers } from "ethers";
@@ -38,6 +55,33 @@ async function verify_receipt(path, rpc_url) {
       tscp_id: receipt.tscp_id,
       status: "INVALID",
       reason: "artifact_hash mismatch"
+    };
+  }
+
+  const computed_content_keccak = ethers.keccak256(
+    fs.readFileSync(receipt.source.file)
+  );
+
+  if (!receipt.content_keccak) {
+    return {
+      file: path,
+      tscp_id: receipt.tscp_id,
+      status: "UNBOUND",
+      reason:
+        "receipt does not bind content to batch_hash: no content_keccak"
+    };
+  }
+
+  if (computed_content_keccak.toLowerCase() !== receipt.content_keccak.toLowerCase()) {
+    return {
+      file: path,
+      tscp_id: receipt.tscp_id,
+      status: "INVALID",
+      reason:
+        "content_keccak mismatch: receipt " +
+        receipt.content_keccak +
+        " != file " +
+        computed_content_keccak
     };
   }
 
@@ -136,6 +180,7 @@ if (files.length === 0) {
 
 let has_invalid = false;
 let has_indeterminate = false;
+let has_unbound = false;
 
 for (const file of files) {
   const result = await verify_receipt(file, rpc_url);
@@ -148,8 +193,10 @@ for (const file of files) {
 
   if (result.status === "INVALID") has_invalid = true;
   if (result.status === "INDETERMINATE") has_indeterminate = true;
+  if (result.status === "UNBOUND") has_unbound = true;
 }
 
 if (has_invalid) process.exit(1);
 if (has_indeterminate) process.exit(3);
+if (has_unbound) process.exit(4);
 process.exit(0);
