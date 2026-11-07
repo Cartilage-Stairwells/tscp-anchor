@@ -193,7 +193,7 @@ jobs:
         run: |
           echo "=== TSCP Receipt Verification (offline) ==="
           if ls anchor-receipts/*.json 1>/dev/null 2>&1; then
-            npm run verify:offline
+            npm run verify:classified
             echo "PASS: Receipt verification completed"
           else
             echo "SKIP: No anchor-receipts found (expected for non-anchor commits)"

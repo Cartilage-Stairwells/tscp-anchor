@@ -13,4 +13,4 @@ jobs:
         with:
           node-version: 22
       - run: npm install --omit=optional --ignore-scripts --no-audit
-      - run: npm run verify:offline
+      - run: npm run verify:classified

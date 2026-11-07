@@ -10,7 +10,8 @@
     "audit:offline": "node scripts/audit-receipts.mjs offline",
     "audit:sepolia": "node scripts/audit-receipts.mjs sepolia",
     "audit:manifest": "node scripts/create-audit-manifest.mjs anchor-receipts/*.json --out=audit-manifest.json --auditor=Triune-Oracle",
-    "verify:audit:manifest": "node scripts/verify-audit-manifest.mjs audit-manifest.json"
+    "verify:audit:manifest": "node scripts/verify-audit-manifest.mjs audit-manifest.json",
+    "verify:classified": "node scripts/verify-receipts-classified.mjs"
   },
   "keywords": [],
   "author": "",
