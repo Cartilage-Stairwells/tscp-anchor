@@ -84,7 +84,7 @@ tscp-anchor provides three things:
 
 - **OWSL** (Oracle Witness Status Layer) — operational witness-status daemon used for runtime health gating and execution policy. Writes atomic status to `~/.tscp/owsl_status.json` every 30 seconds. Rust bridge in `crates/prover-server/src/owsl_bridge.rs`.
 - **TSCPAnchor.sol** — Solidity contract for on-chain artifact registration.
-- **Lean 4 scaffold** (`TraceCoreProver.lean`) — formal-semantics scaffold for the Mazurkiewicz trace monoid and categorical compiler functor. It sits OUTSIDE the 11 audited build roots, contains 3 theorems and 12 `sorry` placeholders, and is therefore NOT part of the 101-theorem kernel-audited count; `CLAIMS_STATEMENT.md` records it as a scaffold (3 of the 4 scaffold declarations in the 87 at `formal-corpus-v2026-09-11`).
+- **Lean 4 scaffold** (`TraceCoreProver.lean`) — formal-semantics scaffold for the Mazurkiewicz trace monoid and categorical compiler functor. It sits OUTSIDE the 11 audited build roots and is therefore NOT part of the 101-theorem kernel-audited count. The scaffold layer is not one file: `TraceCoreProver/Kernel.lean` holds 3 theorems and 12 `sorry` placeholders, `BabyBear/Element.lean` holds 1 theorem, and `BabyBear/Verifier.lean` declares 1 `axiom` (`babybear_verifier_injective`, a documented boundary awaiting the FRI binding proof). `CLAIMS_STATEMENT.md` records the four scaffold theorem declarations, 3 + 1, inside the 87 counted at `formal-corpus-v2026-09-11`.
 
 ---
 
@@ -264,7 +264,7 @@ This repository is suitable for research evaluation, technical due diligence, an
 ## Related
 
 - [TSCP Specification](tscp-docs/) — protocol governance documents
-- [Lean 4 scaffold](TraceCoreProver.lean) — formal semantics, outside the 11 audited build roots (3 theorems, 12 `sorry`)
+- [Lean 4 scaffold](TraceCoreProver.lean) — formal semantics, outside the 11 audited build roots (4 theorems, 1 `axiom`, 12 `sorry` across `Kernel.lean`, `Element.lean` and `Verifier.lean`)
 - [Triune-Oracle](https://github.com/Triune-Oracle) — parent organization
 - `tscp-pl-phase1` — frozen Phase 1 AVX-512 research artifact ([access restricted](#reviewer-access))
 - `avx512-butterfly` — AVX-512 BabyBear NTT kernel benchmark artifact (access restricted; contact for access)
