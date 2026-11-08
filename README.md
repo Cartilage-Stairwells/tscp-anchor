@@ -12,11 +12,11 @@ universal implementation equivalence, no `Core.ntt_map` correspondence, no perfo
 claim beyond host-named sealed numbers), and the sealed host-named kernel-throughput
 comparison vs Plonky3 (claim C4, Rev 2 2026-10-18).
 
-The reviewer surface (`zksha-rx-reviewer-access`) cites **88** declarations at tag
-`formal-corpus-v2026-09-11`. Both figures are correct for their commits and neither
-revises the other; the exact reconciliation, including the composition of the
-17-declaration delta and the four scaffold declarations outside any build root, is
-under "Corpus counts across tags" in [CLAIMS_STATEMENT.md](CLAIMS_STATEMENT.md).
+The September census at tag `formal-corpus-v2026-09-11` gives **87** declarations: 83 under
+`TSCP/Formal` plus 4 scaffold declarations outside every build root. An earlier figure of 88
+counted one line of comment prose as a declaration; it is corrected, with the composition of
+the 18-declaration delta to Release A, under "Corpus counts across tags" in
+[CLAIMS_STATEMENT.md](CLAIMS_STATEMENT.md).
 
 **Companion implementation:** `avx512-butterfly` ([access restricted](#reviewer-access); public evidence at [avx512-butterfly-evidence](https://github.com/Cartilage-Stairwells/avx512-butterfly-evidence)) —
 AVX-512 engines with CI-enforced bit-exact parity against the scalar reference on native
@@ -84,7 +84,7 @@ tscp-anchor provides three things:
 
 - **OWSL** (Oracle Witness Status Layer) — operational witness-status daemon used for runtime health gating and execution policy. Writes atomic status to `~/.tscp/owsl_status.json` every 30 seconds. Rust bridge in `crates/prover-server/src/owsl_bridge.rs`.
 - **TSCPAnchor.sol** — Solidity contract for on-chain artifact registration.
-- **Lean 4 scaffold** (`TraceCoreProver.lean`) — formal-semantics scaffold for the Mazurkiewicz trace monoid and categorical compiler functor. It sits OUTSIDE the 11 audited build roots, contains 3 theorems and 12 `sorry` placeholders, and is therefore NOT part of the 101-theorem kernel-audited count; `CLAIMS_STATEMENT.md` records it as a scaffold (3 of the 88 declarations at `formal-corpus-v2026-09-11`).
+- **Lean 4 scaffold** (`TraceCoreProver.lean`) — formal-semantics scaffold for the Mazurkiewicz trace monoid and categorical compiler functor. It sits OUTSIDE the 11 audited build roots, contains 3 theorems and 12 `sorry` placeholders, and is therefore NOT part of the 101-theorem kernel-audited count; `CLAIMS_STATEMENT.md` records it as a scaffold (3 of the 4 scaffold declarations in the 87 at `formal-corpus-v2026-09-11`).
 
 ---
 

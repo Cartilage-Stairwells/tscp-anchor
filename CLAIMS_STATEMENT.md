@@ -22,14 +22,20 @@ For the B5 construct on the `Nat → Nat` carrier (module `TSCP.Formal.NTTFull`)
 
 **Scope boundary:** the theorem holds for the verified model (canonical residues x ∈ [0, P-1], pow2 lengths N = 2^k, k ≤ 27, matched-inverse stage lists). It is a result about the formal NTT construct, not a universal implementation-correctness claim.
 
-**Corpus counts across tags.** The reviewer surface (`zksha-rx-reviewer-access`) cites 88 theorem declarations at tag `formal-corpus-v2026-09-11`; this statement counts 101 at Release A (`70e614f3`). The difference is exact and reproduces from the source:
+**Corpus counts across tags.** Counts are theorem declarations, not verified results: a census establishes what is declared at a commit, and compilation, axiom and `sorry` status are recorded separately. Every figure below reproduces from the tree with the rule stated at the end of this section.
 
 | Count | Composition |
 |---|---|
-| **88** at `formal-corpus-v2026-09-11` | 84 inside the build roots + 4 in scaffolds (`TraceCoreProver/Kernel.lean` 3, `BabyBear/Element.lean` 1) |
-| **101** at Release A | 84 + 11 (`NTTFull.lean`, new at Release A) + 6 (`NormalizationBridge`, 6 → 12) = 101 |
+| **83** at `formal-corpus-v2026-09-11`, build roots | the Lean files under `TSCP/Formal` |
+| **4** at the same tag, scaffolds | `TraceCoreProver/Kernel.lean` 3, `BabyBear/Element.lean` 1 — outside every build root |
+| **87** at the same tag, total | 83 + 4 |
+| **101** at Release A (`70e614f3`) | 83 + 1 (`Core.lean`: `babybear_ntt_end_to_end`, structural) + 11 (`NTTFull.lean`, new at Release A) + 6 (`NormalizationBridge`, 6 → 12) |
 
-The delta is 17, not 13, because four of the 88 were scaffold declarations outside any build root. Both figures are correct for their commits and neither revises the other.
+**The historical 88.** Earlier versions of this statement, and the reviewer surface, published 88 declarations at the September tag. That figure was not a different scope; it was a counting defect. It counted 84 declarations in the build roots where the census finds 83, because a line of prose inside a block comment in `TSCP/Formal/Core.lean` — `theorem proof_valid — same statement, proved by rfl.` — reads as a declaration when block comments are not stripped. The correct total is 87 (83 build roots + 4 scaffolds). Any table stating 88, or 84 build-root declarations, is superseded by the table above and is not restated.
+
+The delta from the September tag to Release A is 18: one structural theorem added in `Core.lean`, eleven in `NTTFull.lean`, six in `NormalizationBridge`. The September figure includes four scaffold declarations and the Release A figure includes none, so the two are not a trend and should not be read as one.
+
+**Counting rule.** A declaration whose keyword is `theorem` or `lemma`, after removing `--` line comments and `/- … -/` block comments. Attributes and the `private`, `protected` and `noncomputable` modifiers do not change the count. The stripper is a lightweight census implementation, not a Lean parser: Lean permits nested block comments, which this rule does not handle, so a corpus using them would be miscounted by it.
 
 ### C2 — Montgomery REDC single-lane kernel equivalence (SMT-verified)
 The 64-bit REDC kernel (`mont_reduce_epu64`, single lane) is bit-exact equivalent to its modular specification for all inputs in [0, 2⁶⁴−1].
