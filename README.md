@@ -12,6 +12,12 @@ universal implementation equivalence, no `Core.ntt_map` correspondence, no perfo
 claim beyond host-named sealed numbers), and the sealed host-named kernel-throughput
 comparison vs Plonky3 (claim C4, Rev 2 2026-10-18).
 
+The reviewer surface (`zksha-rx-reviewer-access`) cites **88** declarations at tag
+`formal-corpus-v2026-09-11`. Both figures are correct for their commits and neither
+revises the other; the exact reconciliation, including the composition of the
+17-declaration delta and the four scaffold declarations outside any build root, is
+under "Corpus counts across tags" in [CLAIMS_STATEMENT.md](CLAIMS_STATEMENT.md).
+
 **Companion implementation:** `avx512-butterfly` ([access restricted](#reviewer-access); public evidence at [avx512-butterfly-evidence](https://github.com/Cartilage-Stairwells/avx512-butterfly-evidence)) —
 AVX-512 engines with CI-enforced bit-exact parity against the scalar reference on native
 silicon.
@@ -20,7 +26,7 @@ silicon.
 
 # tscp-anchor
 
-The **Triune Structured Codex Protocol (TSCP)** is a multi-agent coordination standard that governs state transitions, governance events, and oracle-layer operations across a sovereign AI execution environment. **TSCP Anchor** is its cryptographic proving layer — the component responsible for making every protocol claim independently verifiable.
+The **Trusted Supply Chain Protocol (TSCP)** is a multi-agent coordination standard that governs state transitions, governance events, and oracle-layer operations across a sovereign AI execution environment. **TSCP Anchor** is its cryptographic proving layer — the component responsible for making every protocol claim independently verifiable.
 
 It implements a zero-knowledge proving stack built on [Plonky3](https://github.com/Plonky3/Plonky3), providing integrity guarantees grounded in cryptographic proof rather than trust in any single party or system.
 
