@@ -12,6 +12,12 @@ universal implementation equivalence, no `Core.ntt_map` correspondence, no perfo
 claim beyond host-named sealed numbers), and the sealed host-named kernel-throughput
 comparison vs Plonky3 (claim C4, Rev 2 2026-10-18).
 
+The September census at tag `formal-corpus-v2026-09-11` gives **87** declarations: 83 under
+`TSCP/Formal` plus 4 scaffold declarations outside every build root. An earlier figure of 88
+counted one line of comment prose as a declaration; it is corrected, with the composition of
+the 18-declaration delta to Release A, under "Corpus counts across tags" in
+[CLAIMS_STATEMENT.md](CLAIMS_STATEMENT.md).
+
 **Companion implementation:** `avx512-butterfly` ([access restricted](#reviewer-access); public evidence at [avx512-butterfly-evidence](https://github.com/Cartilage-Stairwells/avx512-butterfly-evidence)) —
 AVX-512 engines with CI-enforced bit-exact parity against the scalar reference on native
 silicon.
@@ -20,7 +26,7 @@ silicon.
 
 # tscp-anchor
 
-The **Triune Structured Codex Protocol (TSCP)** is a multi-agent coordination standard that governs state transitions, governance events, and oracle-layer operations across a sovereign AI execution environment. **TSCP Anchor** is its cryptographic proving layer — the component responsible for making every protocol claim independently verifiable.
+The **Trusted Supply Chain Protocol (TSCP)** is a multi-agent coordination standard that governs state transitions, governance events, and oracle-layer operations across a sovereign AI execution environment. **TSCP Anchor** is its cryptographic proving layer — the component responsible for making every protocol claim independently verifiable.
 
 It implements a zero-knowledge proving stack built on [Plonky3](https://github.com/Plonky3/Plonky3), providing integrity guarantees grounded in cryptographic proof rather than trust in any single party or system.
 
@@ -78,7 +84,7 @@ tscp-anchor provides three things:
 
 - **OWSL** (Oracle Witness Status Layer) — operational witness-status daemon used for runtime health gating and execution policy. Writes atomic status to `~/.tscp/owsl_status.json` every 30 seconds. Rust bridge in `crates/prover-server/src/owsl_bridge.rs`.
 - **TSCPAnchor.sol** — Solidity contract for on-chain artifact registration.
-- **Lean 4 scaffold** (`TraceCoreProver.lean`) — formal-semantics scaffold for the Mazurkiewicz trace monoid and categorical compiler functor. It sits OUTSIDE the 11 audited build roots, contains 3 theorems and 12 `sorry` placeholders, and is therefore NOT part of the 101-theorem kernel-audited count; `CLAIMS_STATEMENT.md` records it as a scaffold (3 of the 88 declarations at `formal-corpus-v2026-09-11`).
+- **Lean 4 scaffold** (`TraceCoreProver.lean`) — formal-semantics scaffold for the Mazurkiewicz trace monoid and categorical compiler functor. It sits OUTSIDE the 11 audited build roots, contains 3 theorems and 12 `sorry` placeholders, and is therefore NOT part of the 101-theorem kernel-audited count; `CLAIMS_STATEMENT.md` records it as a scaffold (3 of the 4 scaffold declarations in the 87 at `formal-corpus-v2026-09-11`).
 
 ---
 
