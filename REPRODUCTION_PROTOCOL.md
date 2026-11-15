@@ -101,8 +101,16 @@ lean BabyBearVerified.lean
 ```bash
 # Requires: cargo, network access to crates.io
 cd bench_suite && cargo bench
-# Expected: BabyBear DIT speedup ≈ 9.15×, XOR speedup ≈ 4.58×
-# (exact numbers will vary by hardware; relative ordering should hold)
+# Expected (LEGACY Phase-1 figures — host-dependent, NOT portable targets):
+#   BabyBear DIT ≈ 9.15×, XOR ≈ 4.58×
+# These historical kernel figures are recorded as host-dependent and
+# non-portable by the sealed legacy DIT verdict, and must not be restated as
+# portable claims. A reproducer on different silicon should NOT expect these
+# values and should not treat a lower ratio as a failure.
+# Authoritative current claim: C4 in CLAIMS_STATEMENT.md — host-named
+# kernel-throughput ratios of 1.006x to 2.120x versus pinned Plonky3 0.6.3
+# across 12 cells on four named CPUs (sealed capture run 39137424483).
+# Relative ordering versus the scalar baseline should still hold.
 
 # NOTE (B-4): plonky3_bench/ never existed in this repository's history.
 # The scalar Montgomery-multiplication comparison is documented (not runnable)
