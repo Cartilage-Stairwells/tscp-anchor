@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 1100" width="960" height="1100">
+  <defs>
+    <style>
+      .bg { fill: #0f1419; }
+      .native { fill: #1a2e24; stroke: #3d7a5a; stroke-width: 2.5; }
+      .wrap { fill: #2a2218; stroke: #a67c3a; stroke-width: 2.5; stroke-dasharray: 8 5; }
+      .deploy { fill: #1a2430; stroke: #4a6a88; stroke-width: 2; }
+      .warn { fill: #2a1a1a; stroke: #8a4545; stroke-width: 2; }
+      .title { fill: #e8eef4; font-family: Georgia, serif; font-size: 22px; font-weight: 600; }
+      .sub { fill: #9aabbc; font-family: Georgia, serif; font-size: 12px; }
+      .h { fill: #f4f7fa; font-family: Georgia, serif; font-size: 16px; font-weight: 600; }
+      .t { fill: #c5d4e0; font-family: Georgia, serif; font-size: 12px; }
+      .ok { fill: #8ec8a8; font-family: Georgia, serif; font-size: 12px; }
+      .caution { fill: #d7c48a; font-family: Georgia, serif; font-size: 12px; }
+      .bad { fill: #e0a0a0; font-family: Georgia, serif; font-size: 12px; }
+      .arrow { stroke: #7a8fa3; stroke-width: 2; fill: none; marker-end: url(#arr); }
+      .arrow-opt { stroke: #a67c3a; stroke-width: 2; fill: none; stroke-dasharray: 6 4; marker-end: url(#arr-o); }
+      .label { fill: #b8c5d0; font-family: Georgia, serif; font-size: 11px; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#7a8fa3"/>
+    </marker>
+    <marker id="arr-o" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#a67c3a"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="960" height="1100"/>
+  <text class="title" x="480" y="36" text-anchor="middle">TSCP SNARK-Wrapper Deployment Path</text>
+  <text class="sub" x="480" y="58" text-anchor="middle">Optional path only · Native STARK-family proof remains primary · authority = 0</text>
+
+  <!-- Native stack -->
+  <rect class="native" x="180" y="80" width="600" height="200" rx="8"/>
+  <text class="h" x="480" y="108" text-anchor="middle">Native TSCP Anchor (unchanged)</text>
+  <text class="ok" x="480" y="130" text-anchor="middle">Transparent · FRI / sumcheck / DEEP-ALI · Poseidon2 · Plonky3</text>
+  <text class="t" x="480" y="156" text-anchor="middle">prover-server → oracle-layer → batch-merkle → commitment</text>
+  <text class="t" x="480" y="178" text-anchor="middle">Produces P_stark (STARK-family / transparent IOP proof)</text>
+  <text class="ok" x="480" y="204" text-anchor="middle">Primary evidence object for TSCP admission discussions</text>
+  <text class="t" x="480" y="228" text-anchor="middle">No trusted setup · Stronger PQ posture (hash-based) · Larger proof</text>
+  <text class="t" x="480" y="250" text-anchor="middle">Audit surface: FRI + AIR + transcript</text>
+
+  <path class="arrow" d="M480 280 L480 310"/>
+  <text class="label" x="500" y="300">P_stark</text>
+
+  <!-- Decision -->
+  <rect class="deploy" x="260" y="312" width="440" height="56" rx="6"/>
+  <text class="t" x="480" y="336" text-anchor="middle">Deployment constraint check</text>
+  <text class="sub" x="480" y="354" text-anchor="middle">Need smaller proof / cheaper on-chain verify?</text>
+
+  <!-- Branch labels -->
+  <path class="arrow" d="M360 368 L280 400"/>
+  <path class="arrow-opt" d="M600 368 L680 400"/>
+  <text class="label" x="240" y="390">No — native verify</text>
+  <text class="label" x="690" y="390">Yes — optional wrap</text>
+
+  <!-- Native verify path -->
+  <rect class="native" x="80" y="410" width="280" height="120" rx="8"/>
+  <text class="h" x="220" y="440" text-anchor="middle">Native verifier</text>
+  <text class="t" x="220" y="464" text-anchor="middle">Verify P_stark directly</text>
+  <text class="ok" x="220" y="488" text-anchor="middle">Transparent · no extra setup</text>
+  <text class="t" x="220" y="512" text-anchor="middle">Prefer when size/cost allow</text>
+
+  <!-- Wrapper path -->
+  <rect class="wrap" x="520" y="410" width="360" height="160" rx="8"/>
+  <text class="h" x="700" y="438" text-anchor="middle">SNARK Wrapper Circuit (optional)</text>
+  <text class="caution" x="700" y="460" text-anchor="middle">Statement: P_stark verifies under PP for inputs X</text>
+  <text class="t" x="700" y="484" text-anchor="middle">Produces P_snark (e.g. Groth16 / Plonk / …)</text>
+  <text class="caution" x="700" y="508" text-anchor="middle">May introduce trusted setup</text>
+  <text class="t" x="700" y="532" text-anchor="middle">Smaller proof · cheaper constrained verify</text>
+  <text class="bad" x="700" y="556" text-anchor="middle">Extra audit surface · PQ may weaken</text>
+
+  <path class="arrow-opt" d="M700 570 L700 600"/>
+  <text class="label" x="720" y="590">P_snark</text>
+
+  <rect class="deploy" x="520" y="602" width="360" height="72" rx="8"/>
+  <text class="h" x="700" y="630" text-anchor="middle">Constrained deployment verifier</text>
+  <text class="t" x="700" y="654" text-anchor="middle">On-chain or size-limited environment</text>
+
+  <!-- Security rules box -->
+  <rect class="warn" x="80" y="700" width="800" height="200" rx="8"/>
+  <text class="h" x="480" y="730" text-anchor="middle">Security and discipline rules</text>
+  <text class="t" x="480" y="758" text-anchor="middle">1. P_stark remains primary unless contract explicitly accepts P_snark under stated assumptions</text>
+  <text class="t" x="480" y="782" text-anchor="middle">2. Wrapper failure does not repair invalid P_stark · Wrapper success does not clear VoxCanon S3</text>
+  <text class="t" x="480" y="806" text-anchor="middle">3. authority = 0 on evidence objects · FCO / AdmittedEvidence do not become authorization</text>
+  <text class="t" x="480" y="830" text-anchor="middle">4. Setup kind must be disclosed · Mixed-version policy prefer reject · Dual audit (native + circuit)</text>
+  <text class="t" x="480" y="854" text-anchor="middle">5. Named-role strings must not appear in circuit ids that enter hash preimages</text>
+  <text class="caution" x="480" y="880" text-anchor="middle">DRAFTED optional path · Implementation in tscp-anchor NOT claimed</text>
+
+  <text class="sub" x="480" y="940" text-anchor="middle">Solid border = native transparent path · Dashed amber = optional SNARK wrapper</text>
+  <text class="sub" x="480" y="962" text-anchor="middle">TSCP_SNARK_WRAPPER_diagram_v1.0 · documentation only</text>
+  <text class="sub" x="480" y="1020" text-anchor="middle">Use wrapper only when deployment constraints require it; prefer native when setup avoidance and PQ dominate</text>
+</svg>
