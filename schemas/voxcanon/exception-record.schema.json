@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Cartilage-Stairwells/tscp-anchor/blob/master/schemas/voxcanon/exception-record.schema.json",
+  "title": "VoxCanon ExceptionRecord (DRAFTED, unbound)",
+  "description": "Observational exception record for a future VoxCanon conformance surface, per TSCP_DRAFTED_PROTOCOLS_v1.0 Part A. STATUS: schema present in-repo; checker NOT_BOUND - no crate emits these records. This is NOT schemas/exceptions.schema.json (Supply Chain Exception Registry). Observational only: a record carries no authority and a disposition never promotes, demotes, or unfreezes any layer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "timestamp",
+    "voxcanon_version",
+    "vocabulary_ref",
+    "object_ref",
+    "severity",
+    "code",
+    "message",
+    "violated_constraints",
+    "mutation_attempted",
+    "disposition"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique per emission (opaque id)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Observation time, UTC instant (RFC 3339)."
+    },
+    "voxcanon_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Protocol version of the checker emitting this record."
+    },
+    "vocabulary_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to the VoxArchon vocabulary / rule-set version the check ran against. If the vocabulary registry is not yet bound, carry an explicit UNBOUND marker rather than a fabricated version id."
+    },
+    "object_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to the object under alignment check."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["S0", "S1", "S2", "S3"],
+      "description": "S0 informational, S1 recoverable, S2 blocking, S3 severe/constitutional. Only S2/S3 halt the alignment success path."
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^VCX-[A-Z0-9]+(-[A-Z0-9]+)*$",
+      "description": "Machine-stable exception code (VCX-* registry; the code registry itself is not yet bound)."
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable summary."
+    },
+    "violated_constraints": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "Identifiers of failed predicates."
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Optional hashes / proof ids / test receipts. References only - evidence is never authority and never overrides an S3 failure."
+    },
+    "mutation_attempted": {
+      "type": "boolean",
+      "description": "Must be false under correct operation. A record carrying true documents an operational failure; it is never a remediation."
+    },
+    "disposition": {
+      "type": "string",
+      "enum": ["recorded", "rejected", "escalated"],
+      "description": "Observational disposition. 'escalated' notifies a governance surface; it does not itself promote or unfreeze any layer."
+    },
+    "observer": {
+      "type": "string",
+      "description": "Optional operator/service identity reference; not authority."
+    }
+  }
+}

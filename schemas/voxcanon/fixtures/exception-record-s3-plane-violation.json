@@ -1,0 +1,14 @@
+{
+  "record_id": "vxr-fixture-0001-s3-plane-violation",
+  "timestamp": "2026-10-07T00:00:00Z",
+  "voxcanon_version": "voxcanon-severe-exception-protocol@DRAFTED-v1.0",
+  "vocabulary_ref": "voxarchon-vocabulary@UNBOUND",
+  "object_ref": "fixture:custody-artifact-presented-as-authority",
+  "severity": "S3",
+  "code": "VCX-S3-PLANE-VIOLATION",
+  "message": "Fixture example: a custody artifact is presented as an authority object, violating plane preservation (custody is not authority). No real object is referenced; this fixture exercises S3 emission shape and must be rejected by any alignment success path.",
+  "violated_constraints": ["plane_preservation", "custody_is_not_authority"],
+  "evidence_refs": [],
+  "mutation_attempted": false,
+  "disposition": "escalated"
+}
